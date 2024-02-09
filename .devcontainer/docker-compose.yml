@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   services:
-    container_name: lib
+    container_name: shopware-api-client
     init: true
     build:
       context: ..

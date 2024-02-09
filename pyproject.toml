@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "python-lib-template"  # TODO
-description = "Template for python libs"  # TODO
+name = "shopware-api-client"
+description = " An api client for the Shopware API"
 version = "1.0.0"
 license = "MIT"
 authors = ["GWS Gesellschaft für Warenwirtschafts-Systeme mbH <ebusiness@gws.ms>"]
 readme = "README.md"
 homepage = "https://github.com/GWS-mbH"
-repository = "https://github.com/GWS-mbH/python-lib-template"  # TODO
-documentation = "https://github.com/GWS-mbH/python-lib-template"  # TODO
+repository = "https://github.com/GWS-mbH/shopware-api-client"
+documentation = "https://github.com/GWS-mbH/shopware-api-client/wiki"
 keywords = ["shopware", "api", "client"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -16,11 +16,14 @@ classifiers = [
 ]
 
 [tool.poetry.urls]
-Changelog = "https://github.com/GWS-mbH/python-lib-template"  # TODO
-Bugtracker = "https://github.com/GWS-mbH/python-lib-template"  # TODO
+Changelog = "https://github.com/GWS-mbH/shopware-api-client"
+Bugtracker = "https://github.com/GWS-mbH/shopware-api-client/issues"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+httpx = "^0.26"
+httpx-auth = "^0.19"
+pydantic = "^2.6"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
