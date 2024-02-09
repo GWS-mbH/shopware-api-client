@@ -1,0 +1,11 @@
+{
+    "python.testing.pytestArgs": [
+        "./src",
+        "--rootdir=./src",
+        "--cov",
+        "--cov-branch",
+        "--cov-report=xml:./coverage.xml"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

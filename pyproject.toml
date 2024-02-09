@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "python-lib-template"  # TODO
+description = "Template for python libs"  # TODO
+version = "1.0.0"
+license = "MIT"
+authors = ["GWS Gesellschaft für Warenwirtschafts-Systeme mbH <ebusiness@gws.ms>"]
+readme = "README.md"
+homepage = "https://github.com/GWS-mbH"
+repository = "https://github.com/GWS-mbH/python-lib-template"  # TODO
+documentation = "https://github.com/GWS-mbH/python-lib-template"  # TODO
+keywords = ["shopware", "api", "client"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.urls]
+Changelog = "https://github.com/GWS-mbH/python-lib-template"  # TODO
+Bugtracker = "https://github.com/GWS-mbH/python-lib-template"  # TODO
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+pytest = "^7.4.4"
+coverage = "^7.4.0"
+pytest-cov = "^4.1.0"
+ruff = "^0.2.0"
+pytest-asyncio = "^0.23.3"
+pytest-recording = "^0.13.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+strict_optional = true
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py", "*_test.py"]
+filterwarnings = ["ignore::DeprecationWarning"]
+asyncio_mode = "auto"
+addopts = "--rootdir=./src --cov-branch --cov=src --cov-report=xml"
