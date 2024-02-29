@@ -22,7 +22,7 @@ Bugtracker = "https://github.com/GWS-mbH/shopware-api-client/issues"
 [tool.poetry.dependencies]
 python = "^3.12"
 httpx = "^0.26"
-httpx-auth = "^0.19"
+httpx-auth = "^0.21"
 pydantic = "^2.6"
 
 [tool.poetry.group.dev.dependencies]
