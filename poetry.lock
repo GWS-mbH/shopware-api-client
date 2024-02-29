@@ -561,6 +561,20 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-random-order"
+version = "1.1.1"
+description = "Randomise the order in which pytest tests are run with some control over the randomness"
+optional = false
+python-versions = ">=3.5.0"
+files = [
+    {file = "pytest-random-order-1.1.1.tar.gz", hash = "sha256:4472d7d34f1f1c5f3a359c4ffc5c13ed065232f31eca19c8844c1ab406e79080"},
+    {file = "pytest_random_order-1.1.1-py3-none-any.whl", hash = "sha256:882727a8b597ecd06ede28654ffeb8a6d511a1e4abe1054cca7982f2e42008cd"},
+]
+
+[package.dependencies]
+pytest = ">=3.0.0"
+
+[[package]]
 name = "pytest-recording"
 version = "0.13.1"
 description = "A pytest plugin that allows you recording of network interactions via VCR.py"
@@ -907,4 +921,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "29ac2ff7e9861c508f109f0eb5a1a0f78700e1fd9180d0da868862a96058681d"
+content-hash = "75f9ed2c5c6caddd6e63cef9182d93c44bda7d994e4d299dd5fde403acb74fb6"

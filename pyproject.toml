@@ -24,6 +24,7 @@ python = "^3.12"
 httpx = "^0.26"
 httpx-auth = "^0.21"
 pydantic = "^2.6"
+pytest-random-order = "^1.1.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
