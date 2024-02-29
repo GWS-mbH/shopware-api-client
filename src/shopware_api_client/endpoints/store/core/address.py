@@ -66,19 +66,23 @@ class AddressEndpoint(EndpointBase[Address]):
 
     async def set_default_shipping_address(self, pk: str) -> bool:
         result = await self.client.patch(f"/account/address/default-shipping/{pk}")
-        return result.status_code == 204
+        return bool(result.status_code == 204)
 
     async def set_default_billing_address(self, pk: str) -> bool:
         result = await self.client.patch(f"/account/address/default-billing/{pk}")
-        return result.status_code == 204
+        return bool(result.status_code == 204)
 
     async def get(self, pk: str) -> Address | dict[str, Any]:
         raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
 
-    async def bulk_upsert(self, objs: list[Address] | list[dict[str, Any]]) -> dict[str, Any] | None:
+    async def bulk_upsert(
+        self, objs: list[Address] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+    ) -> dict[str, Any] | None:
         raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
 
-    async def bulk_delete(self, objs: list[Address] | list[dict[str, Any]]) -> dict[str, Any]:
+    async def bulk_delete(
+        self, objs: list[Address] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
         raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
 
 

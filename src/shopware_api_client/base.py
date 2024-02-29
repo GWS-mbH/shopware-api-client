@@ -165,9 +165,9 @@ class EndpointBase(Generic[ModelClass]):
         return data
 
     def _reset_endpoint(self) -> None:
-        self._filter: list[dict[str, Any]] = []
-        self._limit: int | None = None
-        self._sort: list[dict[str, Any]] = []
+        self._filter = []
+        self._limit = None
+        self._sort = []
 
     @overload
     def _parse_response(self, data: list[dict[str, Any]]) -> list[ModelClass]:
