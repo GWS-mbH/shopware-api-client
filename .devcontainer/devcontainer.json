@@ -16,7 +16,9 @@
 				"ryanluker.vscode-coverage-gutters",
 				"GitHub.copilot",
 				"GitHub.copilot-chat",
-				"ms-vsliveshare.vsliveshare"
+				"ms-vsliveshare.vsliveshare",
+				"GitHub.vscode-pull-request-github",
+				"github.vscode-github-actions"
 			],
 			"settings": {
 				"[python]": {
