@@ -15,7 +15,8 @@
 				"charliermarsh.ruff",
 				"ryanluker.vscode-coverage-gutters",
 				"GitHub.copilot",
-				"GitHub.copilot-chat"
+				"GitHub.copilot-chat",
+				"ms-vsliveshare.vsliveshare"
 			],
 			"settings": {
 				"[python]": {
