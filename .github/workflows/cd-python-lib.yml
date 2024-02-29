@@ -23,8 +23,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.head_ref }}
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -41,7 +39,7 @@ jobs:
 
     - uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "Bump version to ${poetry version}"
+        commit_message: "Bump version to ${{ poetry version }}"
 
     - name: Build and publish Package
       env:
