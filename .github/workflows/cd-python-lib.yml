@@ -18,7 +18,6 @@ jobs:
 
     permissions:
       contents: write
-      administration: read
 
     steps:
     - uses: actions/checkout@v4
