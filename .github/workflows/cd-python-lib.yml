@@ -4,11 +4,9 @@
 name: Continuous Delivery
 on:
   workflow_dispatch:
-  pull_request:
+  push:
     branches:
       - main
-    types:
-      - closed
 
 jobs:
   build:
