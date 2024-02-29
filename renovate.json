@@ -6,8 +6,8 @@
     "labels": [
       "deps"
     ],
-    "schedule": [
-      "0 3 * * *"
+    "repositories": [
+      "GWS-mbH/shopware-api-client"
     ],
     "ignorePaths": [],
     "packageRules": [
