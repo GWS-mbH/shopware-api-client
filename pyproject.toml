@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "shopware-api-client"
 description = " An api client for the Shopware API"
-version = "1.0.2"
+version = "1.0.3"
 license = "MIT"
 authors = ["GWS Gesellschaft für Warenwirtschafts-Systeme mbH <ebusiness@gws.ms>"]
 readme = "README.md"
