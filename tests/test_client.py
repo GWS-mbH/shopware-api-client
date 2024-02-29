@@ -1,0 +1,58 @@
+import httpx
+import pytest
+from shopware_api_client.client import AdminClient, StoreClient
+from shopware_api_client.config import AdminConfig, StoreConfig
+from shopware_api_client.exceptions import SWAPIConfigException
+
+
+class TestAdminClient:
+    def setup_method(self) -> None:
+        self.admin_config = AdminConfig(
+            url="https://localhost",
+            client_id="CLIENT_ID",
+            client_secret="CLIENT_SECRET",
+            grant_type="client_credentials",
+        )
+
+    def test_creation(self) -> None:
+        client = AdminClient(config=self.admin_config)
+        assert isinstance(client, AdminClient)
+
+    def test_get_client(self) -> None:
+        client = AdminClient(config=self.admin_config)
+        httpx_client = client._get_client()
+        assert isinstance(httpx_client, httpx.AsyncClient)
+
+    def test_wrong_config(self) -> None:
+        self.admin_config.client_id = None
+        client = AdminClient(config=self.admin_config)
+
+        with pytest.raises(SWAPIConfigException):
+            client._get_client()
+
+
+class TestStoreClient:
+    def setup_method(self) -> None:
+        self.store_config = StoreConfig(url="https://localhost", access_key="ACCESS_KEY")
+
+    def test_creation(self) -> None:
+        client = StoreClient(config=self.store_config)
+        assert isinstance(client, StoreClient)
+
+    def test_get_client(self) -> None:
+        client = StoreClient(config=self.store_config)
+        httpx_client = client._get_client()
+        assert isinstance(httpx_client, httpx.AsyncClient)
+
+    def test_context_token(self) -> None:
+        config = StoreConfig(url="https://localhost", access_key="ACCESS_KEY", context_token="CONTEXT_TOKEN")
+        client = StoreClient(config=config)
+        httpx_client = client._get_client()
+        headers = httpx_client.headers
+        assert headers.get("sw-context-token") == "CONTEXT_TOKEN"
+
+    def test_context_token_not_set(self) -> None:
+        client = StoreClient(config=self.store_config)
+        httpx_client = client._get_client()
+        headers = httpx_client.headers
+        assert headers.get("sw-context-token") is None

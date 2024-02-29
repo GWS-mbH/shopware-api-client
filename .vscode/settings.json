@@ -1,7 +1,7 @@
 {
     "python.testing.pytestArgs": [
-        "./src",
-        "--rootdir=./src",
+        "./test",
+        "--rootdir=./test",
         "--cov",
         "--cov-branch",
         "--cov-report=xml:./coverage.xml"
