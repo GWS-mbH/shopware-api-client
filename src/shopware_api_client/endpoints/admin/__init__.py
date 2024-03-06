@@ -37,6 +37,7 @@ from .core.order_transaction_capture_refund import OrderTransactionCaptureRefund
 from .core.order_transaction_capture_refund_position import OrderTransactionCaptureRefundPosition
 from .core.payment_method import PaymentMethod
 from .core.product import Product
+from .core.product_category import ProductCategory
 from .core.product_configurator_setting import ProductConfiguratorSetting
 from .core.product_cross_selling import ProductCrossSelling
 from .core.product_cross_selling_assigned_products import ProductCrossSellingAssignedProducts
@@ -112,6 +113,7 @@ __all__ = [
     "OrderTransactionCaptureRefundPosition",
     "PaymentMethod",
     "Product",
+    "ProductCategory",
     "ProductConfiguratorSetting",
     "ProductCrossSelling",
     "ProductCrossSellingAssignedProducts",
