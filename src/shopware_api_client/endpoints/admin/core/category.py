@@ -49,7 +49,7 @@ class CategoryBase(ApiModelBase[EndpointClass]):
         validation_alias=AliasChoices("auto_increment", "autoIncrement"),
         exclude=True,
     )
-    breadcrumb: list[dict[str, Any]] | None = Field(default=None, exclude=True)
+    breadcrumb: list[str] | None = Field(default=None, exclude=True)
     level: int | None = Field(default=None, exclude=True)
     path: str | None = Field(default=None, exclude=True)
     child_count: int | None = Field(
