@@ -88,6 +88,16 @@ class ClientBase:
     async def close(self) -> None:
         await self._get_client().aclose()
 
+    async def bulk_upsert(
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        raise Exception("bulk_upsert is only supported in the admin API")
+
+    async def bulk_delete(
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        raise Exception("bulk_delete is only supported in the admin API")
+
 
 class ApiModelBase(BaseModel, Generic[EndpointClass]):
     _identifier: str
@@ -373,38 +383,12 @@ class EndpointBase(Generic[ModelClass]):
     async def bulk_upsert(
         self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
     ) -> dict[str, Any] | None:
-        obj_list: list[dict] = []
-
-        for obj in objs:
-            if isinstance(obj, ApiModelBase):
-                obj_list.append(obj.model_dump(by_alias=True, mode="json"))
-            else:
-                obj_list.append(obj)
-
-        data = {f"write-{self.name}": {"entity": self.name, "action": "upsert", "payload": obj_list}}
-
-        response = await self.client.post("/_action/sync", json=data, timeout=600, **request_kwargs)
-        result: dict[str, Any] = response.json()
-
-        return result
+        return await self.client.bulk_upsert(self.name, objs, **request_kwargs)
 
     async def bulk_delete(
         self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
     ) -> dict[str, Any]:
-        obj_list: list[dict] = []
-
-        for obj in objs:
-            if isinstance(obj, ApiModelBase):
-                obj_list.append(obj.model_dump(by_alias=True, mode="json"))
-            else:
-                obj_list.append(obj)
-
-        data = {f"delete-{self.name}": {"entity": self.name, "action": "delete", "payload": obj_list}}
-
-        response = await self.client.post("/_action/sync", json=data, timeout=600, **request_kwargs)
-        result: dict[str, Any] = response.json()
-
-        return result
+        return await self.client.bulk_delete(self.name, objs, **request_kwargs)
 
     def limit(self, count: int | None) -> "Self":
         self._limit = count

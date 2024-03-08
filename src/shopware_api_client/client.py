@@ -1,7 +1,8 @@
+from typing import Any
 import httpx
 from httpx_auth import OAuth2ClientCredentials, OAuth2ResourceOwnerPasswordCredentials
 
-from .base import ApiModelBase, ClientBase, EndpointBase
+from .base import ApiModelBase, ClientBase, EndpointBase, ModelClass
 from .config import AdminConfig, StoreConfig
 from .exceptions import SWAPIConfigException
 
@@ -40,6 +41,42 @@ class AdminClient(ClientBase):
                 raise SWAPIConfigException("Invalid grant_type for AdminClient.")
 
         return self._client
+
+    async def bulk_upsert(
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        obj_list: list[dict] = []
+
+        for obj in objs:
+            if isinstance(obj, ApiModelBase):
+                obj_list.append(obj.model_dump(by_alias=True, mode="json"))
+            else:
+                obj_list.append(obj)
+
+        data = {f"write-{name}": {"entity": name, "action": "upsert", "payload": obj_list}}
+
+        response = await self.post("/_action/sync", json=data, timeout=600, **request_kwargs)
+        result: dict[str, Any] = response.json()
+
+        return result
+
+    async def bulk_delete(
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        obj_list: list[dict] = []
+
+        for obj in objs:
+            if isinstance(obj, ApiModelBase):
+                obj_list.append(obj.model_dump(by_alias=True, mode="json"))
+            else:
+                obj_list.append(obj)
+
+        data = {f"delete-{name}": {"entity": name, "action": "delete", "payload": obj_list}}
+
+        response = await self.post("/_action/sync", json=data, timeout=600, **request_kwargs)
+        result: dict[str, Any] = response.json()
+
+        return result
 
 
 class StoreClient(ClientBase):
