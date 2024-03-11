@@ -67,12 +67,12 @@ class CategoryBase(ApiModelBase[EndpointClass]):
     visible: bool | None = None
     active: bool | None = None
     cms_page_id_sIdFieldched: bool | None = Field(
-        None,
+        default=None,
         alias="cmsPageIdSwitched",
         description="Runtime field, cannot be used as part of the criteria.",
     )
     visible_child_count: int | None = Field(
-        None,
+        default=None,
         alias="visibleChildCount",
         description="Runtime field, cannot be used as part of the criteria.",
     )
