@@ -1,6 +1,7 @@
 from typing import Any, Coroutine, Generic
 
 from ..base import ApiModelBase, EndpointBase, ModelClass
+from ..exceptions import SWNoClientProvided
 
 
 class ForeignRelation(Generic[ModelClass]):
@@ -32,8 +33,19 @@ class ManyRelation(Generic[ModelClass]):
         self.model = model
         self.api_link = api_link
 
-    def __get__(self, instance: Any, owner: type[Any]) -> Coroutine[Any, Any, list[ModelClass] | list[dict[str, Any]]]:
+    async def fake_async(self, value: Any) -> Any:
+        return value
+
+    def __get__(
+        self, instance: Any, owner: type[Any]
+    ) -> Coroutine[Any, Any, list[ModelClass] | list[dict[str, Any]] | None]:
         from ..client import registry
 
         model_class: type[ApiModelBase[EndpointBase]] = registry.get_admin_model(self.model)  # type: ignore
-        return model_class.using(instance._get_client()).get_related(instance, relation=self.api_link)
+        try:
+            return model_class.using(instance._get_client()).get_related(instance, relation=self.api_link)
+        except SWNoClientProvided:
+            return self.fake_async(None)
+
+    def __set__(self, instance: Any, value: list[ModelClass]) -> None:
+        setattr(instance, self.api_link, value)

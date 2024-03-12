@@ -49,7 +49,7 @@ class AdminClient(ClientBase):
 
         for obj in objs:
             if isinstance(obj, ApiModelBase):
-                obj_list.append(obj.model_dump(by_alias=True, mode="json"))
+                obj_list.append(obj.model_dump(by_alias=True, mode="json", exclude_unset=True))
             else:
                 obj_list.append(obj)
 
@@ -67,7 +67,7 @@ class AdminClient(ClientBase):
 
         for obj in objs:
             if isinstance(obj, ApiModelBase):
-                obj_list.append(obj.model_dump(by_alias=True, mode="json"))
+                obj_list.append(obj.model_dump(by_alias=True, mode="json", exclude_unset=True))
             else:
                 obj_list.append(obj)
 
