@@ -17,7 +17,7 @@ class RuleBase(ApiModelBase[EndpointClass]):
     priority: int
     description: str | None = None
     invalid: bool | None = Field(default=None, exclude=True)
-    areas: list[dict[str, Any]] | None = Field(default=None, exclude=True)
+    areas: list[str] | None = Field(default=None, exclude=True)
     custom_fields: dict[str, Any] | None = Field(
         default=None, serialization_alias="customFields", validation_alias=AliasChoices("custom_fields", "customFields")
     )
