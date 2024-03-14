@@ -2,7 +2,7 @@ import json
 from typing import Any, AsyncGenerator, Generic, Self, Type, TypeVar, overload
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseConfig, BaseModel
 
 from .endpoints.base_fields import IdField
 from .exceptions import SWAPIError, SWFilterException, SWNoClientProvided
@@ -47,7 +47,8 @@ class ClientBase:
 
     @staticmethod
     def _get_headers() -> dict[str, str]:
-        return {"Content-Type": "application/json", "Accept": "application/vnd.api+json"}
+        # return {"Content-Type": "application/json", "Accept": "application/vnd.api+json"}
+        return {"Content-Type": "application/json", "Accept": "application/json"}
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
@@ -104,6 +105,9 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
 
     id: IdField | None
 
+    class Config(BaseConfig):
+        extra = "allow"
+
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
         super().__init__(**kwargs)
         self._client = client
@@ -156,21 +160,29 @@ class EndpointBase(Generic[ModelClass]):
         self._filter: list[dict[str, Any]] = []
         self._limit: int | None = None
         self._sort: list[dict[str, Any]] = []
+        self._associations: dict[str, dict[str, Any]] = {}
+        self._includes: dict[str, list[str]] = {}
 
     def _is_search_query(self) -> bool:
-        return len(self._filter) > 0 or len(self._sort) > 0
+        return any([self._filter, self._sort, self._associations, self._includes])
 
     def _get_data_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {}
 
-        if len(self._filter) > 0:
+        if self._filter:
             data["filter"] = self._filter
 
-        if len(self._sort) > 0:
+        if self._sort:
             data["sort"] = self._sort
 
         if self._limit is not None:
             data["limit"] = self._limit
+
+        if self._associations:
+            data["associations"] = self._associations
+
+        if self._includes:
+            data["includes"] = self._includes
 
         return data
 
@@ -178,6 +190,8 @@ class EndpointBase(Generic[ModelClass]):
         self._filter = []
         self._limit = None
         self._sort = []
+        self._associations = {}
+        self._includes = {}
 
     @overload
     def _parse_response(self, data: list[dict[str, Any]]) -> list[ModelClass]:
@@ -317,6 +331,14 @@ class EndpointBase(Generic[ModelClass]):
             return result_data
 
         return self._parse_response(result_data)
+
+    def select_related(self, **kwargs: dict[str, Any]) -> Self:
+        self._associations.update(kwargs)
+        return self
+
+    def only(self, **kwargs: list[str]) -> Self:
+        self._includes.update(kwargs)
+        return self
 
     def filter(self, **kwargs: str) -> Self:
         for key, value in kwargs.items():
