@@ -457,7 +457,7 @@ class MediaThumbnailEndpoint(EndpointBase[MediaThumbnail]):
 registry.register_admin(MediaThumbnailEndpoint)
 ```
 
-8. Now we have to check, which fields are write-only fields. The easiest way for this is to head to the POST section of the documentation of this Endpoint: https://shopware.stoplight.io/docs/admin-api/9724c473cce7d-create-a-new-media-thumbnail-resources
+8. Now we have to check, which fields are read-only fields. The easiest way for this is to head to the POST section of the documentation of this Endpoint: https://shopware.stoplight.io/docs/admin-api/9724c473cce7d-create-a-new-media-thumbnail-resources
 All fields that aren't listed here are read-only fields. So for our example this are: width, height, path, created_at and updated_at. We need to add an `exclude=True` to this fields, to make Pydantic ignore this fields when we send them back to the
 API for saving or creating entries.
 
