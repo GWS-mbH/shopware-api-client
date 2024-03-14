@@ -164,6 +164,8 @@ registry.register_admin(CustomerGroupEndpoint)  # Register it so it will be adde
 - `limit(count: int | None)` sets the limit parameter, to limit the amount of results. Needs to be called with .all() or .first()
 - `first()` sets the limit to 1 and returns the result (calling .all())
 - `order_by(fields: str | tuple[str]` sets the sort parameter. Needs to be called with .all(), .iter() or .first(). Syntax: "name" for ASC, "-name" for DESC
+- `select_related(**kwargs: dict[str, Any])` sets the _associations parameter to define which related models to load in the request. Needs to be called with .all(), .iter() or .first().
+- `only(**kwargs: list[str])` sets the _includes parameter to define which fields to request. Needs to be called with .all(), .iter() or .first().
 - `iter(batch_size: int = 100)` sets the limit-parameter to batch_size and makes use of the pagination of the api. Should be used when requesting a big set of data (GET /customer-group or POST /search/customer-group if filter or sort is set)
 - `bulk_upsert(objs: list[ModelClass] | list[dict[str, Any]` creates/updates multiple objects. Does always return dict of plain response. (POST /_action/sync)
 - `bulk_delete(objs: list[ModelClass] | list[dict[str, Any]` deletes multiple objects. Does always return dict or plain response. (POST /_action/sync)
