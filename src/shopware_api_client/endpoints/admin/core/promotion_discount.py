@@ -1,62 +1,27 @@
-from typing import TYPE_CHECKING, ClassVar
-
-from pydantic import AliasChoices, AwareDatetime, Field
-
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import Promotion, PromotionDiscountPrices, Rule
 
 
 class PromotionDiscountBase(ApiModelBase[EndpointClass]):
     _identifier: str = "promotion_discount"
 
-    promotion_id: IdField = Field(
-        ..., serialization_alias="promotionId", validation_alias=AliasChoices("promotion_id", "promotionId")
-    )
+    promotion_id: IdField
     scope: str
     type: str
     value: float
-    consider_advanced_rules: bool = Field(
-        ...,
-        serialization_alias="considerAdvancedRules",
-        validation_alias=AliasChoices("consider_advanced_rules", "considerAdvancedRules"),
-    )
-    max_value: float | None = Field(
-        default=None, serialization_alias="maxValue", validation_alias=AliasChoices("max_value", "maxValue")
-    )
-    sorter_key: str | None = Field(
-        default=None, serialization_alias="sorterKey", validation_alias=AliasChoices("sorter_key", "sorterKey")
-    )
-    applier_key: str | None = Field(
-        default=None, serialization_alias="applierKey", validation_alias=AliasChoices("applier_key", "applierKey")
-    )
-    usage_key: str | None = Field(
-        default=None, serialization_alias="usageKey", validation_alias=AliasChoices("usage_key", "usageKey")
-    )
-    picker_key: str | None = Field(
-        default=None, serialization_alias="pickerKey", validation_alias=AliasChoices("picker_key", "pickerKey")
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    consider_advanced_rules: bool
+    max_value: float | None = None
+    sorter_key: str | None = None
+    applier_key: str | None = None
+    usage_key: str | None = None
+    picker_key: str | None = None
 
 
 class PromotionDiscountRelations:
-    promotion: ClassVar[ForeignRelation["Promotion"]] = ForeignRelation("Promotion", "promotion_id")
-    discount_rules: ClassVar[ManyRelation["Rule"]] = ManyRelation("Rule", "discountRules")
-    promotion_discount_prices: ClassVar[ManyRelation["PromotionDiscountPrices"]] = ManyRelation(
-        "PromotionDiscountPrices", "promotion-discount-prices"
-    )
+    promotion: ForeignRelation["Promotion"]
+    discount_rules: ManyRelation["Rule"]
+    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"]
 
 
 class PromotionDiscount(PromotionDiscountBase["PromotionDiscountEndpoint"], PromotionDiscountRelations):
@@ -69,4 +34,6 @@ class PromotionDiscountEndpoint(EndpointBase[PromotionDiscount]):
     model_class = PromotionDiscount
 
 
-registry.register_admin(PromotionDiscountEndpoint)
+from .promotion import Promotion  # noqa: E402
+from .promotion_discount_prices import PromotionDiscountPrices  # noqa: E402
+from .rule import Rule  # noqa: E402

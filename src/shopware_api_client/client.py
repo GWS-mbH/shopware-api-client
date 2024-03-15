@@ -1,19 +1,22 @@
 from typing import Any
+
 import httpx
 from httpx_auth import OAuth2ClientCredentials, OAuth2ResourceOwnerPasswordCredentials
 
-from .base import ApiModelBase, ClientBase, EndpointBase, ModelClass
+from .base import ApiModelBase, ClientBase, ModelClass
 from .config import AdminConfig, StoreConfig
+from .endpoints.admin import AdminEndpoints
+from .endpoints.store import StoreEndpoints
 from .exceptions import SWAPIConfigException
 
 
-class AdminClient(ClientBase):
+class AdminClient(ClientBase, AdminEndpoints):
     def __init__(self, config: AdminConfig, raw: bool = False):
         super().__init__(config, raw=raw)
         self.config = config
         self.api_url = f"{config.url}/api"
         self._client: httpx.AsyncClient | None = None
-        registry.add_admin_endpoints(self)
+        self.init_endpoints(self)
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -79,13 +82,13 @@ class AdminClient(ClientBase):
         return result
 
 
-class StoreClient(ClientBase):
+class StoreClient(ClientBase, StoreEndpoints):
     def __init__(self, config: StoreConfig, raw: bool = False):
         super().__init__(config, raw=raw)
         self.config = config
         self.api_url = f"{config.url}/store-api"
         self._client: httpx.AsyncClient | None = None
-        registry.add_store_endpoints(self)
+        self.init_endpoints(self)
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -105,36 +108,3 @@ class StoreClient(ClientBase):
             self._client.headers = httpx.Headers(headers)
 
         return self._client
-
-
-class EndpointRegistry:
-    def __init__(self) -> None:
-        self.admin_endpoints: dict[str, type[EndpointBase]] = {}
-        self.store_endpoints: dict[str, type[EndpointBase]] = {}
-        self.admin_models: dict[str, type[ApiModelBase]] = {}
-        self.store_models: dict[str, type[ApiModelBase]] = {}
-
-    def register_admin(self, endpoint_class: type[EndpointBase]) -> None:
-        self.admin_endpoints[endpoint_class.name] = endpoint_class
-        self.admin_models[endpoint_class.model_class.__name__] = endpoint_class.model_class
-
-    def register_store(self, endpoint_class: type[EndpointBase]) -> None:
-        self.store_endpoints[endpoint_class.name] = endpoint_class
-        self.store_models[endpoint_class.model_class.__name__] = endpoint_class.model_class
-
-    def add_admin_endpoints(self, client: AdminClient) -> None:
-        for name, cls in self.admin_endpoints.items():
-            setattr(client, name, cls(client))
-
-    def get_admin_model(self, name: str) -> type[ApiModelBase]:
-        return self.admin_models[name]
-
-    def add_store_endpoints(self, client: StoreClient) -> None:
-        for name, cls in self.store_endpoints.items():
-            setattr(client, name, cls(client))
-
-    def get_store_model(self, name: str) -> type[ApiModelBase]:
-        return self.store_models[name]
-
-
-registry = EndpointRegistry()

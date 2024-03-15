@@ -1,11 +1,13 @@
 import json
-from typing import Any, AsyncGenerator, Generic, Self, Type, TypeVar, overload
+from datetime import UTC, datetime
+from typing import Any, AsyncGenerator, Callable, Generic, Self, Type, TypeVar, get_origin, overload
 
 import httpx
-from pydantic import BaseConfig, BaseModel
+from pydantic import AliasChoices, AliasGenerator, AwareDatetime, BaseModel, ConfigDict, Field, model_serializer
+from pydantic.alias_generators import to_camel
 
 from .endpoints.base_fields import IdField
-from .exceptions import SWAPIError, SWFilterException, SWNoClientProvided
+from .exceptions import SWAPIError, SWAPIException, SWFilterException, SWNoClientProvided
 from .logging import logger
 
 EndpointClass = TypeVar("EndpointClass", bound="EndpointBase[Any]")
@@ -47,7 +49,6 @@ class ClientBase:
 
     @staticmethod
     def _get_headers() -> dict[str, str]:
-        # return {"Content-Type": "application/json", "Accept": "application/vnd.api+json"}
         return {"Content-Type": "application/json", "Accept": "application/json"}
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
@@ -92,25 +93,75 @@ class ClientBase:
     async def bulk_upsert(
         self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
     ) -> dict[str, Any] | None:
-        raise Exception("bulk_upsert is only supported in the admin API")
+        raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
         self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
     ) -> dict[str, Any]:
-        raise Exception("bulk_delete is only supported in the admin API")
+        raise SWAPIException("bulk_delete is only supported in the admin API")
 
 
 class ApiModelBase(BaseModel, Generic[EndpointClass]):
-    _identifier: str
+    model_config = ConfigDict(
+        alias_generator=AliasGenerator(
+            validation_alias=lambda field_name: AliasChoices(field_name, to_camel(field_name)),
+            serialization_alias=lambda field_name: to_camel(field_name),
+        ),
+        validate_assignment=True,
+    )
 
-    id: IdField | None
-
-    class Config(BaseConfig):
-        extra = "allow"
+    id: IdField | None = None
+    created_at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
+    updated_at: AwareDatetime | None = Field(default=None, exclude=True)
 
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
         super().__init__(**kwargs)
         self._client = client
+
+    def __setattr__(self, name: str, value: Any) -> Any:
+        from .endpoints.relations import ForeignRelation, ManyRelation
+
+        fields = super().__getattribute__("model_fields")
+
+        if name in fields and get_origin(fields[name].annotation) in [ForeignRelation, ManyRelation]:
+            field = super().__getattribute__(name)
+            return field.__set__(self, value)
+
+        return super().__setattr__(name, value)
+
+    def __getattribute__(self, name: str) -> Any:
+        from .endpoints.relations import ForeignRelation, ManyRelation
+
+        fields = super().__getattribute__("model_fields")
+
+        # hack to get the actual ForeignKey-Instance
+        if name.endswith("__raw") and name[:-5] in fields:
+            return super().__getattribute__(name[:-5])
+
+        if name in fields and get_origin(fields[name].annotation) in [ForeignRelation, ManyRelation]:
+            field = super().__getattribute__(name)
+            return field.__get__(self, type(self))
+
+        return super().__getattribute__(name)
+
+    @model_serializer(mode="wrap")
+    def ser_model(self, serializer: Callable[..., dict[str, Any]]) -> dict[str, Any]:
+        from .endpoints.relations import ForeignRelation, ManyRelation
+
+        ser_dict = serializer(self)
+
+        # If we don't ask the api for related fields it returns "null" for this field
+        # But the API also doesn't like if we send null back, so we need to remove them here
+        for field, info in self.model_fields.items():
+            if get_origin(info.annotation) in [ForeignRelation, ManyRelation]:
+                raw_obj = getattr(self, f"{field}__raw")
+                if raw_obj.data is None and not raw_obj.changed:
+                    ser_dict.pop(field, None)
+
+                    if info.serialization_alias is not None:
+                        ser_dict.pop(info.serialization_alias, None)
+
+        return ser_dict
 
     @classmethod
     def using(cls: type[Self], client: ClientBase) -> EndpointClass:
@@ -193,12 +244,17 @@ class EndpointBase(Generic[ModelClass]):
         self._associations = {}
         self._includes = {}
 
+    def _serialize_field_name(self, name: str) -> str:
+        return self.model_class.model_fields[name].serialization_alias or name
+
     @overload
     def _parse_response(self, data: list[dict[str, Any]]) -> list[ModelClass]:
+        # typing overload
         pass
 
     @overload
     def _parse_response(self, data: dict[str, Any]) -> ModelClass:
+        # typing overload
         pass
 
     def _parse_response(self, data: list[dict[str, Any]] | dict[str, Any]) -> list[ModelClass] | ModelClass:
@@ -332,12 +388,12 @@ class EndpointBase(Generic[ModelClass]):
 
         return self._parse_response(result_data)
 
-    def select_related(self, **kwargs: dict[str, Any]) -> Self:
-        self._associations.update(kwargs)
+    def select_related(self, **kwargs: Any) -> Self:
+        self._associations.update({self._serialize_field_name(field): data for field, data in kwargs.items()})
         return self
 
     def only(self, **kwargs: list[str]) -> Self:
-        self._includes.update(kwargs)
+        self._includes.update({self._serialize_field_name(field): data for field, data in kwargs.items()})
         return self
 
     def filter(self, **kwargs: str) -> Self:
@@ -380,14 +436,13 @@ class EndpointBase(Generic[ModelClass]):
             if filter_term != "":
                 field_parts = field_parts[:-1]
 
-            # Todo: Maybe add filter over related attributes
             if len(field_parts) >= 2:
                 field = "%s.%s" % (
-                    self.model_class.model_fields[field_parts[0]].alias or field_parts[0],
+                    self._serialize_field_name(field_parts[0]),
                     ".".join(field_parts[1:]),
                 )
             else:
-                field = self.model_class.model_fields[field_parts[0]].alias or field_parts[0]
+                field = self._serialize_field_name(field_parts[0])
 
             parameters = {}
 
@@ -429,10 +484,10 @@ class EndpointBase(Generic[ModelClass]):
 
             if field not in self.model_class.model_fields:
                 raise SWFilterException(
-                    f"Unknown Field: {field}. Available fields: " f"{self.model_class.model_fields.keys()}"
+                    f"Unknown Field: {field}. Available fields: {self.model_class.model_fields.keys()}"
                 )
             else:
-                field = self.model_class.model_fields[field].alias or field
+                field = self._serialize_field_name(field)
 
             self._sort.append({"field": field, "order": order})
 

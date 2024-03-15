@@ -1,13 +1,9 @@
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any
 
-from pydantic import AliasChoices, AwareDatetime, Field
+from pydantic import Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...relations import ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import PaymentMethod, ProductPrice, Promotion, PromotionDiscount, ShippingMethod, Tag
 
 
 class RuleBase(ApiModelBase[EndpointClass]):
@@ -18,34 +14,19 @@ class RuleBase(ApiModelBase[EndpointClass]):
     description: str | None = None
     invalid: bool | None = Field(default=None, exclude=True)
     areas: list[dict[str, Any]] | None = Field(default=None, exclude=True)
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, serialization_alias="customFields", validation_alias=AliasChoices("custom_fields", "customFields")
-    )
-    module_types: dict[str, Any] | None = Field(
-        default=None, serialization_alias="moduleTypes", validation_alias=AliasChoices("module_types", "moduleTypes")
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    custom_fields: dict[str, Any] | None = None
+    module_types: dict[str, Any] | None = None
 
 
 class RuleRelations:
-    product_prices: ClassVar[ManyRelation["ProductPrice"]] = ManyRelation("ProductPrice", "productPrices")
-    shipping_methods: ClassVar[ManyRelation["ShippingMethod"]] = ManyRelation("ShippingMethod", "shippingMethods")
-    payment_methods: ClassVar[ManyRelation["PaymentMethod"]] = ManyRelation("PaymentMethod", "paymentMethods")
-    persona_promotions: ClassVar[ManyRelation["Promotion"]] = ManyRelation("Promotion", "personaPromotions")
-    tags: ClassVar[ManyRelation["Tag"]] = ManyRelation("Tag", "tags")
-    order_promotions: ClassVar[ManyRelation["Promotion"]] = ManyRelation("Promotion", "orderPromotions")
-    cart_promotions: ClassVar[ManyRelation["Promotion"]] = ManyRelation("Promotion", "cartPromotions")
-    promotion_discounts: ClassVar[ManyRelation["PromotionDiscount"]] = ManyRelation(
-        "PromotionDiscount", "promotionDiscounts"
-    )
+    product_prices: ManyRelation["ProductPrice"]
+    shipping_methods: ManyRelation["ShippingMethod"]
+    payment_methods: ManyRelation["PaymentMethod"]
+    persona_promotions: ManyRelation["Promotion"]
+    tags: ManyRelation["Tag"]
+    order_promotions: ManyRelation["Promotion"]
+    cart_promotions: ManyRelation["Promotion"]
+    promotion_discounts: ManyRelation["PromotionDiscount"]
 
     """
     Todo:
@@ -65,4 +46,9 @@ class RuleEndpoint(EndpointBase[Rule]):
     model_class = Rule
 
 
-registry.register_admin(RuleEndpoint)
+from .payment_method import PaymentMethod  # noqa: E402
+from .product_price import ProductPrice  # noqa: E402
+from .promotion import Promotion  # noqa: E402
+from .promotion_discount import PromotionDiscount  # noqa: E402
+from .shipping_method import ShippingMethod  # noqa: E402
+from .tag import Tag  # noqa: E402

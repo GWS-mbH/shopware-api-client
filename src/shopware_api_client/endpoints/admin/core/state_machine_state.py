@@ -1,75 +1,31 @@
-from typing import TYPE_CHECKING, Any, ClassVar
-
-from pydantic import AliasChoices, AwareDatetime, Field
+from typing import Any
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import (
-        Order,
-        OrderDelivery,
-        OrderTransaction,
-        OrderTransactionCapture,
-        OrderTransactionCaptureRefund,
-        StateMachine,
-        StateMachineHistory,
-        StateMachineTransition,
-    )
 
 
 class StateMachineStateBase(ApiModelBase[EndpointClass]):
     _identifier: str = "state_machine_state"
 
-    technical_name: str = Field(
-        ..., serialization_alias="technicalName", validation_alias=AliasChoices("technical_name", "technicalName")
-    )
+    technical_name: str
     name: str
-    state_machine_id: IdField = Field(
-        ..., serialization_alias="stateMachineId", validation_alias=AliasChoices("state_machine_id", "stateMachineId")
-    )
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, serialization_alias="customFields", validation_alias=AliasChoices("custom_fields", "customFields")
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    state_machine_id: IdField
+    custom_fields: dict[str, Any] | None = None
     translated: dict[str, Any] | None = None
 
 
 class StateMachineStateRelations:
-    state_machine: ClassVar[ForeignRelation["StateMachine"]] = ForeignRelation("StateMachine", "state_machine_id")
-    from_state_machine_transitions: ClassVar[ManyRelation["StateMachineTransition"]] = ManyRelation(
-        "StateMachineTransition", "fromStateMachineTransitions"
-    )
-    to_state_machine_transitions: ClassVar[ManyRelation["StateMachineTransition"]] = ManyRelation(
-        "StateMachineTransition", "toStateMachineTransitions"
-    )
-    order_transactions: ClassVar[ManyRelation["OrderTransaction"]] = ManyRelation(
-        "OrderTransaction", "orderTransactions"
-    )
-    order_deliveries: ClassVar[ManyRelation["OrderDelivery"]] = ManyRelation("OrderDelivery", "orderDeliveries")
-    orders: ClassVar[ManyRelation["Order"]] = ManyRelation("Order", "orders")
-    order_transaction_captures: ClassVar[ManyRelation["OrderTransactionCapture"]] = ManyRelation(
-        "OrderTransactionCapture", "orderTransactionCaptures"
-    )
-    order_transaction_capture_refunds: ClassVar[ManyRelation["OrderTransactionCaptureRefund"]] = ManyRelation(
-        "OrderTransactionCaptureRefund", "orderTransactionCaptureRefunds"
-    )
-    to_state_machine_history_entries: ClassVar[ManyRelation["StateMachineHistory"]] = ManyRelation(
-        "StateMachineHistory", "toStateMachineHistoryEntries"
-    )
-    from_state_machine_history_entries: ClassVar[ManyRelation["StateMachineHistory"]] = ManyRelation(
-        "StateMachineHistory", "fromStateMachineHistoryEntries"
-    )
+    state_machine: ForeignRelation["StateMachine"]
+    from_state_machine_transitions: ManyRelation["StateMachineTransition"]
+    to_state_machine_transitions: ManyRelation["StateMachineTransition"]
+    order_transactions: ManyRelation["OrderTransaction"]
+    order_deliveries: ManyRelation["OrderDelivery"]
+    orders: ManyRelation["Order"]
+    order_transaction_captures: ManyRelation["OrderTransactionCapture"]
+    order_transaction_capture_refunds: ManyRelation["OrderTransactionCaptureRefund"]
+    to_state_machine_history_entries: ManyRelation["StateMachineHistory"]
+    from_state_machine_history_entries: ManyRelation["StateMachineHistory"]
 
 
 class StateMachineState(StateMachineStateBase["StateMachineStateEndpoint"], StateMachineStateRelations):
@@ -82,4 +38,11 @@ class StateMachineStateEndpoint(EndpointBase[StateMachineState]):
     model_class = StateMachineState
 
 
-registry.register_admin(StateMachineStateEndpoint)
+from .order import Order  # noqa: E402
+from .order_delivery import OrderDelivery  # noqa: E402
+from .order_transaction import OrderTransaction  # noqa: E402
+from .order_transaction_capture import OrderTransactionCapture  # noqa: E402
+from .order_transaction_capture_refund import OrderTransactionCaptureRefund  # noqa: E402
+from .state_machine import StateMachine  # noqa: E402
+from .state_machine_history import StateMachineHistory  # noqa: E402
+from .state_machine_transition import StateMachineTransition  # noqa: E402
