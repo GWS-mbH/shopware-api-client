@@ -73,11 +73,11 @@ class CustomerBaseRelations:
     updated_by: ForeignRelation["User"]
 
 
-class Customer(CustomerBase["CustomerEndpoint"]):
+class Customer(CustomerBase["CustomerEndpoint"], CustomerBaseRelations):
     pass
 
 
-class CustomerEndpoint(EndpointBase[Customer], CustomerBaseRelations):
+class CustomerEndpoint(EndpointBase[Customer]):
     name = "customer"
     path = "/customer"
     model_class = Customer
