@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ...client import AdminClient
 
+from .core.app import App, AppEndpoint
+from .core.app_script_condition import AppScriptCondition, AppScriptConditionEndpoint
 from .core.category import Category, CategoryEndpoint
 from .core.cms_block import CmsBlock, CmsBlockEndpoint
 from .core.cms_page import CmsPage, CmsPageEndpoint
@@ -70,6 +72,7 @@ from .core.promotion_discount_prices import PromotionDiscountPrices, PromotionDi
 from .core.property_group import PropertyGroup, PropertyGroupEndpoint
 from .core.property_group_option import PropertyGroupOption, PropertyGroupOptionEndpoint
 from .core.rule import Rule, RuleEndpoint
+from .core.rule_condition import RuleCondition, RuleConditionEndpoint
 from .core.sales_channel import SalesChannel, SalesChannelEndpoint
 from .core.sales_channel_domain import SalesChannelDomain, SalesChannelDomainEndpoint
 from .core.salutation import Salutation, SalutationEndpoint
@@ -88,6 +91,8 @@ from .core.user import User, UserEndpoint
 
 __all__ = [
     "AdminEndpoints",
+    "App",
+    "AppScriptCondition",
     "Category",
     "CmsBlock",
     "CmsPage",
@@ -146,6 +151,7 @@ __all__ = [
     "PropertyGroup",
     "PropertyGroupOption",
     "Rule",
+    "RuleCondition",
     "SalesChannel",
     "SalesChannelDomain",
     "Salutation",
@@ -166,6 +172,8 @@ __all__ = [
 
 class AdminEndpoints:
     def init_endpoints(self, client: "AdminClient") -> None:
+        self.app = AppEndpoint(client)
+        self.app_script_condition = AppScriptConditionEndpoint(client)
         self.category = CategoryEndpoint(client)
         self.cms_block = CmsBlockEndpoint(client)
         self.cms_page = CmsPageEndpoint(client)
@@ -224,6 +232,7 @@ class AdminEndpoints:
         self.property_group = PropertyGroupEndpoint(client)
         self.property_group_option = PropertyGroupOptionEndpoint(client)
         self.rule = RuleEndpoint(client)
+        self.rule_condition = RuleConditionEndpoint(client)
         self.sales_channel = SalesChannelEndpoint(client)
         self.sales_channel_domain = SalesChannelDomainEndpoint(client)
         self.salutation = SalutationEndpoint(client)
