@@ -1,14 +1,10 @@
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any
 
-from pydantic import AliasChoices, AwareDatetime, Field
+from pydantic import Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import DeliveryTime, Media, OrderDelivery, Rule, SalesChannel, Tag, Tax
 
 
 class ShippingMethodBase(ApiModelBase[EndpointClass]):
@@ -17,57 +13,27 @@ class ShippingMethodBase(ApiModelBase[EndpointClass]):
     name: str
     active: bool | None = None
     position: int | None = None
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, serialization_alias="customFields", validation_alias=AliasChoices("custom_fields", "customFields")
-    )
-    availability_rule_id: IdField = Field(
-        ...,
-        serialization_alias="availabilityRuleId",
-        validation_alias=AliasChoices("availability_rule_id", "availabilityRuleId"),
-    )
-    media_id: IdField | None = Field(
-        default=None, serialization_alias="mediaId", validation_alias=AliasChoices("media_id", "mediaId")
-    )
-    delivery_time_id: IdField = Field(
-        ..., serialization_alias="deliveryTimeId", validation_alias=AliasChoices("delivery_time_id", "deliveryTimeId")
-    )
-    tax_type: str = Field(..., serialization_alias="taxType", validation_alias=AliasChoices("tax_type", "taxType"))
-    tax_id: IdField | None = Field(
-        default=None, serialization_alias="taxId", validation_alias=AliasChoices("tax_id", "taxId")
-    )
+    custom_fields: dict[str, Any] | None = None
+    availability_rule_id: IdField
+    media_id: IdField | None = None
+    delivery_time_id: IdField
+    tax_type: str
+    tax_id: IdField | None = None
     description: str | None = None
-    tracking_url: str | None = Field(
-        default=None, serialization_alias="trackingUrl", validation_alias=AliasChoices("tracking_url", "trackingUrl")
-    )
-    technical_name: str | None = Field(
-        default=None,
-        serialization_alias="technicalName",
-        validation_alias=AliasChoices("technical_name", "technicalName"),
-        exclude=True,
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    tracking_url: str | None = None
+    technical_name: str | None = Field(default=None, exclude=True)
     translated: dict[str, Any] | None = None
 
 
 class ShippingMethodRelations:
-    delivery_time: ClassVar[ForeignRelation["DeliveryTime"]] = ForeignRelation("DeliveryTime", "delivery_time_id")
-    availability_rule: ClassVar[ForeignRelation["Rule"]] = ForeignRelation("Rule", "availability_rule_id")
-    media: ClassVar[ForeignRelation["Media"]] = ForeignRelation("Media", "media_id")
-    tags: ClassVar[ManyRelation["Tag"]] = ManyRelation("Tag", "tags")
-    order_deliveries: ClassVar[ManyRelation["OrderDelivery"]] = ManyRelation("OrderDelivery", "orderDeliveries")
-    sales_channels: ClassVar[ManyRelation["SalesChannel"]] = ManyRelation("SalesChannel", "salesChannels")
-    sales_channel_default_assignments: ClassVar[ManyRelation["SalesChannel"]] = ManyRelation(
-        "SalesChannel", "salesChannelDefaultAssignments"
-    )
-    tax: ClassVar[ForeignRelation["Tax"]] = ForeignRelation("Tax", "tax_id")
+    delivery_time: ForeignRelation["DeliveryTime"]
+    availability_rule: ForeignRelation["Rule"]
+    media: ForeignRelation["Media"]
+    tags: ManyRelation["Tag"]
+    order_deliveries: ManyRelation["OrderDelivery"]
+    sales_channels: ManyRelation["SalesChannel"]
+    sales_channel_default_assignments: ManyRelation["SalesChannel"]
+    tax: ForeignRelation["Tax"]
 
     """
     Todo:
@@ -85,4 +51,10 @@ class ShippingMethodEndpoint(EndpointBase[ShippingMethod]):
     model_class = ShippingMethod
 
 
-registry.register_admin(ShippingMethodEndpoint)
+from .delivery_time import DeliveryTime  # noqa: E402
+from .media import Media  # noqa: E402
+from .order_delivery import OrderDelivery  # noqa: E402
+from .rule import Rule  # noqa: E402
+from .sales_channel import SalesChannel  # noqa: E402
+from .tag import Tag  # noqa: E402
+from .tax import Tax  # noqa: E402

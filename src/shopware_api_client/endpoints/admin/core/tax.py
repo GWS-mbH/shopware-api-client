@@ -1,39 +1,24 @@
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any
 
-from pydantic import AliasChoices, AwareDatetime, Field
+from pydantic import Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...relations import ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import Product, Rule, ShippingMethod
 
 
 class TaxBase(ApiModelBase[EndpointClass]):
     _identifier: str = "tax"
 
-    tax_rate: float = Field(..., serialization_alias="taxRate", validation_alias=AliasChoices("tax_rate", "taxRate"))
+    tax_rate: float
     name: str
     position: int = Field(..., description="Added since version: 6.4.0.0.")
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, serialization_alias="customFields", validation_alias=AliasChoices("custom_fields", "customFields")
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    custom_fields: dict[str, Any] | None = None
 
 
 class TaxRelations:
-    products: ClassVar[ManyRelation["Product"]] = ManyRelation("Product", "products")
-    rules: ClassVar[ManyRelation["Rule"]] = ManyRelation("Rule", "rules")
-    shipping_methods: ClassVar[ManyRelation["ShippingMethod"]] = ManyRelation("ShippingMethod", "shippingMethods")
+    products: ManyRelation["Product"]
+    rules: ManyRelation["Rule"]
+    shipping_methods: ManyRelation["ShippingMethod"]
 
 
 class Tax(TaxBase["TaxEndpoint"], TaxRelations):
@@ -46,4 +31,6 @@ class TaxEndpoint(EndpointBase[Tax]):
     model_class = Tax
 
 
-registry.register_admin(TaxEndpoint)
+from .product import Product  # noqa: E402
+from .rule import Rule  # noqa: E402
+from .shipping_method import ShippingMethod  # noqa: E402

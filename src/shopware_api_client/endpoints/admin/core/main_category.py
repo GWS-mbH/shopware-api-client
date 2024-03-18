@@ -1,53 +1,22 @@
-from typing import TYPE_CHECKING, ClassVar
-
-from pydantic import AliasChoices, AwareDatetime, Field
-
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...base_fields import IdField
 from ...relations import ForeignRelation
-
-if TYPE_CHECKING:
-    from ...admin import Category, Product, SalesChannel
 
 
 class MainCategoryBase(ApiModelBase[EndpointClass]):
     _identifier: str = "main_category"
 
-    product_id: IdField = Field(
-        ..., serialization_alias="productId", validation_alias=AliasChoices("product_id", "productId")
-    )
-    product_version_id: IdField | None = Field(
-        default=None,
-        serialization_alias="productVersionId",
-        validation_alias=AliasChoices("product_version_id", "productVersionId"),
-    )
-    category_id: IdField = Field(
-        ..., serialization_alias="categoryId", validation_alias=AliasChoices("category_id", "categoryId")
-    )
-    category_version_id: IdField | None = Field(
-        default=None,
-        serialization_alias="categoryVersionId",
-        validation_alias=AliasChoices("category_version_id", "categoryVersionId"),
-    )
-    sales_channel_id: IdField = Field(
-        ..., serialization_alias="salesChannelId", validation_alias=AliasChoices("sales_channel_id", "salesChannelId")
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    product_id: IdField
+    product_version_id: IdField | None = None
+    category_id: IdField
+    category_version_id: IdField | None = None
+    sales_channel_id: IdField
 
 
 class MainCategoryRelations:
-    product: ClassVar[ForeignRelation["Product"]] = ForeignRelation("Product", "product_id")
-    category: ClassVar[ForeignRelation["Category"]] = ForeignRelation("Category", "category_id")
-    sales_channel: ClassVar[ForeignRelation["SalesChannel"]] = ForeignRelation("SalesChannel", "sales_channel_id")
+    product: ForeignRelation["Product"]
+    category: ForeignRelation["Category"]
+    sales_channel: ForeignRelation["SalesChannel"]
 
 
 class MainCategory(MainCategoryBase["MainCategoryEndpoint"], MainCategoryRelations):
@@ -60,4 +29,6 @@ class MainCategoryEndpoint(EndpointBase[MainCategory]):
     model_class = MainCategory
 
 
-registry.register_admin(MainCategoryEndpoint)
+from .category import Category  # noqa: E402
+from .product import Product  # noqa: E402
+from .sales_channel import SalesChannel  # noqa: E402

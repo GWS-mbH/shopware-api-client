@@ -1,14 +1,8 @@
-from typing import TYPE_CHECKING, Any, ClassVar
-
-from pydantic import AliasChoices, AwareDatetime, Field
+from typing import Any
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import Product, ProductCrossSellingAssignedProducts, ProductStream
 
 
 class ProductCrossSellingBase(ApiModelBase[EndpointClass]):
@@ -16,48 +10,21 @@ class ProductCrossSellingBase(ApiModelBase[EndpointClass]):
 
     name: str
     position: int
-    sort_by: str | None = Field(
-        default=None, serialization_alias="sortBy", validation_alias=AliasChoices("sort_by", "sortBy")
-    )
-    sort_direction: str | None = Field(
-        default=None,
-        serialization_alias="sortDirection",
-        validation_alias=AliasChoices("sort_direction", "sortDirection"),
-    )
+    sort_by: str | None = None
+    sort_direction: str | None = None
     type: str
     active: bool | None = None
     limit: int | None = None
-    product_id: IdField = Field(
-        ..., serialization_alias="productId", validation_alias=AliasChoices("product_id", "productId")
-    )
-    product_version_id: IdField | None = Field(
-        default=None,
-        serialization_alias="productVersionId",
-        validation_alias=AliasChoices("product_version_id", "productVersionId"),
-    )
-    product_stream_id: IdField | None = Field(
-        default=None,
-        serialization_alias="productStreamId",
-        validation_alias=AliasChoices("product_stream_id", "productStreamId"),
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    product_id: IdField
+    product_version_id: IdField | None = None
+    product_stream_id: IdField | None = None
     translated: dict[str, Any] | None = None
 
 
 class ProductCrossSellingRelations:
-    product: ClassVar[ForeignRelation["Product"]] = ForeignRelation("Product", "product_id")
-    product_stream: ClassVar[ForeignRelation["ProductStream"]] = ForeignRelation("ProductStream", "product_stream_id")
-    assigned_products: ClassVar[ManyRelation["ProductCrossSellingAssignedProducts"]] = ManyRelation(
-        "ProductCrossSellingAssignedProducts", "assignedProducts"
-    )
+    product: ForeignRelation["Product"]
+    product_stream: ForeignRelation["ProductStream"]
+    assigned_products: ManyRelation["ProductCrossSellingAssignedProducts"]
 
 
 class ProductCrossSelling(ProductCrossSellingBase["ProductCrossSellingEndpoint"], ProductCrossSellingRelations):
@@ -70,4 +37,6 @@ class ProductCrossSellingEndpoint(EndpointBase[ProductCrossSelling]):
     model_class = ProductCrossSelling
 
 
-registry.register_admin(ProductCrossSellingEndpoint)
+from .product import Product  # noqa: E402
+from .product_cross_selling_assigned_products import ProductCrossSellingAssignedProducts  # noqa: E402
+from .product_stream import ProductStream  # noqa: E402

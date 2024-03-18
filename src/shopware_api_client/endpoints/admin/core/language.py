@@ -1,63 +1,32 @@
-from typing import TYPE_CHECKING, Any, ClassVar
-
-from pydantic import AliasChoices, AwareDatetime, Field
+from typing import Any
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
-
-if TYPE_CHECKING:
-    from ...admin import Customer, Locale, Order, ProductReview, ProductSearchKeyword, SalesChannel, SalesChannelDomain
 
 
 class LanguageBase(ApiModelBase[EndpointClass]):
     _identifier: str = "language"
 
-    parent_id: IdField | None = Field(
-        default=None, serialization_alias="parentId", validation_alias=AliasChoices("parent_id", "parentId")
-    )
-    locale_id: IdField = Field(
-        ..., serialization_alias="localeId", validation_alias=AliasChoices("locale_id", "localeId")
-    )
-    translation_code_id: IdField | None = Field(
-        default=None,
-        serialization_alias="translationCodeId",
-        validation_alias=AliasChoices("translation_code_id", "translationCodeId"),
-    )
+    parent_id: IdField | None = None
+    locale_id: IdField
+    translation_code_id: IdField | None = None
     name: str
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, serialization_alias="customFields", validation_alias=AliasChoices("custom_fields", "customFields")
-    )
-    created_at: AwareDatetime = Field(
-        ..., serialization_alias="createdAt", validation_alias=AliasChoices("created_at", "createdAt"), exclude=True
-    )
-    updated_at: AwareDatetime | None = Field(
-        default=None,
-        serialization_alias="updatedAt",
-        validation_alias=AliasChoices("updated_at", "updatedAt"),
-        exclude=True,
-    )
+    custom_fields: dict[str, Any] | None = None
 
 
 class LanguageRelations:
-    parent: ClassVar[ForeignRelation["Language"]] = ForeignRelation("Language", "parent_id")
-    locale: ClassVar[ForeignRelation["Locale"]] = ForeignRelation("Locale", "locale_id")
-    translation_code: ClassVar[ForeignRelation["Locale"]] = ForeignRelation("Locale", "translation_code_id")
-    children: ClassVar[ManyRelation["Language"]] = ManyRelation("Language", "children")
-    sales_channels: ClassVar[ManyRelation["SalesChannel"]] = ManyRelation("SalesChannel", "salesChannels")
-    sales_channel_default_assignments: ClassVar[ManyRelation["SalesChannel"]] = ManyRelation(
-        "SalesChannel", "salesChannelDefaultAssignments"
-    )
-    sales_channel_domains: ClassVar[ManyRelation["SalesChannelDomain"]] = ManyRelation(
-        "SalesChannelDomain", "salesChannelDomains"
-    )
-    customers: ClassVar[ManyRelation["Customer"]] = ManyRelation("Customer", "customers")
-    orders: ClassVar[ManyRelation["Order"]] = ManyRelation("Order", "orders")
-    product_search_keywords: ClassVar[ManyRelation["ProductSearchKeyword"]] = ManyRelation(
-        "ProductSearchKeyword", "productSearchKeywords"
-    )
-    product_reviews: ClassVar[ManyRelation["ProductReview"]] = ManyRelation("ProductReview", "productReviews")
+    parent: ForeignRelation["Language"]
+    locale: ForeignRelation["Locale"]
+    translation_code: ForeignRelation["Locale"]
+    children: ManyRelation["Language"]
+    sales_channels: ManyRelation["SalesChannel"]
+    sales_channel_default_assignments: ManyRelation["SalesChannel"]
+    sales_channel_domains: ManyRelation["SalesChannelDomain"]
+    customers: ManyRelation["Customer"]
+    orders: ManyRelation["Order"]
+    product_search_keywords: ManyRelation["ProductSearchKeyword"]
+    product_reviews: ManyRelation["ProductReview"]
 
     """
     Todo:
@@ -76,4 +45,10 @@ class LanguageEndpoint(EndpointBase[Language]):
     model_class = Language
 
 
-registry.register_admin(LanguageEndpoint)
+from .customer import Customer  # noqa: E402
+from .locale import Locale  # noqa: E402
+from .order import Order  # noqa: E402
+from .product_review import ProductReview  # noqa: E402
+from .product_search_keyword import ProductSearchKeyword  # noqa: E402
+from .sales_channel import SalesChannel  # noqa: E402
+from .sales_channel_domain import SalesChannelDomain  # noqa: E402

@@ -1,9 +1,6 @@
 from typing import Any, AsyncGenerator
 
-from pydantic import AliasChoices, Field
-
 from ....base import EndpointBase
-from ....client import registry
 from ....exceptions import SWAPIMethodNotAvailable
 from ...admin.core.country import CountryBase
 from ...admin.core.country_state import CountryStateBase
@@ -15,11 +12,7 @@ class Address(CustomerAddressBase["AddressEndpoint"]):
     _identifier = "address"
 
     country: CountryBase | None = None
-    customer_state: CountryStateBase | None = Field(
-        default=None,
-        serialization_alias="countryState",
-        validation_alias=AliasChoices("customer_state", "countryState"),
-    )
+    customer_state: CountryStateBase | None = None
     salutation: SalutationBase | None = None
 
 
@@ -84,6 +77,3 @@ class AddressEndpoint(EndpointBase[Address]):
         self, objs: list[Address] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
     ) -> dict[str, Any]:
         raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
-
-
-registry.register_store(AddressEndpoint)
