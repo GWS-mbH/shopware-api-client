@@ -27,10 +27,11 @@ class RuleRelations:
     order_promotions: ManyRelation["Promotion"]
     cart_promotions: ManyRelation["Promotion"]
     promotion_discounts: ManyRelation["PromotionDiscount"]
+    conditions: ManyRelation["RuleCondition"]
 
     """
     Todo:
-    conditions[RuleCondition], shipping_method_prices[ShippingMethodPrice],
+    shipping_method_prices[ShippingMethodPrice],
     shipping_method_price_calculations[ShippingMethodPrice], flow_sequences[FlowSequence], tax_providers[TaxProvider],
     promotion_set_groups[PromotionSetGroup]
     """
@@ -52,3 +53,4 @@ from .promotion import Promotion  # noqa: E402
 from .promotion_discount import PromotionDiscount  # noqa: E402
 from .shipping_method import ShippingMethod  # noqa: E402
 from .tag import Tag  # noqa: E402
+from .rule_condition import RuleCondition  # noqa: E402

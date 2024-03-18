@@ -12,7 +12,7 @@ class RuleConditionBase(ApiModelBase[EndpointClass]):
     rule_id: IdField
     script_id: IdField | None = None
     parent_id: IdField | None = None
-    value: dict[str, Any] | None = None
+    value: Any | None = None
     position: int | None = None
     custom_fields: dict[str, Any] | None = None
 
