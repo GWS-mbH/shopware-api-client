@@ -179,10 +179,10 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
         endpoint: EndpointClass = getattr(self._get_client(), self._identifier).__class__(self._get_client())  # type: ignore
         return endpoint
 
-    async def save(self) -> Self | dict:
+    async def save(self, force_insert: bool = False) -> Self | dict:
         endpoint = self._get_endpoint()
 
-        if self.id is None:
+        if force_insert or self.id is None:
             result = await endpoint.create(obj=self)
         else:
             result = await endpoint.update(pk=self.id, obj=self)

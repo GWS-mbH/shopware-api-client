@@ -15,16 +15,20 @@ class ForeignRelation(Generic[ModelClass]):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        assert handler.field_name is not None
         data_tp = get_args(source)[0]
         data_schema = handler.generate_schema(data_tp)
 
-        return core_schema.with_info_after_validator_function(
-            cls._validate,
-            core_schema.nullable_schema(data_schema),
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                cls._serialize, info_arg=False, return_schema=core_schema.nullable_schema(data_schema)
+        return core_schema.with_default_schema(
+            core_schema.with_info_after_validator_function(
+                cls._validate,
+                core_schema.nullable_schema(data_schema),
+                serialization=core_schema.plain_serializer_function_ser_schema(
+                    cls._serialize, info_arg=False, return_schema=core_schema.nullable_schema(data_schema)
+                ),
+                field_name=handler.field_name,
             ),
-            field_name=handler.field_name,
+            default=ForeignRelation(field_name=handler.field_name, data=None),
         )
 
     @staticmethod
@@ -74,18 +78,22 @@ class ManyRelation(Generic[ModelClass]):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        assert handler.field_name is not None
         data_tp = get_args(source)[0]
         data_schema = handler.generate_schema(data_tp)
 
-        return core_schema.with_info_after_validator_function(
-            cls._validate,
-            core_schema.nullable_schema(core_schema.list_schema(data_schema)),
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                cls._serialize,
-                info_arg=False,
-                return_schema=core_schema.nullable_schema(core_schema.list_schema(data_schema)),
+        return core_schema.with_default_schema(
+            core_schema.with_info_after_validator_function(
+                cls._validate,
+                core_schema.nullable_schema(core_schema.list_schema(data_schema)),
+                serialization=core_schema.plain_serializer_function_ser_schema(
+                    cls._serialize,
+                    info_arg=False,
+                    return_schema=core_schema.nullable_schema(core_schema.list_schema(data_schema)),
+                ),
+                field_name=handler.field_name,
             ),
-            field_name=handler.field_name,
+            default=ManyRelation(field_name=handler.field_name, data=[]),
         )
 
     @staticmethod
