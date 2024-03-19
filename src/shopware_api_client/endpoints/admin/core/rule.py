@@ -51,6 +51,6 @@ from .payment_method import PaymentMethod  # noqa: E402
 from .product_price import ProductPrice  # noqa: E402
 from .promotion import Promotion  # noqa: E402
 from .promotion_discount import PromotionDiscount  # noqa: E402
+from .rule_condition import RuleCondition  # noqa: E402
 from .shipping_method import ShippingMethod  # noqa: E402
 from .tag import Tag  # noqa: E402
-from .rule_condition import RuleCondition  # noqa: E402
