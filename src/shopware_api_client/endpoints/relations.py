@@ -15,6 +15,7 @@ class ForeignRelation(Generic[ModelClass]):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        assert handler.field_name is not None
         data_tp = get_args(source)[0]
         data_schema = handler.generate_schema(data_tp)
 
@@ -77,6 +78,7 @@ class ManyRelation(Generic[ModelClass]):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        assert handler.field_name is not None
         data_tp = get_args(source)[0]
         data_schema = handler.generate_schema(data_tp)
 
