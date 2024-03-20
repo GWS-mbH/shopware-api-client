@@ -6,7 +6,7 @@ from ...relations import ForeignRelation, ManyRelation
 
 
 class RuleConditionBase(ApiModelBase[EndpointClass]):
-    _identifier = "rule_condition"
+    _identifier: str = "rule_condition"
 
     type: str
     rule_id: IdField

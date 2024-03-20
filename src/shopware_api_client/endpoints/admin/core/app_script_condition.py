@@ -13,7 +13,7 @@ class AppScriptConditionBase(ApiModelBase[EndpointClass]):
     active: bool
     group: str | None = None
     script: str | None = None
-    config: dict[str, Any] | None = None
+    config: list[dict[str, Any]] | None = None
     app_id: IdField
     translated: dict[str, Any] | None = None
 
