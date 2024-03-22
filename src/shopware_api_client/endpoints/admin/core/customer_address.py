@@ -24,7 +24,6 @@ class CustomerAddressBase(ApiModelBase[EndpointClass]):
     additional_address_line1: str | None = None
     additional_address_line2: str | None = None
     custom_fields: dict[str, Any] | None = None
-    customer: ForeignRelation["Customer"]
 
 
 class CustomerAddressRelations:
