@@ -128,12 +128,12 @@ class ClientBase:
         await self._get_client().aclose()
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any] | None:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
 
@@ -495,13 +495,11 @@ class EndpointBase(Generic[ModelClass]):
         return self
 
     async def bulk_upsert(
-        self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any] | None:
         return await self.client.bulk_upsert(self.name, objs, **request_kwargs)
 
-    async def bulk_delete(
-        self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def bulk_delete(self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any) -> dict[str, Any]:
         return await self.client.bulk_delete(self.name, objs, **request_kwargs)
 
     def limit(self, count: int | None) -> "Self":
