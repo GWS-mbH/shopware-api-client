@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import UTC, datetime
 from typing import Any, AsyncGenerator, Callable, Generic, Self, Type, TypeVar, get_origin, overload
@@ -7,7 +8,16 @@ from pydantic import AliasChoices, AliasGenerator, AwareDatetime, BaseModel, Con
 from pydantic.alias_generators import to_camel
 
 from .endpoints.base_fields import IdField
-from .exceptions import SWAPIError, SWAPIException, SWFilterException, SWNoClientProvided
+from .exceptions import (
+    SWAPIError,
+    SWAPIErrorList,
+    SWAPIException,
+    SWAPIGatewayTimeout,
+    SWAPIInternalServerError,
+    SWAPIServiceUnavailable,
+    SWFilterException,
+    SWNoClientProvided,
+)
 from .logging import logger
 
 EndpointClass = TypeVar("EndpointClass", bound="EndpointBase[Any]")
@@ -61,15 +71,42 @@ class ClientBase:
         headers = self._get_headers()
         headers.update(kwargs.pop("headers", {}))
 
-        response = await client.request(method, url, headers=headers, **kwargs)
+        retries = int(kwargs.pop("retries", 0))
+        retry_errors = tuple(
+            kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
+        )
+        no_retry_errors = tuple(kwargs.pop("no_retry_errors", []))
 
-        if response.status_code >= 400:
-            try:
-                raise SWAPIError(response.json().get("errors"))
-            except json.JSONDecodeError:
-                raise SWAPIError(f"Status: {response.status_code}: {response.text}")
+        retry_count = 0
+        while True:
+            response = await client.request(method, url, headers=headers, **kwargs)
+            if response.status_code >= 400:
+                try:
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(response.json().get("errors"))
+                except json.JSONDecodeError:
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
 
-        return response
+                if isinstance(error, SWAPIErrorList) and len(error.errors) == 1:
+                    error = error.errors[0]
+
+                if isinstance(error, SWAPIErrorList):
+                    if any([isinstance(err, no_retry_errors) for err in error.errors]):
+                        raise error
+
+                    if not any([isinstance(err, retry_errors) for err in error.errors]):
+                        raise error
+
+                elif isinstance(error, no_retry_errors) or not isinstance(error, retry_errors):
+                    raise error
+
+                if retry_count == retries:
+                    raise error
+
+                logger.debug(f"Try failed, retrying in {2 ** retry_count} seconds.")
+                await asyncio.sleep(2**retry_count)
+                retry_count += 1
+            else:
+                return response
 
     async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
         return await self._make_request(method="GET", relative_url=relative_url, **kwargs)
@@ -91,12 +128,12 @@ class ClientBase:
         await self._get_client().aclose()
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any] | None:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
 
@@ -458,13 +495,11 @@ class EndpointBase(Generic[ModelClass]):
         return self
 
     async def bulk_upsert(
-        self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any] | None:
         return await self.client.bulk_upsert(self.name, objs, **request_kwargs)
 
-    async def bulk_delete(
-        self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def bulk_delete(self, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any) -> dict[str, Any]:
         return await self.client.bulk_delete(self.name, objs, **request_kwargs)
 
     def limit(self, count: int | None) -> "Self":
