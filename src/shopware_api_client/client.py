@@ -46,7 +46,7 @@ class AdminClient(ClientBase, AdminEndpoints):
         return self._client
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any] | None:
         obj_list: list[dict] = []
 
@@ -64,7 +64,7 @@ class AdminClient(ClientBase, AdminEndpoints):
         return result
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: dict[str, Any]
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
         obj_list: list[dict] = []
 
