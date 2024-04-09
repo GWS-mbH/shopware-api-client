@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ...client import AdminClient
 
+from .commercial.b2b_components_role import B2bComponentsRole, B2bComponentsRoleEndpoint
+from .commercial.b2b_employee import B2bEmployee, B2bEmployeeEndpoint
 from .core.app import App, AppEndpoint
 from .core.app_script_condition import AppScriptCondition, AppScriptConditionEndpoint
 from .core.category import Category, CategoryEndpoint
@@ -91,6 +93,8 @@ from .core.user import User, UserEndpoint
 
 __all__ = [
     "AdminEndpoints",
+    "B2bComponentsRole",
+    "B2bEmployee",
     "App",
     "AppScriptCondition",
     "Category",
@@ -172,6 +176,11 @@ __all__ = [
 
 class AdminEndpoints:
     def init_endpoints(self, client: "AdminClient") -> None:
+        # Commercial
+        self.b2b_employee = B2bEmployeeEndpoint(client)
+        self.b2b_components_role = B2bComponentsRoleEndpoint(client)
+
+        # Core
         self.app = AppEndpoint(client)
         self.app_script_condition = AppScriptConditionEndpoint(client)
         self.category = CategoryEndpoint(client)
