@@ -45,13 +45,18 @@ class ClientBase:
         await self._get_client().aclose()
 
     async def log_request(self, request: httpx.Request) -> None:
-        logger.debug(f"Request: {request.method} {request.url} - {request.content!r} <headers: {request.headers}>")
+        if not hasattr(request, "_content"):
+            await request.aread()
+        logger.debug("Request: %s %s - %r <headers: %s>", request.method, request.url, request.content, request.headers)
 
     async def log_response(self, response: httpx.Response) -> None:
         await response.aread()
         logger.debug(
-            f"Response: {response.status_code} - {response.status_code} - {response.content!r} "
-            f"<headers: {response.headers}>"
+            "Response: %s - %s - %r <headers: %s>",
+            response.status_code,
+            response.reason_phrase,
+            response.content,
+            response.headers,
         )
 
     def _get_client(self) -> httpx.AsyncClient:
@@ -216,7 +221,7 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
         endpoint: EndpointClass = getattr(self._get_client(), self._identifier).__class__(self._get_client())  # type: ignore
         return endpoint
 
-    async def save(self, force_insert: bool = False) -> Self | dict:
+    async def save(self, force_insert: bool = False) -> Self | dict | None:
         endpoint = self._get_endpoint()
 
         if force_insert or self.id is None:
@@ -367,13 +372,17 @@ class EndpointBase(Generic[ModelClass]):
 
         return self._parse_response(result_data)
 
-    async def update(self, pk: str, obj: ModelClass | dict[str, Any]) -> ModelClass | dict[str, Any]:
+    async def update(self, pk: str, obj: ModelClass | dict[str, Any]) -> ModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True)
         else:
             data = json.dumps(obj)
 
         result = await self.client.patch(f"{self.path}/{pk}", data=data)
+        # 204 - "no data" handling
+        if result.status_code == 204:
+            return None
+
         result_data: dict[str, Any] = self._prase_data_single(result.json())
 
         if self.raw:
@@ -393,13 +402,17 @@ class EndpointBase(Generic[ModelClass]):
 
         return result[0]
 
-    async def create(self, obj: ModelClass | dict[str, Any]) -> ModelClass | dict[str, Any]:
+    async def create(self, obj: ModelClass | dict[str, Any]) -> ModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True)
         else:
             data = json.dumps(obj)
 
         result = await self.client.post(f"{self.path}", data=data)
+        # 204 - "no data" handling
+        if result.status_code == 204:
+            return None
+
         result_data: dict[str, Any] = self._prase_data_single(result.json())
 
         if self.raw:

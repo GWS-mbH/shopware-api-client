@@ -14,6 +14,7 @@ class UserBase(ApiModelBase[EndpointClass]):
     username: str
     first_name: str
     last_name: str
+    password: str | None = None
     title: str | None = None
     email: str
     active: bool | None = None
@@ -33,10 +34,11 @@ class UserRelations:
     updated_orders: ManyRelation["Order"]
     created_customers: ManyRelation["Customer"]
     updated_customers: ManyRelation["Customer"]
+    acl_roles: ManyRelation["AclRole"]
 
     """
     Todo:
-    access_keys[UserAccessKey], configs[UserConfig], import_export_log_entries[ImportExportLog], acl_roles[AclRole],
+    access_keys[UserAccessKey], configs[UserConfig], import_export_log_entries[ImportExportLog],
     recovery_user[UserRecovery]
     """
 
@@ -51,6 +53,7 @@ class UserEndpoint(EndpointBase[User]):
     model_class = User
 
 
+from .acl_role import AclRole  # noqa: E402
 from .customer import Customer  # noqa: E402
 from .locale import Locale  # noqa: E402
 from .media import Media  # noqa: E402

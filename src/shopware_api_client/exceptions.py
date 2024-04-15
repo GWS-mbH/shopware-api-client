@@ -40,7 +40,10 @@ class SWAPIError(SWAPIException):
         self.meta = kwargs.get("meta", {})
 
     def __str__(self) -> str:
-        return f"Status: {self.status} {self.title} - {self.detail}"
+        return f"Status: {self.status} {self.title} - {self.detail} - {self.source}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}: {self}>"
 
     @classmethod
     def get_exception_class(cls, status_code: int) -> type["SWAPIError"]:
@@ -91,6 +94,12 @@ class SWAPIError(SWAPIException):
 class SWAPIErrorList(SWAPIException):
     def __init__(self, errors: list[SWAPIError]) -> None:
         self.errors = errors
+
+    def __str__(self) -> str:
+        return f"Errors: {self.errors}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}: {self}>"
 
 
 class SWNoClientProvided(SWModelException):

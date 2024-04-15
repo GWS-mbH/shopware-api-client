@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ...client import AdminClient
 
+from .core.acl_role import AclRole, AclRoleEndpoint
 from .core.app import App, AppEndpoint
 from .core.app_script_condition import AppScriptCondition, AppScriptConditionEndpoint
 from .core.category import Category, CategoryEndpoint
@@ -28,6 +29,7 @@ from .core.document_base_config_sales_channel import (
     DocumentBaseConfigSalesChannelEndpoint,
 )
 from .core.document_type import DocumentType, DocumentTypeEndpoint
+from .core.integration import Integration, IntegrationEndpoint
 from .core.landing_page import LandingPage, LandingPageEndpoint
 from .core.language import Language, LanguageEndpoint
 from .core.locale import Locale, LocaleEndpoint
@@ -90,6 +92,7 @@ from .core.unit import Unit, UnitEndpoint
 from .core.user import User, UserEndpoint
 
 __all__ = [
+    "AclRole",
     "AdminEndpoints",
     "App",
     "AppScriptCondition",
@@ -113,6 +116,7 @@ __all__ = [
     "DocumentBaseConfig",
     "DocumentBaseConfigSalesChannel",
     "DocumentType",
+    "Integration",
     "LandingPage",
     "Language",
     "Locale",
@@ -172,6 +176,7 @@ __all__ = [
 
 class AdminEndpoints:
     def init_endpoints(self, client: "AdminClient") -> None:
+        self.acl_role = AclRoleEndpoint(client)
         self.app = AppEndpoint(client)
         self.app_script_condition = AppScriptConditionEndpoint(client)
         self.category = CategoryEndpoint(client)
@@ -194,6 +199,7 @@ class AdminEndpoints:
         self.document_base_config = DocumentBaseConfigEndpoint(client)
         self.document_base_config_sales_channel = DocumentBaseConfigSalesChannelEndpoint(client)
         self.document_type = DocumentTypeEndpoint(client)
+        self.integration = IntegrationEndpoint(client)
         self.landing_page = LandingPageEndpoint(client)
         self.language = LanguageEndpoint(client)
         self.locale = LocaleEndpoint(client)
