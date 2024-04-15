@@ -29,14 +29,20 @@ class AdminClient(ClientBase, AdminEndpoints):
             if self.config.grant_type == "client_credentials":
                 if self.config.client_id is not None and self.config.client_secret is not None:
                     self._client.auth = OAuth2ClientCredentials(
-                        token_url=auth_url, client_id=self.config.client_id, client_secret=self.config.client_secret
+                        token_url=auth_url,
+                        client_id=self.config.client_id,
+                        client_secret=self.config.client_secret,
+                        **self.config.extra,
                     )
                 else:
                     raise SWAPIConfigException("Missing Client Credentials.")
             elif self.config.grant_type == "password":
                 if self.config.username is not None and self.config.password is not None:
                     self._client.auth = OAuth2ResourceOwnerPasswordCredentials(
-                        token_url=auth_url, username=self.config.username, password=self.config.password
+                        token_url=auth_url,
+                        username=self.config.username,
+                        password=self.config.password,
+                        **self.config.extra,
                     )
                 else:
                     raise SWAPIConfigException("Missing Client Credentials.")

@@ -4,6 +4,7 @@ from pydantic import Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import IdField
+from ...relations import ForeignRelation, ManyRelation
 
 
 class AppBase(ApiModelBase[EndpointClass]):
@@ -36,23 +37,9 @@ class AppBase(ApiModelBase[EndpointClass]):
 
 
 class AppRelations:
-    # integration: Integration | None = None
-    # acl_role: AclRole | None = Field(None, alias="aclRole")
-    # custom_field_sets: list[CustomFieldSet] | None = Field(
-    #     None, alias="customFieldSets"
-    # )
-    # action_buttons: list[AppActionButton] | None = Field(None, alias="actionButtons")
-    # templates: list[AppTemplate] | None = None
-    # webhooks: list[Webhook] | None = None
-    # payment_methods: list[AppPaymentMethod] | None = Field(None, alias="paymentMethods")
-    # tax_providers: list[TaxProvider] | None = Field(None, alias="taxProviders")
-    # cms_blocks: list[AppCmsBlock] | None = Field(None, alias="cmsBlocks")
-    # flow_actions: list[AppFlowAction] | None = Field(None, alias="flowActions")
-    # flow_events: list[AppFlowEvent] | None = Field(None, alias="flowEvents")
-    # app_shipping_methods: list[AppShippingMethod] | None = Field(
-    #     None, alias="appShippingMethods"
-    # )
-    pass
+    app: ForeignRelation["App"]
+    acl_roles: ManyRelation["AclRole"]
+    integrations: ManyRelation["Integration"]
 
 
 class App(AppBase["AppEndpoint"], AppRelations):
@@ -63,3 +50,8 @@ class AppEndpoint(EndpointBase[App]):
     name = "app"
     path = "/app"
     model_class = App
+
+
+from .acl_role import AclRole  # noqa: E402
+from .app import App  # noqa: E402
+from .integration import Integration  # noqa: E402

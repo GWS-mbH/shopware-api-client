@@ -1,3 +1,5 @@
+from typing import Any
+
 from .base import ConfigBase
 from .exceptions import SWAPIConfigException
 
@@ -11,6 +13,7 @@ class AdminConfig(ConfigBase):
         client_id: str | None = None,
         client_secret: str | None = None,
         grant_type: str = "client_credentials",
+        extra: dict[str, Any] | None = None,
     ) -> None:
         match grant_type:
             case "client_credentials":
@@ -30,6 +33,7 @@ class AdminConfig(ConfigBase):
         self.client_id = client_id
         self.client_secret = client_secret
         self.grant_type = grant_type
+        self.extra = extra or {}
 
 
 class StoreConfig(ConfigBase):
