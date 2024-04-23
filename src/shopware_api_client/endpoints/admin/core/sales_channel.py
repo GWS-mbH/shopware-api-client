@@ -35,7 +35,7 @@ class SalesChannelBase(ApiModelBase[EndpointClass]):
     active: bool | None = None
     hreflang_active: bool | None = None
     maintenance: bool | None = None
-    maintenance_ip_whitelist: list[dict[str, Any]] | None = None
+    maintenance_ip_whitelist: list[str] | None = None
     custom_fields: dict[str, Any] | None = None
     payment_method_ids: list[IdField] | None = Field(default=None, exclude=True)
     home_cms_page_id: IdField | None = None
