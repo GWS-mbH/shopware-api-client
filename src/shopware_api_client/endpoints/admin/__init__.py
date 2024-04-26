@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 from .commercial.b2b_components_role import B2bComponentsRole, B2bComponentsRoleEndpoint
 from .commercial.b2b_employee import B2bEmployee, B2bEmployeeEndpoint
 from .core.acl_role import AclRole, AclRoleEndpoint
+from .core.api_info import ApiInfo, ApiInfoEndpoint
 from .core.app import App, AppEndpoint
 from .core.app_script_condition import AppScriptCondition, AppScriptConditionEndpoint
 from .core.category import Category, CategoryEndpoint
@@ -98,6 +99,7 @@ __all__ = [
     "AdminEndpoints",
     "B2bComponentsRole",
     "B2bEmployee",
+    "ApiInfo",
     "App",
     "AppScriptCondition",
     "Category",
@@ -186,6 +188,7 @@ class AdminEndpoints:
 
         # Core
         self.acl_role = AclRoleEndpoint(client)
+        self.api_info = ApiInfoEndpoint(client)
         self.app = AppEndpoint(client)
         self.app_script_condition = AppScriptConditionEndpoint(client)
         self.category = CategoryEndpoint(client)
