@@ -21,7 +21,7 @@ class ApiInfoBase(ApiModelBase[EndpointClass]):
     admin_worker: dict[str, Any]
     bundles: dict[str, Bundle]
     settings: dict[str, Any]
-    license_toggles: dict[str, bool]
+    license_toggles: dict[str, bool] | None = None
 
 
 class ApiInfo(ApiInfoBase["ApiInfoEndpoint"]):
