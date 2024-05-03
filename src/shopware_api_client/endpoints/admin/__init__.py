@@ -234,12 +234,12 @@ class AdminEndpoints:
 
             ce_model: type[ApiModelBase[Any]] = create_model(custom_entity.name, **fields, __base__=ApiModelBase[EndpointBase])
 
-            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (EndpointBase[ApiModelBase],))(client)
-            ce_endpoint.name = custom_entity.name
-            ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"
-            ce_endpoint.model_class = ce_model
+            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (EndpointBase[ApiModelBase],))
+            ce_endpoint.name = custom_entity.name  # type: ignore
+            ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"  # type: ignore
+            ce_endpoint.model_class = ce_model  # type: ignore
 
-            setattr(client, custom_entity.name, ce_endpoint)
+            setattr(client, custom_entity.name, ce_endpoint(client))
 
     def init_endpoints(self, client: "AdminClient") -> None:
         # Commercial
