@@ -185,16 +185,17 @@ __all__ = [
 class AdminEndpoints:
     async def load_custom_entities(self, client: "AdminClient") -> None:
         from types import new_class
+        from typing import Any
 
         from pydantic import AwareDatetime, create_model
 
-        from ...base import ApiModelBase, EndpointBase
+        from ...base import ApiModelBase, EndpointBase, ModelClass
         from ..base_fields import IdField
 
         async for custom_entity in self.custom_entity.iter():
             assert(isinstance(custom_entity, CustomEntity))
-            fields = {}
-            field_type = str
+            fields: dict[str, Any] = {}
+            field_type: Any = str
             field_appendix = ""
 
             for field in custom_entity.fields:
@@ -231,14 +232,14 @@ class AdminEndpoints:
 
             fields["_identifier"] = (str, custom_entity.name)
 
-            ce_model = create_model(custom_entity.name, **fields, __base__=ApiModelBase[EndpointBase])
+            ce_model: type[ApiModelBase[Any]] = create_model(custom_entity.name, **fields, __base__=ApiModelBase[EndpointBase])
 
-            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (EndpointBase[ce_model],))
+            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (EndpointBase[ApiModelBase],))(client)
             ce_endpoint.name = custom_entity.name
             ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"
             ce_endpoint.model_class = ce_model
 
-            setattr(client, custom_entity.name, ce_endpoint(client))
+            setattr(client, custom_entity.name, ce_endpoint)
 
     def init_endpoints(self, client: "AdminClient") -> None:
         # Commercial
