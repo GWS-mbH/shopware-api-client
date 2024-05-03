@@ -189,7 +189,7 @@ class AdminEndpoints:
 
         from pydantic import AwareDatetime, create_model
 
-        from ...base import ApiModelBase, EndpointBase, ModelClass
+        from ...base import ApiModelBase, EndpointBase
         from ..base_fields import IdField
 
         async for custom_entity in self.custom_entity.iter():
