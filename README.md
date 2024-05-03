@@ -110,6 +110,25 @@ async with AdminClient(config=config) as client:
 customer_group = await customer.group  # This will fail, because the client connection is already closed!
 ```
 
+#### CustomEntities
+
+Shopware allows to create custom entities. You can use the `load_custom_entities` function to load them into the client.
+
+```python
+from shopware_api_client.client import AdminClient
+
+config = ...
+client = AdminClient(config=config)
+await client.load_custom_entities(client)
+
+# Endpoint for the custom entity ce_blog
+await client.ce_blog.all()
+
+# Pydantic Model for the custom entity ce_blog
+CeBlog = client.ce_blog.model_class
+``` 
+Since custom entities are completely dynamic no autocompletion in IDE is available. However there are some pydantic validations added for the field-types of the custom entity. Relations are currently not supported, but everything else should work as expected.
+
 ### client.StoreClient
 
 To use the StoreClient you need to create a `config.StoreConfig`. The `StoreConfig` needs a store api access key.
