@@ -18,6 +18,7 @@ from .core.country import Country, CountryEndpoint
 from .core.country_state import CountryState, CountryStateEndpoint
 from .core.currency import Currency, CurrencyEndpoint
 from .core.currency_country_rounding import CurrencyCountryRounding, CurrencyCountryRoundingEndpoint
+from .core.custom_entity import CustomEntity, CustomEntityEndpoint
 from .core.customer import Customer, CustomerEndpoint
 from .core.customer_address import CustomerAddress, CustomerAddressEndpoint
 from .core.customer_group import CustomerGroup, CustomerGroupEndpoint
@@ -111,6 +112,7 @@ __all__ = [
     "CountryState",
     "Currency",
     "CurrencyCountryRounding",
+    "CustomEntity",
     "Customer",
     "CustomerAddress",
     "CustomerGroup",
@@ -181,6 +183,64 @@ __all__ = [
 
 
 class AdminEndpoints:
+    async def load_custom_entities(self, client: "AdminClient") -> None:
+        from types import new_class
+        from typing import Any
+
+        from pydantic import AwareDatetime, create_model
+
+        from ...base import ApiModelBase, EndpointBase
+        from ..base_fields import IdField
+
+        async for custom_entity in self.custom_entity.iter():
+            assert(isinstance(custom_entity, CustomEntity))
+            fields: dict[str, Any] = {}
+            field_type: Any = str
+            field_appendix = ""
+
+            for field in custom_entity.fields:
+                match field["type"]:
+                    case "int":
+                        field_type = int
+                    case "float":
+                        field_type = float
+                    case "bool":
+                        field_type = bool
+                    case "many-to-many":
+                        continue
+                    case "many-to-one":
+                        field_appendix = "_id"
+                        field_type = IdField
+                    case "one-to-many":
+                        continue
+                    case "one-to-one":
+                        field_appendix = "_id"
+                        field_type = IdField
+                    case "json":
+                        field_type = dict
+                    case "price":
+                        field_type = float
+                    case "date":
+                        field_type = AwareDatetime
+                    case _:
+                        field_type = str
+
+                if field["required"]:
+                    fields[field["name"] + field_appendix] = (field_type, ...)
+                else:
+                    fields[field["name"] + field_appendix] = (field_type | None, None)
+
+            fields["_identifier"] = (str, custom_entity.name)
+
+            ce_model: type[ApiModelBase[Any]] = create_model(custom_entity.name, **fields, __base__=ApiModelBase[EndpointBase])
+
+            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (EndpointBase[ApiModelBase],))(client)
+            ce_endpoint.name = custom_entity.name
+            ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"
+            ce_endpoint.model_class = ce_model
+
+            setattr(client, custom_entity.name, ce_endpoint)
+
     def init_endpoints(self, client: "AdminClient") -> None:
         # Commercial
         self.b2b_employee = B2bEmployeeEndpoint(client)
@@ -200,6 +260,7 @@ class AdminEndpoints:
         self.country_state = CountryStateEndpoint(client)
         self.currency = CurrencyEndpoint(client)
         self.currency_country_rounding = CurrencyCountryRoundingEndpoint(client)
+        self.custom_entity = CustomEntityEndpoint(client)
         self.customer = CustomerEndpoint(client)
         self.customer_address = CustomerAddressEndpoint(client)
         self.customer_group = CustomerGroupEndpoint(client)
