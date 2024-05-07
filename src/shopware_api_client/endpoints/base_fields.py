@@ -1,115 +1,78 @@
 from typing import Annotated, Any
 
-from pydantic import AliasChoices, BaseModel, Field, StringConstraints
+from pydantic import AliasChoices, AliasGenerator, BaseModel, ConfigDict, StringConstraints
+from pydantic.alias_generators import to_camel
 
 IdField = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]
 
 
-class CustomerTax(BaseModel):
-    enabled: bool
-    currency_id: str = Field(
-        ..., serialization_alias="currencyId", validation_alias=AliasChoices("currency_id", "currencyId")
+class BaseFieldSet(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=AliasGenerator(
+            validation_alias=lambda field_name: AliasChoices(field_name, to_camel(field_name)),
+            serialization_alias=lambda field_name: to_camel(field_name),
+        ),
+        validate_assignment=True,
     )
+
+
+class CustomerTax(BaseFieldSet):
+    enabled: bool
+    currency_id: IdField
     amount: float
 
 
-class CompanyTax(BaseModel):
+class CompanyTax(BaseFieldSet):
     enabled: bool
-    currency_id: str = Field(
-        ..., serialization_alias="currencyId", validation_alias=AliasChoices("currency_id", "currencyId")
-    )
+    currency_id: IdField
     amount: float
 
 
-class Data(BaseModel):
+class Data(BaseFieldSet):
     states: list[dict[str, Any]] | None = None
-    zip_code: str | None = Field(
-        default=None, serialization_alias="zipCode", validation_alias=AliasChoices("zip_code", "zipCode")
-    )
-    from_zip_code: str | None = Field(
-        default=None, serialization_alias="fromZipCode", validation_alias=AliasChoices("from_zip_code", "fromZipCode")
-    )
-    to_zip_code: str | None = Field(
-        default=None, serialization_alias="toZipCode", validation_alias=AliasChoices("to_zip_code", "toZipCode")
-    )
+    zip_code: str | None = None
+    from_zip_code: str | None = None
+    to_zip_code: str | None = None
 
 
-class Visibility(BaseModel):
+class Visibility(BaseFieldSet):
     mobile: bool | None = None
     desktop: bool | None = None
     tablet: bool | None = None
 
 
-class ListPrice(BaseModel):
+class ListPrice(BaseFieldSet):
     price: float | None = None
     discount: float | None = None
     percentage: float | None = None
 
 
-class Price(BaseModel):
-    net_price: float = Field(
-        ..., serialization_alias="netPrice", validation_alias=AliasChoices("net_price", "netPrice")
-    )
-    total_price: float = Field(
-        ..., serialization_alias="totalPrice", validation_alias=AliasChoices("total_price", "totalPrice")
-    )
-    calculated_taxes: dict[str, Any] | None = Field(
-        default=None,
-        serialization_alias="calculatedTaxes",
-        validation_alias=AliasChoices("calculated_taxes", "calculatedTaxes"),
-    )
-    tax_rules: dict[str, Any] | None = Field(
-        default=None, serialization_alias="taxRules", validation_alias=AliasChoices("tax_rules", "taxRules")
-    )
-    position_price: float = Field(
-        ..., serialization_alias="positionPrice", validation_alias=AliasChoices("position_price", "positionPrice")
-    )
-    raw_total: float = Field(
-        ..., serialization_alias="rawTotal", validation_alias=AliasChoices("raw_total", "rawTotal")
-    )
-    tax_status: str = Field(
-        ..., serialization_alias="taxStatus", validation_alias=AliasChoices("tax_status", "taxStatus")
-    )
+class Price(BaseFieldSet):
+    net_price: float
+    total_price: float
+    calculated_taxes: list[dict[str, Any]] | None = None
+    tax_rules: list[dict[str, Any]] | None = None
+    position_price: float
+    raw_total: float
+    tax_status: str
 
 
-class RegulationPrice(BaseModel):
+class RegulationPrice(BaseFieldSet):
     price: float | None = None
 
 
-class Rounding(BaseModel):
+class Rounding(BaseFieldSet):
     decimals: int | None = None
     interval: float | None = None
-    round_for_net: bool | None = Field(
-        default=None, serialization_alias="roundForNet", validation_alias=AliasChoices("round_for_net", "roundForNet")
-    )
+    round_for_net: bool | None = None
 
 
-class Amount(BaseModel):
-    unit_price: float = Field(
-        ..., serialization_alias="unitPrice", validation_alias=AliasChoices("unit_price", "unitPrice")
-    )
-    total_price: float = Field(
-        ..., serialization_alias="totalPrice", validation_alias=AliasChoices("total_price", "totalPrice")
-    )
+class Amount(BaseFieldSet):
+    unit_price: float
+    total_price: float
     quantity: int
-    calculated_taxes: dict[str, Any] | None = Field(
-        default=None,
-        serialization_alias="calculatedTaxes",
-        validation_alias=AliasChoices("calculated_taxes", "calculatedTaxes"),
-    )
-    tax_rules: dict[str, Any] | None = Field(
-        default=None, serialization_alias="taxRules", validation_alias=AliasChoices("tax_rules", "taxRules")
-    )
-    reference_price: dict[str, Any] | None = Field(
-        default=None,
-        serialization_alias="referencePrice",
-        validation_alias=AliasChoices("reference_price", "referencePrice"),
-    )
-    list_price: ListPrice | None = Field(
-        default=None, serialization_alias="listPrice", validation_alias=AliasChoices("list_price", "listPrice")
-    )
-    regulation_price: RegulationPrice | None = Field(
-        default=None,
-        serialization_alias="regulationPrice",
-        validation_alias=AliasChoices("regulation_price", "regulationPrice"),
-    )
+    calculated_taxes: list[dict[str, Any]] | None = None
+    tax_rules: list[dict[str, Any]] | None = None
+    reference_price: dict[str, Any] | None = None
+    list_price: ListPrice | None = None
+    regulation_price: RegulationPrice | None = None
