@@ -27,6 +27,7 @@ class OrderBase(ApiModelBase[EndpointClass]):
     tax_status: str | None = Field(default=None, exclude=True)
     shipping_costs: Amount | None = None
     shipping_total: float | None = Field(default=None, exclude=True)
+    order_customer: "OrderCustomer"
     currency_factor: float
     deep_link_code: str | None = None
     affiliate_code: str | None = None
@@ -44,7 +45,6 @@ class OrderBase(ApiModelBase[EndpointClass]):
 
 class OrderRelations:
     state: ForeignRelation["StateMachineState"]
-    order_customer: ManyRelation["OrderCustomer"]
     currency: ForeignRelation["Currency"]
     language: ForeignRelation["Language"]
     sales_channel: ForeignRelation["SalesChannel"]
