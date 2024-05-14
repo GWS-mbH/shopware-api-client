@@ -32,6 +32,7 @@ class ConfigBase:
 class ClientBase:
     api_url: str
     raw: bool
+    language_id: IdField | None = None
 
     def __init__(self, config: ConfigBase, raw: bool = False):
         self.api_url = config.url
@@ -62,9 +63,13 @@ class ClientBase:
     def _get_client(self) -> httpx.AsyncClient:
         raise NotImplementedError()
 
-    @staticmethod
-    def _get_headers() -> dict[str, str]:
-        return {"Content-Type": "application/json", "Accept": "application/json"}
+    def _get_headers(self) -> dict[str, str]:
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+
+        if self.language_id is not None:
+            headers["sw-language-id"] = str(self.language_id)
+
+        return headers
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
@@ -141,6 +146,9 @@ class ClientBase:
         self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
+    
+    def set_language(self, language_id: IdField | None) -> None:
+        self.language_id = language_id
 
 
 class ApiModelBase(BaseModel, Generic[EndpointClass]):
