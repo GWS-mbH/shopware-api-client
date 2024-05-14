@@ -195,10 +195,11 @@ class AdminEndpoints:
         async for custom_entity in self.custom_entity.iter():
             assert(isinstance(custom_entity, CustomEntity))
             fields: dict[str, Any] = {}
-            field_type: Any = str
-            field_appendix = ""
 
             for field in custom_entity.fields:
+                field_type: Any = str
+                field_appendix = ""
+
                 match field["type"]:
                     case "int":
                         field_type = int
