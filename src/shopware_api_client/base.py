@@ -300,12 +300,12 @@ class EndpointBase(Generic[ModelClass]):
     @overload
     def _parse_response(self, data: list[dict[str, Any]]) -> list[ModelClass]:
         # typing overload
-        pass
+        ...
 
     @overload
     def _parse_response(self, data: dict[str, Any]) -> ModelClass:
         # typing overload
-        pass
+        ...
 
     def _parse_response(self, data: list[dict[str, Any]] | dict[str, Any]) -> list[ModelClass] | ModelClass:
         single = False
@@ -317,12 +317,7 @@ class EndpointBase(Generic[ModelClass]):
         result_list: list[ModelClass] = []
 
         for entry in data:
-            api_type = entry.get("type", None)
-
-            if api_type is None:
-                model_class = self.model_class
-            else:
-                model_class = getattr(self.client, api_type).model_class
+            model_class = self.model_class
 
             if "attributes" in entry:
                 obj = model_class(client=self.client, id=entry["id"], **entry["attributes"])
@@ -454,7 +449,7 @@ class EndpointBase(Generic[ModelClass]):
         self._includes.update({self._serialize_field_name(field): data for field, data in kwargs.items()})
         return self
 
-    def filter(self, **kwargs: str) -> Self:
+    def filter(self, **kwargs: Any) -> Self:
         for key, value in kwargs.items():
             filter_term = ""
             filter_type = "equals"

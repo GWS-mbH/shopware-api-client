@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField, Price
+from ...base_fields import Amount, IdField
 from ...relations import ForeignRelation, ManyRelation
 
 
@@ -29,7 +29,7 @@ class OrderLineItemBase(ApiModelBase[EndpointClass]):
     stackable: bool | None = None
     position: int
     states: list[str]
-    price: Price
+    price: Amount
     price_definition: dict[str, Any] | None = None
     unit_price: float | None = None
     total_price: float | None = None
