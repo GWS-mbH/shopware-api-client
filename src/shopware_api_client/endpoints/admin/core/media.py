@@ -60,6 +60,7 @@ class MediaRelations:
 
 class Media(MediaBase["MediaEndpoint"], MediaRelations):
     async def upload_file(self, file_extension: str = "jpg", file_name: str | None = None, url: str | None = None, file: bytes | None = None) -> bool:
+        assert self.id is not None
         return await self._get_endpoint().upload(self.id, file_extension=file_extension, file_name=file_name, url=url, file=file)
     
 
