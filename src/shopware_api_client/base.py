@@ -123,16 +123,19 @@ class ClientBase:
 
     async def post(self, relative_url: str, **kwargs: Any) -> httpx.Response:
         # we need to set a response type, otherwise we don't get one
-        relative_url += "?_response=basic"
+        relative_url += "?_response=basic" if "?" not in relative_url else "&_response=basic"
         return await self._make_request(method="POST", relative_url=relative_url, **kwargs)
 
     async def patch(self, relative_url: str, **kwargs: Any) -> httpx.Response:
         # we need to set a reponse type, otherwise we don't get one
-        relative_url += "?_response=basic"
+        relative_url += "?_response=basic" if "?" not in relative_url else "&_response=basic"
         return await self._make_request(method="PATCH", relative_url=relative_url, **kwargs)
 
     async def delete(self, relative_url: str, **kwargs: Any) -> httpx.Response:
         return await self._make_request(method="DELETE", relative_url=relative_url, **kwargs)
+    
+    async def upload(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+        return await self._make_request(method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"} ,**kwargs)
 
     async def close(self) -> None:
         await self._get_client().aclose()

@@ -39,7 +39,10 @@ from .core.language import Language, LanguageEndpoint
 from .core.locale import Locale, LocaleEndpoint
 from .core.main_category import MainCategory, MainCategoryEndpoint
 from .core.media import Media, MediaEndpoint
+from .core.media_folder import MediaFolder, MediaFolderEndpoint
+from .core.media_folder_configuration import MediaFolderConfiguration, MediaFolderConfigurationEndpoint
 from .core.media_thumbnail import MediaThumbnail, MediaThumbnailEndpoint
+from .core.media_thumbnail_size import MediaThumbnailSize, MediaThumbnailSizeEndpoint
 from .core.order import Order, OrderEndpoint
 from .core.order_address import OrderAddress, OrderAddressEndpoint
 from .core.order_customer import OrderCustomer, OrderCustomerEndpoint
@@ -130,7 +133,10 @@ __all__ = [
     "Locale",
     "MainCategory",
     "Media",
+    "MediaFolder",
+    "MediaFolderConfiguration",
     "MediaThumbnail",
+    "MediaThumbnailSize",
     "Order",
     "OrderAddress",
     "OrderCustomer",
@@ -279,7 +285,10 @@ class AdminEndpoints:
         self.locale = LocaleEndpoint(client)
         self.main_category = MainCategoryEndpoint(client)
         self.media = MediaEndpoint(client)
+        self.media_folder = MediaFolderEndpoint(client)
+        self.media_folder_configuration = MediaFolderConfigurationEndpoint(client)
         self.media_thumbnail = MediaThumbnailEndpoint(client)
+        self.media_thumbnail_size = MediaThumbnailSizeEndpoint(client)
         self.order = OrderEndpoint(client)
         self.order_address = OrderAddressEndpoint(client)
         self.order_customer = OrderCustomerEndpoint(client)
