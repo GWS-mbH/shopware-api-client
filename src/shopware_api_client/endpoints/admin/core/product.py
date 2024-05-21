@@ -71,7 +71,7 @@ class ProductBase(ApiModelBase[EndpointClass]):
     custom_fields: dict[str, Any] | None = None
     slot_config: dict[str, Any] | None = None
     custom_search_keywords: list[str] | None = None
-    available_stock: int | None = None
+    available_stock: int | None = Field(default=None, exclude=True)
     stock: int
     translated: dict[str, Any] | None = None
 
