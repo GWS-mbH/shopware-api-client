@@ -11,7 +11,7 @@ class MediaBase(ApiModelBase[EndpointClass]):
     _identifier: str = "media"
 
     user_id: IdField | None = None
-    media_folder_id: IdField | None = Field(default=None, exclude=True)
+    media_folder_id: IdField | None = Field(default=None)
     mime_type: str | None = Field(default=None, exclude=True)
     file_extension: str | None = Field(default=None, exclude=True)
     uploaded_at: AwareDatetime | None = Field(default=None, exclude=True)
@@ -24,7 +24,7 @@ class MediaBase(ApiModelBase[EndpointClass]):
     title: str | None = None
     url: str | None = Field(default=None, description="Runtime field, cannot be used as part of the criteria.")
     path: str | None = Field(default=None, exclude=True)
-    has_file: bool | None = Field(None, description="Runtime field, cannot be used as part of the criteria.")
+    has_file: bool | None = Field(default=None, description="Runtime field, cannot be used as part of the criteria.")
     private: bool | None = False
     custom_fields: dict[str, Any] | None = None
     translated: dict[str, Any] | None = None
@@ -40,6 +40,7 @@ class MediaRelations:
     product_downloads: ManyRelation["ProductDownload"]
     order_line_item_downloads: ManyRelation["OrderLineItemDownload"]
     avatar_users: ManyRelation["Media"]
+    media_folder: ForeignRelation["MediaFolder"]
     property_group_options: ManyRelation["PropertyGroupOption"]
     document_base_configs: ManyRelation["DocumentBaseConfig"]
     shipping_methods: ManyRelation["ShippingMethod"]
@@ -53,7 +54,7 @@ class MediaRelations:
 
     """
     Todo:
-    media_folder[MediaFolder], mail_template_media[MailTemplateMedia], app_payment_methods[AppPaymentMethod],
+    mail_template_media[MailTemplateMedia], app_payment_methods[AppPaymentMethod],
     app_shipping_methods[AppShippingMethod]
     """
 
@@ -93,6 +94,7 @@ from .cms_page import CmsPage  # noqa: E402
 from .cms_section import CmsSection  # noqa: E402
 from .document import Document  # noqa: E402
 from .document_base_config import DocumentBaseConfig  # noqa: E402
+from .media_folder import MediaFolder  # noqa: E402
 from .media_thumbnail import MediaThumbnail  # noqa: E402
 from .order_line_item import OrderLineItem  # noqa: E402
 from .order_line_item_download import OrderLineItemDownload  # noqa: E402

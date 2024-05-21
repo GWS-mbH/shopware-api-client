@@ -24,7 +24,7 @@ class MediaFolderRelations:
     parent: ForeignRelation["MediaFolder"]
     children: ManyRelation["MediaFolder"]
     media: ManyRelation["Media"]
-    default_folder: ForeignRelation["MediaFolder"]
+    default_folder: ForeignRelation["MediaDefaultFolder"]
     configuration: ForeignRelation["MediaFolderConfiguration"]
     
 
@@ -39,4 +39,5 @@ class MediaFolderEndpoint(EndpointBase[MediaFolder]):
 
 
 from .media import Media  # noqa: E402
+from .media_default_folder import MediaDefaultFolder  # noqa: E402
 from .media_folder_configuration import MediaFolderConfiguration  # noqa: E402

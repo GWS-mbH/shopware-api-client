@@ -39,6 +39,7 @@ from .core.language import Language, LanguageEndpoint
 from .core.locale import Locale, LocaleEndpoint
 from .core.main_category import MainCategory, MainCategoryEndpoint
 from .core.media import Media, MediaEndpoint
+from .core.media_default_folder import MediaDefaultFolder, MediaDefaultFolderEndpoint
 from .core.media_folder import MediaFolder, MediaFolderEndpoint
 from .core.media_folder_configuration import MediaFolderConfiguration, MediaFolderConfigurationEndpoint
 from .core.media_thumbnail import MediaThumbnail, MediaThumbnailEndpoint
@@ -133,6 +134,7 @@ __all__ = [
     "Locale",
     "MainCategory",
     "Media",
+    "MediaDefaultFolder",
     "MediaFolder",
     "MediaFolderConfiguration",
     "MediaThumbnail",
@@ -285,6 +287,7 @@ class AdminEndpoints:
         self.locale = LocaleEndpoint(client)
         self.main_category = MainCategoryEndpoint(client)
         self.media = MediaEndpoint(client)
+        self.media_default_folder = MediaDefaultFolderEndpoint(client)
         self.media_folder = MediaFolderEndpoint(client)
         self.media_folder_configuration = MediaFolderConfigurationEndpoint(client)
         self.media_thumbnail = MediaThumbnailEndpoint(client)
