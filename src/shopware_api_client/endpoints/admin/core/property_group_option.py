@@ -8,8 +8,8 @@ from ...relations import ForeignRelation, ManyRelation
 class PropertyGroupOptionBase(ApiModelBase[EndpointClass]):
     _identifier: str = "property_group_option"
 
-    group_id: IdField
-    name: str
+    group_id: IdField | None = None
+    name: str | None = None
     position: int | None = None
     color_hex_code: str | None = None
     media_id: IdField | None = None
