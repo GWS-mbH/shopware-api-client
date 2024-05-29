@@ -76,6 +76,7 @@ from .core.product_review import ProductReview, ProductReviewEndpoint
 from .core.product_search_keyword import ProductSearchKeyword, ProductSearchKeywordEndpoint
 from .core.product_stream import ProductStream, ProductStreamEndpoint
 from .core.product_visibility import ProductVisibility, ProductVisibilityEndpoint
+from .core.product_warehouse import ProductWarehouse, ProductWarehouseEndpoint
 from .core.promotion import Promotion, PromotionEndpoint
 from .core.promotion_discount import PromotionDiscount, PromotionDiscountEndpoint
 from .core.promotion_discount_prices import PromotionDiscountPrices, PromotionDiscountPricesEndpoint
@@ -98,6 +99,7 @@ from .core.tax_rule import TaxRule, TaxRuleEndpoint
 from .core.tax_rule_type import TaxRuleType, TaxRuleTypeEndpoint
 from .core.unit import Unit, UnitEndpoint
 from .core.user import User, UserEndpoint
+from .core.warehouse import Warehouse, WarehouseEndpoint
 
 __all__ = [
     "AclRole",
@@ -165,6 +167,7 @@ __all__ = [
     "ProductSearchKeyword",
     "ProductStream",
     "ProductVisibility",
+    "ProductWarehouse",
     "Promotion",
     "PromotionDiscount",
     "PromotionDiscountPrices",
@@ -187,6 +190,7 @@ __all__ = [
     "TaxRuleType",
     "Unit",
     "User",
+    "Warehouse",
 ]
 
 
@@ -318,6 +322,7 @@ class AdminEndpoints:
         self.product_search_keyword = ProductSearchKeywordEndpoint(client)
         self.product_stream = ProductStreamEndpoint(client)
         self.product_visibility = ProductVisibilityEndpoint(client)
+        self.product_warehouse = ProductWarehouseEndpoint(client)
         self.promotion = PromotionEndpoint(client)
         self.promotion_discount = PromotionDiscountEndpoint(client)
         self.promotion_discount_prices = PromotionDiscountPricesEndpoint(client)
@@ -340,3 +345,4 @@ class AdminEndpoints:
         self.tax_rule_type = TaxRuleTypeEndpoint(client)
         self.unit = UnitEndpoint(client)
         self.user = UserEndpoint(client)
+        self.warehouse = WarehouseEndpoint(client)
