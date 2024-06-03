@@ -71,6 +71,16 @@ class ClientBase:
 
         return headers
 
+    @property
+    def timeout(self) -> httpx.Timeout:
+        client = self._get_client()
+        return client.timeout
+
+    @timeout.setter
+    def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
+        client = self._get_client()
+        client.timeout = timeout  # type: ignore 
+
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
             url = relative_url
