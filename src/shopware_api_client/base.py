@@ -308,7 +308,13 @@ class EndpointBase(Generic[ModelClass]):
         self._includes = {}
 
     def _serialize_field_name(self, name: str) -> str:
-        return self.model_class.model_fields[name].serialization_alias or name
+        from .endpoints.relations import ForeignRelation, ManyRelation
+        field = self.model_class.model_fields[name]
+
+        if get_origin(field.annotation) in [ForeignRelation, ManyRelation]:
+            return to_camel(name)
+        else:
+            return self.model_class.model_fields[name].serialization_alias or name
 
     @overload
     def _parse_response(self, data: list[dict[str, Any]]) -> list[ModelClass]:
