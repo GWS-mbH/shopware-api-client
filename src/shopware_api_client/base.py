@@ -309,6 +309,11 @@ class EndpointBase(Generic[ModelClass]):
 
     def _serialize_field_name(self, name: str) -> str:
         from .endpoints.relations import ForeignRelation, ManyRelation
+
+        # if a model contains ForwardRefs it may be not complete and missing some aliases
+        if not self.model_class.__pydantic_complete__:
+            self.model_class.model_rebuild()
+
         field = self.model_class.model_fields[name]
 
         if get_origin(field.annotation) in [ForeignRelation, ManyRelation]:

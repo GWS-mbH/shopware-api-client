@@ -1,7 +1,5 @@
 from typing import Any
 
-from pydantic import Field
-
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
@@ -14,14 +12,14 @@ class ShippingMethodBase(ApiModelBase[EndpointClass]):
     active: bool | None = None
     position: int | None = None
     custom_fields: dict[str, Any] | None = None
-    availability_rule_id: IdField
+    availability_rule_id: IdField | None = None
     media_id: IdField | None = None
     delivery_time_id: IdField
     tax_type: str
     tax_id: IdField | None = None
     description: str | None = None
     tracking_url: str | None = None
-    technical_name: str | None = Field(default=None, exclude=True)
+    technical_name: str | None
     translated: dict[str, Any] | None = None
 
 
