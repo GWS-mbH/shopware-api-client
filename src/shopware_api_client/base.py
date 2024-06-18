@@ -273,6 +273,7 @@ class EndpointBase(Generic[ModelClass]):
         self.raw = client.raw
         self._filter: list[dict[str, Any]] = []
         self._limit: int | None = None
+        self._page: int | None = None
         self._sort: list[dict[str, Any]] = []
         self._associations: dict[str, dict[str, Any]] = {}
         self._includes: dict[str, list[str]] = {}
@@ -292,6 +293,9 @@ class EndpointBase(Generic[ModelClass]):
         if self._limit is not None:
             data["limit"] = self._limit
 
+        if self._page is not None:
+            data["page"] = self._page
+
         if self._associations:
             data["associations"] = self._associations
 
@@ -303,6 +307,7 @@ class EndpointBase(Generic[ModelClass]):
     def _reset_endpoint(self) -> None:
         self._filter = []
         self._limit = None
+        self._page = None
         self._sort = []
         self._associations = {}
         self._includes = {}
@@ -544,6 +549,10 @@ class EndpointBase(Generic[ModelClass]):
 
     def limit(self, count: int | None) -> "Self":
         self._limit = count
+        return self
+    
+    def page(self, num: int | None) -> "Self":
+        self._page = num
         return self
 
     def order_by(self, fields: str | tuple[str]) -> "Self":
