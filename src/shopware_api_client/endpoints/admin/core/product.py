@@ -1,6 +1,7 @@
 from typing import Any
 
 from pydantic import AwareDatetime, Field, field_validator
+from pydantic_core.core_schema import FieldValidationInfo
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import IdField
@@ -76,17 +77,17 @@ class ProductBase(ApiModelBase[EndpointClass]):
     translated: dict[str, Any] | None = None
 
     @field_validator('name')
-    def ensure_name_or_parent(cls, value, info, **kwargs):
+    def ensure_name_or_parent(cls, value: Any, info: FieldValidationInfo, **kwargs: Any) -> None:
         if value is None and info.data['parent_id'] is None:
             raise ValueError('name may only be empty if parent_id is set')
 
     @field_validator('tax_id')
-    def ensure_tax_id_or_parent(cls, value, info, **kwargs):
+    def ensure_tax_id_or_parent(cls, value: Any, info: FieldValidationInfo, **kwargs: Any) -> None:
         if value is None and info.data['parent_id'] is None:
             raise ValueError('tax_id may only be empty if parent_id is set')
 
     @field_validator('price')
-    def ensure_price_or_parent(cls, value, info, **kwargs):
+    def ensure_price_or_parent(cls, value: Any, info: FieldValidationInfo, **kwargs: Any) -> None:
         if value is None and info.data['parent_id'] is None:
             raise ValueError('price may only be empty if parent_id is set')
 
