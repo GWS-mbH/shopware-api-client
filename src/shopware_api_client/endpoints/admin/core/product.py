@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, field_validator
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import IdField
@@ -16,7 +16,7 @@ class ProductBase(ApiModelBase[EndpointClass]):
     manufacturer_id: IdField | None = None
     product_manufacturer_version_id: IdField | None = None
     unit_id: IdField | None = None
-    tax_id: IdField
+    tax_id: IdField | None = None
     cover_id: IdField | None = None
     product_media_version_id: IdField | None = None
     delivery_time_id: IdField | None = None
@@ -24,7 +24,7 @@ class ProductBase(ApiModelBase[EndpointClass]):
     canonical_product_id: IdField | None = None
     cms_page_id: IdField | None = None
     cms_page_version_id: IdField | None = None
-    price: list[dict[str, Any]]
+    price: list[dict[str, Any]] | None = None
     product_number: str
     restock_time: int | None = None
     auto_increment: int | None = Field(default=None, exclude=True)
@@ -62,7 +62,7 @@ class ProductBase(ApiModelBase[EndpointClass]):
     sales: int | None = Field(default=None, exclude=True)
     states: list[str] | None = Field(default=None, exclude=True)
     meta_description: str | None = None
-    name: str
+    name: str | None = None
     keywords: str | None = None
     description: str | None = None
     meta_title: str | None = None
@@ -75,6 +75,20 @@ class ProductBase(ApiModelBase[EndpointClass]):
     stock: int | None = None
     translated: dict[str, Any] | None = None
 
+    @field_validator('name')
+    def ensure_name_or_parent(cls, value, info, **kwargs):
+        if value is None and info.data['parent_id'] is None:
+            raise ValueError('name may only be empty if parent_id is set')
+
+    @field_validator('tax_id')
+    def ensure_tax_id_or_parent(cls, value, info, **kwargs):
+        if value is None and info.data['parent_id'] is None:
+            raise ValueError('tax_id may only be empty if parent_id is set')
+
+    @field_validator('price')
+    def ensure_price_or_parent(cls, value, info, **kwargs):
+        if value is None and info.data['parent_id'] is None:
+            raise ValueError('price may only be empty if parent_id is set')
 
 class ProductRelations:
     downloads: ManyRelation["ProductDownload"]
