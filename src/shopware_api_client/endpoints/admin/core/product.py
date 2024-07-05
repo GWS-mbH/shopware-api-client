@@ -77,19 +77,25 @@ class ProductBase(ApiModelBase[EndpointClass]):
     translated: dict[str, Any] | None = None
 
     @field_validator('name')
-    def ensure_name_or_parent(cls, value: Any, info: FieldValidationInfo, **kwargs: Any) -> None:
+    def ensure_name_or_parent(cls, value: str | None, info: FieldValidationInfo, **kwargs: Any) -> str | None:
         if value is None and info.data['parent_id'] is None:
             raise ValueError('name may only be empty if parent_id is set')
 
+        return value
+
     @field_validator('tax_id')
-    def ensure_tax_id_or_parent(cls, value: Any, info: FieldValidationInfo, **kwargs: Any) -> None:
+    def ensure_tax_id_or_parent(cls, value: IdField | None, info: FieldValidationInfo, **kwargs: Any) -> IdField | None:
         if value is None and info.data['parent_id'] is None:
             raise ValueError('tax_id may only be empty if parent_id is set')
 
+        return value
+
     @field_validator('price')
-    def ensure_price_or_parent(cls, value: Any, info: FieldValidationInfo, **kwargs: Any) -> None:
+    def ensure_price_or_parent(cls, value: list[dict[str, Any]] | None, info: FieldValidationInfo, **kwargs: Any) -> list[dict[str, Any]] | None:
         if value is None and info.data['parent_id'] is None:
             raise ValueError('price may only be empty if parent_id is set')
+
+        return value
 
 class ProductRelations:
     downloads: ManyRelation["ProductDownload"]
