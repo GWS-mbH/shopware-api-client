@@ -38,6 +38,7 @@ class SWAPIError(SWAPIException):
         self.description = kwargs.get("description", "")
         self.source = kwargs.get("source", {})
         self.meta = kwargs.get("meta", {})
+        self.headers = kwargs.get("headers", {})
 
     def __str__(self) -> str:
         return f"Status: {self.status} {self.title} - {self.detail} - {self.source}"
@@ -60,6 +61,8 @@ class SWAPIError(SWAPIException):
                 return SWAPIMethodNotAllowed
             case 412:
                 return SWAPIPreconditionFailed
+            case 429:
+                return SWAPITooManyRequests
             case 500:
                 return SWAPIInternalServerError
             case 501:
@@ -88,7 +91,7 @@ class SWAPIError(SWAPIException):
     @classmethod
     def from_response(cls, response: Response) -> "SWAPIError":
         exception_class = cls.get_exception_class(response.status_code)
-        return exception_class(status=response.status_code, title=response.reason_phrase, detail=response.text)
+        return exception_class(status=response.status_code, title=response.reason_phrase, detail=response.text, headers=response.headers)
 
 
 class SWAPIErrorList(SWAPIException):
@@ -127,6 +130,10 @@ class SWAPIMethodNotAllowed(SWAPIError):
 
 
 class SWAPIPreconditionFailed(SWAPIError):
+    pass
+
+
+class SWAPITooManyRequests(SWAPIError):
     pass
 
 

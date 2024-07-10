@@ -15,6 +15,7 @@ from .exceptions import (
     SWAPIGatewayTimeout,
     SWAPIInternalServerError,
     SWAPIServiceUnavailable,
+    SWAPITooManyRequests,
     SWFilterException,
     SWNoClientProvided,
 )
@@ -95,7 +96,7 @@ class ClientBase:
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
-        no_retry_errors = tuple(kwargs.pop("no_retry_errors", []))
+        no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPITooManyRequests]))
 
         retry_count = 0
         while True:
