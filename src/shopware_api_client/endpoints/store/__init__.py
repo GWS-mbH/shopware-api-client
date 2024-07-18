@@ -5,12 +5,10 @@ if TYPE_CHECKING:
 
 
 from .core.address import Address, AddressEndpoint
-from .core.cart import Cart, CartEndpoint
 
-__all__ = ["Address", "Cart"]
+__all__ = ["Address"]
 
 
 class StoreEndpoints:
     def init_endpoints(self, client: "StoreClient") -> None:
         self.address = AddressEndpoint(client)
-        self.cart = CartEndpoint(client)
