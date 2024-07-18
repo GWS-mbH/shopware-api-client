@@ -54,7 +54,7 @@ class CartEndpoint(EndpointBase[Cart]):
     data_key = "elements"
 
 
-    async def get(self) -> Cart:
+    async def first(self) -> Cart:
         result = await self.client.get(self.path)
         result_data: dict[str, Any] = result.json()
         return self._parse_response(result_data)
