@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import AwareDatetime
+from pydantic import AwareDatetime, Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import Amount, IdField
@@ -16,7 +16,7 @@ class OrderDeliveryBase(ApiModelBase[EndpointClass]):
     shipping_order_address_id: IdField
     shipping_order_address_version_id: IdField | None = None
     shipping_method_id: IdField
-    state_id: IdField
+    state_id: IdField = Field(..., exclude=True)
     tracking_codes: list[str]
     shipping_date_earliest: AwareDatetime
     shipping_date_latest: AwareDatetime

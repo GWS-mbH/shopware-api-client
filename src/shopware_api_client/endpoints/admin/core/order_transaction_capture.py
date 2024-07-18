@@ -1,5 +1,7 @@
 from typing import Any
 
+from pydantic import Field
+
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import Amount, IdField
 from ...relations import ForeignRelation, ManyRelation
@@ -11,7 +13,7 @@ class OrderTransactionCaptureBase(ApiModelBase[EndpointClass]):
     version_id: IdField | None = None
     order_transaction_id: IdField
     order_transaction_version_id: IdField | None = None
-    state_id: IdField
+    state_id: IdField = Field(..., exclude=True)
     external_reference: str | None = None
     amount: Amount
     custom_fields: dict[str, Any] | None = None

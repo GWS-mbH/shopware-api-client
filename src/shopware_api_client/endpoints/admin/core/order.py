@@ -34,7 +34,7 @@ class OrderBase(ApiModelBase[EndpointClass]):
     campaign_code: str | None = None
     customer_comment: str | None = None
     source: str | None = None
-    state_id: IdField
+    state_id: IdField = Field(..., exclude=True)
     rule_ids: list[str] | None = None
     custom_fields: dict[str, Any] | None = None
     created_by_id: IdField | None = None
