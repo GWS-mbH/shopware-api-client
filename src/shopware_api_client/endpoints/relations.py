@@ -4,7 +4,7 @@ from pydantic import GetCoreSchemaHandler, ValidationInfo
 from pydantic.alias_generators import to_camel
 from pydantic_core import SchemaValidator, core_schema
 
-from ..base import ApiModelBase, ModelClass
+from ..base import ApiModelBase, ClientBase, ModelClass
 
 
 class ForeignRelation(Generic[ModelClass]):
@@ -12,6 +12,10 @@ class ForeignRelation(Generic[ModelClass]):
         self.field_name: str = field_name
         self.data: ModelClass | None = data
         self.changed: bool = False
+
+    def _ensure_client(self, client: ClientBase | None) -> None:
+        if self.data is not None and self.data._client is None:
+            self.data._client = client
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
@@ -47,6 +51,7 @@ class ForeignRelation(Generic[ModelClass]):
     async def _get(self, instance: "ApiModelBase[Any]") -> ModelClass | None:
         related_id = getattr(instance, f"{self.field_name}_id")
         if self.data is not None or related_id is None:
+            self._ensure_client(instance._client)
             return self.data
 
         model_class: type[ModelClass] = get_args(instance.model_fields[self.field_name].annotation)[0]
@@ -75,6 +80,12 @@ class ManyRelation(Generic[ModelClass]):
         self.field_name: str = field_name
         self.data: list[ModelClass] | None = data
         self.changed: bool = False
+
+    def _ensure_client(self, client: ClientBase | None) -> None:
+        if self.data is not None:
+            for elem in self.data:
+                if elem._client is None:
+                    elem._client = client
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
@@ -112,6 +123,7 @@ class ManyRelation(Generic[ModelClass]):
     async def _get(self, instance: "ApiModelBase[Any]") -> list[ModelClass] | None:
         api_link = to_camel(self.field_name)
         if self.data is not None:
+            self._ensure_client(instance._client)
             return self.data
 
         model_class: type[ModelClass] = get_args(instance.model_fields[self.field_name].annotation)[0]
