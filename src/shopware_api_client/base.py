@@ -6,6 +6,7 @@ from typing import Any, AsyncGenerator, Callable, Generic, Self, Type, TypeVar, 
 import httpx
 from pydantic import AliasChoices, AliasGenerator, AwareDatetime, BaseModel, ConfigDict, Field, model_serializer
 from pydantic.alias_generators import to_camel
+from pydantic.main import IncEx
 
 from .endpoints.base_fields import IdField
 from .exceptions import (
@@ -243,13 +244,13 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
         endpoint: EndpointClass = getattr(self._get_client(), self._identifier).__class__(self._get_client())  # type: ignore
         return endpoint
 
-    async def save(self, force_insert: bool = False) -> Self | dict | None:
+    async def save(self, force_insert: bool = False, update_fields: IncEx = None) -> Self | dict | None:
         endpoint = self._get_endpoint()
 
         if force_insert or self.id is None:
             result = await endpoint.create(obj=self)
         else:
-            result = await endpoint.update(pk=self.id, obj=self)
+            result = await endpoint.update(pk=self.id, obj=self, update_fields=update_fields)
 
         return result
 
@@ -405,9 +406,9 @@ class EndpointBase(Generic[ModelClass]):
 
         return self._parse_response(result_data)
 
-    async def update(self, pk: str, obj: ModelClass | dict[str, Any]) -> ModelClass | dict[str, Any] | None:
+    async def update(self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx = None) -> ModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
-            data = obj.model_dump_json(by_alias=True)
+            data = obj.model_dump_json(by_alias=True, include=update_fields)
         else:
             data = json.dumps(obj)
 
