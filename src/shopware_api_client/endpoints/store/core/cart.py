@@ -1,35 +1,31 @@
 from typing import Any
 
-from shopware_api_client.base import ApiModelBase, EndpointBase
+from shopware_api_client.base import ApiModelBase, EndpointBase, EndpointClass
+from shopware_api_client.endpoints.base_fields import IdField
 
 
-class LineItem(ApiModelBase["CartEndpoint"]):
+class LineItem(ApiModelBase[EndpointClass]):
     _identifier: str = "cart_line_item"
     
     payload: dict[str, Any]
     label: str
     quantity: int
-    priceDefinition: dict[str, Any]
+    price_definition: dict[str, Any]
     price: dict[str, Any]
     good: bool
     description: str
     cover: Any
-    deliveryInformation: dict[str, Any]
-    chidlren: list[Any]
-    # requirement: ?
+    delivery_information: dict[str, Any]
+    children: list[Any]
     removable: bool
     stackable: bool
-    quantityInformation: dict[str, Any]
+    quantity_information: dict[str, Any]
     modified: bool
-    dataTimestamp: str
-    dataContextHash: str
-    uniqueIdentifier: str = "cart_line_item"
+    data_timestamp: str
+    data_context_hash: str
     states: list[str]
-    modifiedByApp: bool
-    id: str
-    type: str
-    referencedId: str
-    apiAlias: str
+    modified_by_app: bool
+    referenced_id: IdField
 
 
 class Cart(ApiModelBase["CartEndpoint"]):
@@ -37,14 +33,14 @@ class Cart(ApiModelBase["CartEndpoint"]):
     
     token: str
     price: dict[str, Any]
-    lineItems: list[dict[str, Any]]
+    line_items: list[dict[str, Any]]
     errors: list[dict[str, Any]]
     deliveries: list[dict[str, Any]]
     transactions: list[dict[str, Any]]
     modified: bool
-    customerComment: str | None = None
-    affiliateCode: str | None = None
-    campaignCode: str | None = None
+    customer_comment: str | None = None
+    affiliate_code: str | None = None
+    campaign_code: str | None = None
 
 
 class CartEndpoint(EndpointBase[Cart]):
