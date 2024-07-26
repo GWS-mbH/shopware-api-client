@@ -1,7 +1,18 @@
 from typing import Any
 
 from shopware_api_client.base import ApiModelBase, EndpointBase, EndpointClass
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, Price
+
+
+class ItemPrice(ApiModelBase[EndpointClass]):
+    unit_price: float
+    quantity: int
+    total_price: float
+    calculated_taxes: list[dict[str, Any]] | None = None
+    tax_rules: list[dict[str, Any]] | None = None
+    reference_price: float | None = None
+    list_price: float | None = None
+    regulation_price: float | None = None
 
 
 class LineItem(ApiModelBase[EndpointClass]):
@@ -11,9 +22,9 @@ class LineItem(ApiModelBase[EndpointClass]):
     label: str
     quantity: int
     price_definition: dict[str, Any]
-    price: dict[str, Any]
+    price: ItemPrice
     good: bool
-    description: str
+    description: str | None = None
     cover: Any
     delivery_information: dict[str, Any]
     children: list[Any]
@@ -28,14 +39,32 @@ class LineItem(ApiModelBase[EndpointClass]):
     referenced_id: IdField
 
 
+class Position(ApiModelBase[EndpointClass]):
+    _identifier: str = "cart_delivery_position"
+    
+    delivery_date: str
+    line_items: list[LineItem]
+    price: ItemPrice
+
+
+class CartDelivery(ApiModelBase[EndpointClass]):
+    _identifier: str = "cart_delivery"
+    
+    delilvery_date: str
+    location: str
+    positions:list[dict[str, Any]]
+    shipping_costs: str
+    shipping_method: str
+
+
 class Cart(ApiModelBase["CartEndpoint"]):
     _identifier: str = "cart"
     
     token: str
-    price: dict[str, Any]
-    line_items: list[dict[str, Any]]
+    price: Price
+    line_items: list[LineItem]
     errors: list[dict[str, Any]]
-    deliveries: list[dict[str, Any]]
+    deliveries: list[dict[str, CartDelivery]]
     transactions: list[dict[str, Any]]
     modified: bool
     customer_comment: str | None = None
