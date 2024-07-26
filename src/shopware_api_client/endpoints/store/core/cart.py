@@ -41,7 +41,8 @@ class ItemPayload(BaseFieldSet):
     parent_id: IdField | None = None
     stock: int
     features: list[dict[str, Any]] | None = None
-    gws_comment: str | None = None
+    custom_fields: dict[str, Any]
+    # gws_comment: str | None = None
 
 
 class LineItem(ApiModelBase[EndpointClass]):
