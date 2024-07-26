@@ -52,7 +52,7 @@ class CartDelivery(ApiModelBase[EndpointClass]):
     
     delilvery_date: str
     location: str
-    positions:list[dict[str, Any]]
+    positions: list[dict[str, Any]]
     shipping_costs: str
     shipping_method: str
 
