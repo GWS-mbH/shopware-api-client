@@ -1,12 +1,12 @@
 from typing import Any
 
-from shopware_api_client.base import ApiModelBase, EndpointBase, EndpointClass
+from shopware_api_client.base import ApiModelBase, EndpointBase
 from shopware_api_client.endpoints.admin.core.country import Country
 from shopware_api_client.endpoints.base_fields import BaseFieldSet, IdField, Price
 from shopware_api_client.endpoints.store.core.address import Address
 
 
-class ItemPrice(ApiModelBase[EndpointClass]):
+class ItemPrice(BaseFieldSet):
     unit_price: float
     quantity: int
     total_price: float
@@ -25,30 +25,8 @@ class ShippingCosts(ItemPrice):
     variant: str | None = None
 
 
-class ItemPayload(BaseFieldSet):
-    is_closeout: bool
-    release_date: str | None = None
-    is_new: bool
-    mark_as_topseller: bool
-    product_number: str
-    manufacturer_id: IdField | None = None
-    tax_id: IdField
-    category_ids: list[IdField]
-    property_ids: list[IdField] | None = None
-    option_ids: list[IdField] | None = None
-    options: list[dict[str, Any]] | None = None
-    stream_ids: list[IdField] | None = None
-    parent_id: IdField | None = None
-    stock: int
-    features: list[dict[str, Any]] | None = None
-    custom_fields: dict[str, Any]
-    # gws_comment: str | None = None
-
-
-class LineItem(ApiModelBase[EndpointClass]):
-    _identifier: str = "cart_line_item"
-    
-    payload: ItemPayload #dict[str, Any]
+class LineItem(BaseFieldSet):
+    payload: dict[str, Any]
     label: str
     quantity: int
     price_definition: dict[str, Any]
