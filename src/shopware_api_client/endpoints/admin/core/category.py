@@ -34,7 +34,7 @@ class CategoryBase(ApiModelBase[EndpointClass]):
     )
     name: str
     custom_fields: dict[str, Any] | None = None
-    slot_config: dict[str, Any] | None = None
+    slot_config: dict[str, Any] | list[Any] | None = None
     link_type: str | None = None
     internal_link: str | None = None
     external_link: str | None = None
