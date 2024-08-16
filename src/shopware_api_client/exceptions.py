@@ -24,7 +24,7 @@ class SWAPIConfigException(SWAPIException):
 
 
 class SWAPIMethodNotAvailable(SWAPIConfigException):
-    def __init__(self, msg: str | None = None, *args: list[Any], **kwargs) -> None:
+    def __init__(self, msg: str | None = None, *args: list[Any], **kwargs: dict[Any, Any]) -> None:
         if not msg:
             msg = "Method unsupported by this Endpoint"
         super().__init__(msg, *args, **kwargs)
