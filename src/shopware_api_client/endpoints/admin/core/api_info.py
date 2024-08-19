@@ -35,21 +35,21 @@ class ApiInfoEndpoint(EndpointBase[ApiInfo]):
     model_class = ApiInfo
 
     async def delete(self, pk: str) -> bool:
-        raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
+        raise SWAPIMethodNotAvailable()
     
     async def get(self, pk: str) -> ApiInfo | dict[str, Any]:
-        raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
+        raise SWAPIMethodNotAvailable()
 
     async def create(self, obj: ApiInfo | dict[str, Any]) -> ApiInfo | dict[str, Any] | None:
-        raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
+        raise SWAPIMethodNotAvailable()
 
     async def update(self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx = None) -> ApiInfo | dict[str, Any] | None:
-        raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
+        raise SWAPIMethodNotAvailable()
 
     async def bulk_upsert(
         self, objs: list[ApiInfo] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any] | None:
-        raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
+        raise SWAPIMethodNotAvailable()
 
     async def bulk_delete(self, objs: list[ApiInfo] | list[dict[str, Any]], **request_kwargs: Any) -> dict[str, Any]:
-        raise SWAPIMethodNotAvailable("Method unsupported by this Endpoint")
+        raise SWAPIMethodNotAvailable()

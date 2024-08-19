@@ -6,6 +6,8 @@ from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
 
+_FILED_DESCRIPTION = "Runtime field, cannot be used as part of the criteria."
+
 
 class PaymentMethodBase(ApiModelBase[EndpointClass]):
     _identifier: str = "payment_method"
@@ -22,24 +24,24 @@ class PaymentMethodBase(ApiModelBase[EndpointClass]):
     availability_rule_id: IdField | None = None
     media_id: IdField | None = None
     formatted_handler_identifier: str | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria.", exclude=True
+        None, description=_FILED_DESCRIPTION, exclude=True
     )
     synchronous: bool | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria.", exclude=True
+        None, description=_FILED_DESCRIPTION, exclude=True
     )
     asynchronous: bool | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria.", exclude=True
+        None, description=_FILED_DESCRIPTION, exclude=True
     )
     prepared: bool | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria.", exclude=True
+        None, description=_FILED_DESCRIPTION, exclude=True
     )
     refundable: bool | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria.", exclude=True
+        None, description=_FILED_DESCRIPTION, exclude=True
     )
     recurring: bool | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria.", exclude=True
+        None, description=_FILED_DESCRIPTION, exclude=True
     )
-    short_name: str | None = Field(None, description="Runtime field, cannot be used as part of the criteria.")
+    short_name: str | None = Field(None, description=_FILED_DESCRIPTION)
     technical_name: str | None = Field(default=None, exclude=True)
     translated: dict[str, Any] | None = None
 
