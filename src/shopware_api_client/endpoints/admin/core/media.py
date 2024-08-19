@@ -70,18 +70,19 @@ class MediaEndpoint(EndpointBase[Media]):
     path = "/media"
     model_class = Media
 
-    async def upload(self, pk: str, file_extension: str = "jpg", file_name: str | None = None, url: str | None = None, file: bytes | None = None) -> bool:
+    async def upload(self, pk: str, file_extension: str = "jpg", file_name: str | None = None, 
+                     url: str | None = None, file: bytes | None = None, **request_kwargs: Any) -> bool:
         api_url = f"/_action/media/{pk}/upload?extension={file_extension}"
 
         if file_name is not None:
             api_url += f"&fileName={file_name}"
 
         if url is not None:
-            response = await self.client.post(api_url, json={"url": url})
+            response = await self.client.post(api_url, json={"url": url}, **request_kwargs)
         elif file is not None:
-            response = await self.client.upload(api_url, data=file)
+            response = await self.client.upload(api_url, data=file, **request_kwargs)
         else:
-            raise ValueError("Either url or bfile must be provided.")
+            raise ValueError("Either url or file must be provided.")
 
         if response.status_code == 204:
             return True
