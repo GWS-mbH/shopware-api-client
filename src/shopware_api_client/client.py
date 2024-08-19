@@ -64,7 +64,9 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         data = {f"write-{name}": {"entity": name, "action": "upsert", "payload": obj_list}}
 
-        response = await self.post("/_action/sync", json=data, timeout=600, **request_kwargs)
+        request_kwargs.setdefault("timeout", 600)
+
+        response = await self.post("/_action/sync", json=data, **request_kwargs)
         result: dict[str, Any] = response.json()
 
         return result
@@ -82,7 +84,9 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         data = {f"delete-{name}": {"entity": name, "action": "delete", "payload": obj_list}}
 
-        response = await self.post("/_action/sync", json=data, timeout=600, **request_kwargs)
+        request_kwargs.setdefault("timeout", 600)
+
+        response = await self.post("/_action/sync", json=data, **request_kwargs)
         result: dict[str, Any] = response.json()
 
         return result
