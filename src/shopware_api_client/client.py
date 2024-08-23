@@ -1,4 +1,5 @@
-from typing import Any
+import json
+from typing import Any, Literal
 
 import httpx
 from httpx_auth import OAuth2ClientCredentials, OAuth2ResourceOwnerPasswordCredentials
@@ -7,7 +8,7 @@ from .base import ApiModelBase, ClientBase, ModelClass
 from .config import AdminConfig, StoreConfig
 from .endpoints.admin import AdminEndpoints
 from .endpoints.store import StoreEndpoints
-from .exceptions import SWAPIConfigException
+from .exceptions import SWAPIConfigException, SWAPIError, SWAPIErrorList
 
 
 class AdminClient(ClientBase, AdminEndpoints):
@@ -50,10 +51,59 @@ class AdminClient(ClientBase, AdminEndpoints):
                 raise SWAPIConfigException("Invalid grant_type for AdminClient.")
 
         return self._client
+    
+    def _merge_results(self, dict1: dict[str, Any], dict2: dict[str, Any]) -> dict[str, Any]:
+        for key in dict2:
+            if key in dict1:
+                if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+                    self._merge_results(dict1[key], dict2[key])
+                elif isinstance(dict1[key], list) and isinstance(dict2[key], list):
+                    dict1[key].extend(dict2[key])
+            else:
+                dict1[key] = dict2[key]
+        return dict1
+
+    async def _retry_bulk_parts(self, action: Literal["upsert", "delete"], name: str, objs: list[ModelClass] | list[dict[str, Any]], 
+                                exception: SWAPIError | SWAPIErrorList, **request_kwargs: Any) -> dict[str, Any]:
+        result_dict: dict[str, Any] = {}
+
+        if isinstance(exception, SWAPIErrorList):
+            errors = exception.errors
+        else:
+            errors = [exception]
+
+        if len(objs) == len(errors):
+            error_list = []
+
+            for idx, obj in enumerate(objs, start=0):
+                if isinstance(obj, ApiModelBase):
+                    obj = json.loads(obj.model_dump_json())
+                
+                error_list.append({
+                    "code": errors[idx].code,
+                    "detail": errors[idx].detail,
+                    "object": obj
+                })
+            return {
+                "errors": error_list
+            }
+        
+        split = int(len(objs) / 2)
+
+        for part in [objs[:split], objs[split:]]:
+            if action == "upsert":
+                result = await self.bulk_upsert(name=name, objs=part, fail_silently=True, **request_kwargs)
+            else:
+                result = await self.bulk_delete(name=name, objs=part, fail_silently=True, **request_kwargs)
+
+            if result is not None:
+                self._merge_results(result_dict, result)
+
+        return result_dict
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
-    ) -> dict[str, Any] | None:
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+    ) -> dict[str, Any]:
         obj_list: list[dict] = []
 
         for obj in objs:
@@ -66,13 +116,20 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         request_kwargs.setdefault("timeout", 600)
 
-        response = await self.post("/_action/sync", json=data, **request_kwargs)
-        result: dict[str, Any] = response.json()
+        try:
+            response = await self.post("/_action/sync", json=data, **request_kwargs)
+        except (SWAPIErrorList, SWAPIError) as e:
+            if not fail_silently:
+                raise
+            
+            result = await self._retry_bulk_parts(action="upsert", name=name, objs=objs, exception=e, **request_kwargs)
+        else:
+            result = response.json()
 
         return result
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], **request_kwargs: Any
+        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         obj_list: list[dict] = []
 
@@ -86,8 +143,15 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         request_kwargs.setdefault("timeout", 600)
 
-        response = await self.post("/_action/sync", json=data, **request_kwargs)
-        result: dict[str, Any] = response.json()
+        try:
+            response = await self.post("/_action/sync", json=data, **request_kwargs)
+        except (SWAPIErrorList, SWAPIError) as e:
+            if not fail_silently:
+                raise
+            
+            result = await self._retry_bulk_parts(action="delete", name=name, objs=objs, exception=e, **request_kwargs)
+        else:
+            result = response.json()
 
         return result
 
