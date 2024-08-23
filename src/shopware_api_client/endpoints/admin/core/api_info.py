@@ -47,9 +47,9 @@ class ApiInfoEndpoint(EndpointBase[ApiInfo]):
         raise SWAPIMethodNotAvailable()
 
     async def bulk_upsert(
-        self, objs: list[ApiInfo] | list[dict[str, Any]], **request_kwargs: Any
-    ) -> dict[str, Any] | None:
+        self, objs: list[ApiInfo] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+    ) -> dict[str, Any]:
         raise SWAPIMethodNotAvailable()
 
-    async def bulk_delete(self, objs: list[ApiInfo] | list[dict[str, Any]], **request_kwargs: Any) -> dict[str, Any]:
+    async def bulk_delete(self, objs: list[ApiInfo] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any) -> dict[str, Any]:
         raise SWAPIMethodNotAvailable()
