@@ -5,6 +5,7 @@ if TYPE_CHECKING:
 
 from .commercial.b2b_components_role import B2bComponentsRole, B2bComponentsRoleEndpoint
 from .commercial.b2b_employee import B2bEmployee, B2bEmployeeEndpoint
+from .commercial.dynamic_access import DynamicAccess, DynamicAccessEndpoint
 from .core.acl_role import AclRole, AclRoleEndpoint
 from .core.api_info import ApiInfo, ApiInfoEndpoint
 from .core.app import App, AppEndpoint
@@ -130,6 +131,7 @@ __all__ = [
     "DocumentBaseConfig",
     "DocumentBaseConfigSalesChannel",
     "DocumentType",
+    "DynamicAccess",
     "Integration",
     "LandingPage",
     "Language",
@@ -258,6 +260,7 @@ class AdminEndpoints:
         # Commercial
         self.b2b_employee = B2bEmployeeEndpoint(client)
         self.b2b_components_role = B2bComponentsRoleEndpoint(client)
+        self.dynamic_access = DynamicAccessEndpoint(client)
 
         # Core
         self.acl_role = AclRoleEndpoint(client)
