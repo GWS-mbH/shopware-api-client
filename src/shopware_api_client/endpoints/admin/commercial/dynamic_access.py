@@ -11,7 +11,6 @@ class DynamicAccessBase(ApiModelBase[EndpointClass]):
     _identifier: str = "dynamic_access"
 
     product_id: IdField
-    product_version_id: IdField
     rule_id: IdField
 
 class DynamicAccessRelations:
