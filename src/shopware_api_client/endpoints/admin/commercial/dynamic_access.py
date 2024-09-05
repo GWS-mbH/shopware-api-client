@@ -26,5 +26,3 @@ class DynamicAccessEndpoint(EndpointBase[DynamicAccess]):
     name = "swag_dynamic_access_product_rule"
     path = "/swag-dynamic-access-product-rule"
     model_class = DynamicAccess
-
-
