@@ -20,6 +20,7 @@ from .core.country_state import CountryState, CountryStateEndpoint
 from .core.currency import Currency, CurrencyEndpoint
 from .core.currency_country_rounding import CurrencyCountryRounding, CurrencyCountryRoundingEndpoint
 from .core.custom_entity import CustomEntity, CustomEntityEndpoint
+from .core.custom_field import CustomField, CustomFieldEndpoint
 from .core.customer import Customer, CustomerEndpoint
 from .core.customer_address import CustomerAddress, CustomerAddressEndpoint
 from .core.customer_group import CustomerGroup, CustomerGroupEndpoint
@@ -120,6 +121,7 @@ __all__ = [
     "Currency",
     "CurrencyCountryRounding",
     "CustomEntity",
+    "CustomField",
     "Customer",
     "CustomerAddress",
     "CustomerGroup",
@@ -277,6 +279,7 @@ class AdminEndpoints:
         self.currency = CurrencyEndpoint(client)
         self.currency_country_rounding = CurrencyCountryRoundingEndpoint(client)
         self.custom_entity = CustomEntityEndpoint(client)
+        self.custom_field = CustomFieldEndpoint(client)
         self.customer = CustomerEndpoint(client)
         self.customer_address = CustomerAddressEndpoint(client)
         self.customer_group = CustomerGroupEndpoint(client)
