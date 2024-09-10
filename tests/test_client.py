@@ -46,11 +46,12 @@ class TestAdminClient:
         client = AdminClient(config=self.admin_config)
         with pytest.raises(SWAPIDataValidationError) as exc_info:
             await client.cms_page.all()
-            assert len(exc_info.value.errors) == 3
-            assert len(caplog.records) == 3
-            assert caplog.records[0].id == 1
-            assert caplog.records[1].id is None
-            assert caplog.records[2].id == 3
+        
+        assert len(exc_info.value.errors) == 3
+        assert len(caplog.records) == 3
+        assert caplog.records[0].id == 1
+        assert caplog.records[1].id is None
+        assert caplog.records[2].id == 3
 
 
 class TestStoreClient:
