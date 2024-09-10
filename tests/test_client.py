@@ -1,8 +1,13 @@
+import logging
+from unittest.mock import AsyncMock
+
 import httpx
 import pytest
+from pytest_mock import MockerFixture
+
 from shopware_api_client.client import AdminClient, StoreClient
 from shopware_api_client.config import AdminConfig, StoreConfig
-from shopware_api_client.exceptions import SWAPIConfigException
+from shopware_api_client.exceptions import SWAPIConfigException, SWAPIDataValidationError
 
 
 class TestAdminClient:
@@ -29,6 +34,23 @@ class TestAdminClient:
 
         with pytest.raises(SWAPIConfigException):
             client._get_client()
+
+    async def test_error_on_invalid_data_from_shopware(
+        self, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.ERROR)
+        mocker.patch(
+            "httpx.AsyncClient.request",
+            AsyncMock(return_value=httpx.Response(status_code=200, content='[{"id":1},{},{"id":3}]')),
+        )
+        client = AdminClient(config=self.admin_config)
+        with pytest.raises(SWAPIDataValidationError) as exc_info:
+            await client.cms_page.all()
+            assert len(exc_info.value.errors) == 3
+            assert len(caplog.records) == 3
+            assert caplog.records[0].id == 1
+            assert caplog.records[1].id is None
+            assert caplog.records[2].id == 3
 
 
 class TestStoreClient:

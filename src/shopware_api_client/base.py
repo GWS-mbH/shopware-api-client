@@ -4,12 +4,22 @@ from datetime import UTC, datetime
 from typing import Any, AsyncGenerator, Callable, Generic, Self, Type, TypeVar, get_origin, overload
 
 import httpx
-from pydantic import AliasChoices, AliasGenerator, AwareDatetime, BaseModel, ConfigDict, Field, model_serializer
+from pydantic import (
+    AliasChoices,
+    AliasGenerator,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    model_serializer,
+)
 from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 
 from .endpoints.base_fields import IdField
 from .exceptions import (
+    SWAPIDataValidationError,
     SWAPIError,
     SWAPIErrorList,
     SWAPIException,
@@ -81,7 +91,7 @@ class ClientBase:
     @timeout.setter
     def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
         client = self._get_client()
-        client.timeout = timeout  # type: ignore 
+        client.timeout = timeout  # type: ignore
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
@@ -145,23 +155,33 @@ class ClientBase:
 
     async def delete(self, relative_url: str, **kwargs: Any) -> httpx.Response:
         return await self._make_request(method="DELETE", relative_url=relative_url, **kwargs)
-    
+
     async def upload(self, relative_url: str, **kwargs: Any) -> httpx.Response:
-        return await self._make_request(method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"} ,**kwargs)
+        return await self._make_request(
+            method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"}, **kwargs
+        )
 
     async def close(self) -> None:
         await self._get_client().aclose()
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
-    
+
     def set_language(self, language_id: IdField | None) -> None:
         self.language_id = language_id
 
@@ -346,16 +366,31 @@ class EndpointBase(Generic[ModelClass]):
             data = [data]
 
         result_list: list[ModelClass] = []
+        errors = []
 
         for entry in data:
             model_class = self.model_class
 
-            if "attributes" in entry:
-                obj = model_class(client=self.client, id=entry["id"], **entry["attributes"])
-            else:
-                obj = model_class(client=self.client, **entry)
+            try:
+                if "attributes" in entry:
+                    obj = model_class(client=self.client, id=entry["id"], **entry["attributes"])
+                else:
+                    obj = model_class(client=self.client, **entry)
+            except ValidationError as exc:
+                # catch pydantic validation errors, log faulty result with tracking data and attach to errors
+                # (errors will be raised after checking all result objects)
+                data = dict(id=entry["id"], **entry["attributes"]) if "attributes" in entry else entry
+                logger.error(
+                    "Invalid Shopware data",
+                    extra={"model": self.model_class, "id": data.get("id"), "data": data, "detail": str(exc)},
+                )
+                errors.append(exc)
+                continue
 
             result_list.append(obj)
+
+        if errors:
+            raise SWAPIDataValidationError(errors=errors)
 
         if single:
             return result_list[0]
@@ -406,7 +441,9 @@ class EndpointBase(Generic[ModelClass]):
 
         return self._parse_response(result_data)
 
-    async def update(self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx = None) -> ModelClass | dict[str, Any] | None:
+    async def update(
+        self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx = None
+    ) -> ModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True, include=update_fields)
         else:
@@ -546,14 +583,15 @@ class EndpointBase(Generic[ModelClass]):
     ) -> dict[str, Any]:
         return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
-    async def bulk_delete(self, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, 
-                          **request_kwargs: Any) -> dict[str, Any]:
+    async def bulk_delete(
+        self, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+    ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
     def limit(self, count: int | None) -> "Self":
         self._limit = count
         return self
-    
+
     def page(self, num: int | None) -> "Self":
         self._page = num
         return self
