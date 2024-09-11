@@ -101,7 +101,15 @@ class ClientBase:
 
         retry_count = 0
         while True:
-            response = await client.request(method, url, headers=headers, **kwargs)
+            try:
+                response = await client.request(method, url, headers=headers, **kwargs)
+            except httpx.RequestError:
+                if retry_count == retries:
+                    raise
+                await asyncio.sleep(2**retry_count)
+                retry_count += 1
+                continue
+
             if response.status_code >= 400:
                 try:
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(response.json().get("errors"))
