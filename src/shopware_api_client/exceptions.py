@@ -1,6 +1,7 @@
 from typing import Any
 
 from httpx import Response
+from pydantic import ValidationError
 
 
 class SWException(Exception):
@@ -94,7 +95,12 @@ class SWAPIError(SWAPIException):
     @classmethod
     def from_response(cls, response: Response) -> "SWAPIError":
         exception_class = cls.get_exception_class(response.status_code)
-        return exception_class(status=response.status_code, title=response.reason_phrase, detail=response.text, headers=response.headers)
+        return exception_class(
+            status=response.status_code,
+            title=response.reason_phrase,
+            detail=response.text,
+            headers=response.headers,
+        )
 
 
 class SWAPIErrorList(SWAPIException):
@@ -103,6 +109,17 @@ class SWAPIErrorList(SWAPIException):
 
     def __str__(self) -> str:
         return f"Errors: {self.errors}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}: {self}>"
+
+
+class SWAPIDataValidationError(SWAPIException):
+    def __init__(self, errors: list[ValidationError] | None = None) -> None:
+        self.errors = errors if isinstance(errors, (list, tuple)) else []
+
+    def __str__(self) -> str:
+        return f"Invalid Shopware data (pydantic). Errors:\n{'\n'.join([str(e) for e in self.errors])}"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}: {self}>"
