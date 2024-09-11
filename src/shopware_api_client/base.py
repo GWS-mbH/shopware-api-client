@@ -81,7 +81,7 @@ class ClientBase:
     @timeout.setter
     def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
         client = self._get_client()
-        client.timeout = timeout  # type: ignore 
+        client.timeout = timeout  # type: ignore
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
@@ -98,6 +98,8 @@ class ClientBase:
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
         no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPITooManyRequests]))
+
+        kwargs.setdefault("follow_redirects", True)
 
         retry_count = 0
         while True:
@@ -153,23 +155,33 @@ class ClientBase:
 
     async def delete(self, relative_url: str, **kwargs: Any) -> httpx.Response:
         return await self._make_request(method="DELETE", relative_url=relative_url, **kwargs)
-    
+
     async def upload(self, relative_url: str, **kwargs: Any) -> httpx.Response:
-        return await self._make_request(method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"} ,**kwargs)
+        return await self._make_request(
+            method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"}, **kwargs
+        )
 
     async def close(self) -> None:
         await self._get_client().aclose()
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
-    
+
     def set_language(self, language_id: IdField | None) -> None:
         self.language_id = language_id
 
@@ -414,7 +426,9 @@ class EndpointBase(Generic[ModelClass]):
 
         return self._parse_response(result_data)
 
-    async def update(self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx = None) -> ModelClass | dict[str, Any] | None:
+    async def update(
+        self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx = None
+    ) -> ModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True, include=update_fields)
         else:
@@ -554,14 +568,15 @@ class EndpointBase(Generic[ModelClass]):
     ) -> dict[str, Any]:
         return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
-    async def bulk_delete(self, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, 
-                          **request_kwargs: Any) -> dict[str, Any]:
+    async def bulk_delete(
+        self, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+    ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
     def limit(self, count: int | None) -> "Self":
         self._limit = count
         return self
-    
+
     def page(self, num: int | None) -> "Self":
         self._page = num
         return self
