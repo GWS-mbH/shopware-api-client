@@ -105,9 +105,9 @@ class ClientBase:
         while True:
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
-            except httpx.RequestError:
+            except httpx.RequestError as exc:
                 if retry_count == retries:
-                    raise
+                    raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
                 await asyncio.sleep(2**retry_count)
                 retry_count += 1
                 continue
