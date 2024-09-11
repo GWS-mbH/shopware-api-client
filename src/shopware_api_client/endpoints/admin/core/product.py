@@ -70,7 +70,7 @@ class ProductBase(ApiModelBase[EndpointClass]):
     pack_unit: str | None = None
     pack_unit_plural: str | None = None
     custom_fields: dict[str, Any] | None = None
-    slot_config: dict[str, Any] | None = None
+    slot_config: dict[str, Any] | list | None = None
     custom_search_keywords: list[str] | None = None
     available_stock: int | None = Field(default=None, exclude=True)
     stock: int | None = None
