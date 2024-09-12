@@ -11,8 +11,19 @@ from ....base import ApiModelBase, EndpointBase, EndpointClass
 class Bundle(BaseModel):
     css: list[str]
     js: list[str]
-    base_url: str | None = None
+    baseUrl: str | None = None
     type: str
+
+
+class AppBundle(BaseModel):
+    active: bool
+    integrationId: str
+    type: str
+    baseUrl: str
+    permissions: dict[str, list[str]]
+    version: str
+    name: str
+
 
 class ApiInfoBase(ApiModelBase[EndpointClass]):
     _identifier = "api_info"
@@ -20,7 +31,7 @@ class ApiInfoBase(ApiModelBase[EndpointClass]):
     version: str
     version_revision: str
     admin_worker: dict[str, Any]
-    bundles: dict[str, Bundle]
+    bundles: dict[str, Bundle | AppBundle]
     settings: dict[str, Any]
     license_toggles: dict[str, bool] | None = None
 
