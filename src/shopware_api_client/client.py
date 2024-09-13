@@ -25,6 +25,9 @@ class AdminClient(ClientBase, AdminEndpoints):
                 event_hooks={"request": [self.log_request], "response": [self.log_response]}
             )
 
+            # increase default(10s) timeouts
+            self._client.timeout = httpx.Timeout(15, read=45, write=45)
+
             auth_url = f"{self.api_url}/oauth/token"
 
             if self.config.grant_type == "client_credentials":
@@ -51,7 +54,7 @@ class AdminClient(ClientBase, AdminEndpoints):
                 raise SWAPIConfigException("Invalid grant_type for AdminClient.")
 
         return self._client
-    
+
     def _merge_results(self, dict1: dict[str, Any], dict2: dict[str, Any]) -> dict[str, Any]:
         for key in dict2:
             if key in dict1:
@@ -63,8 +66,14 @@ class AdminClient(ClientBase, AdminEndpoints):
                 dict1[key] = dict2[key]
         return dict1
 
-    async def _retry_bulk_parts(self, action: Literal["upsert", "delete"], name: str, objs: list[ModelClass] | list[dict[str, Any]], 
-                                exception: SWAPIError | SWAPIErrorList, **request_kwargs: Any) -> dict[str, Any]:
+    async def _retry_bulk_parts(
+        self,
+        action: Literal["upsert", "delete"],
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        exception: SWAPIError | SWAPIErrorList,
+        **request_kwargs: Any,
+    ) -> dict[str, Any]:
         result_dict: dict[str, Any] = {}
 
         if isinstance(exception, SWAPIErrorList):
@@ -78,16 +87,10 @@ class AdminClient(ClientBase, AdminEndpoints):
             for idx, obj in enumerate(objs, start=0):
                 if isinstance(obj, ApiModelBase):
                     obj = json.loads(obj.model_dump_json())
-                
-                error_list.append({
-                    "code": errors[idx].code,
-                    "detail": errors[idx].detail,
-                    "object": obj
-                })
-            return {
-                "errors": error_list
-            }
-        
+
+                error_list.append({"code": errors[idx].code, "detail": errors[idx].detail, "object": obj})
+            return {"errors": error_list}
+
         split = int(len(objs) / 2)
 
         for part in [objs[:split], objs[split:]]:
@@ -102,7 +105,11 @@ class AdminClient(ClientBase, AdminEndpoints):
         return result_dict
 
     async def bulk_upsert(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         obj_list: list[dict] = []
 
@@ -121,7 +128,7 @@ class AdminClient(ClientBase, AdminEndpoints):
         except (SWAPIErrorList, SWAPIError) as e:
             if not fail_silently:
                 raise
-            
+
             result = await self._retry_bulk_parts(action="upsert", name=name, objs=objs, exception=e, **request_kwargs)
         else:
             result = response.json()
@@ -129,7 +136,11 @@ class AdminClient(ClientBase, AdminEndpoints):
         return result
 
     async def bulk_delete(
-        self, name: str, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         obj_list: list[dict] = []
 
@@ -148,7 +159,7 @@ class AdminClient(ClientBase, AdminEndpoints):
         except (SWAPIErrorList, SWAPIError) as e:
             if not fail_silently:
                 raise
-            
+
             result = await self._retry_bulk_parts(action="delete", name=name, objs=objs, exception=e, **request_kwargs)
         else:
             result = response.json()
@@ -178,6 +189,9 @@ class StoreClient(ClientBase, StoreEndpoints):
 
             if self.config.context_token is not None:
                 headers["sw-context-token"] = self.config.context_token
+
+            # increase default(10s) timeouts
+            self._client.timeout = httpx.Timeout(15, read=45, write=45)
 
             self._client.headers = httpx.Headers(headers)
 

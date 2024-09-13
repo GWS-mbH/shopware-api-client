@@ -109,9 +109,19 @@ class ClientBase:
         )
         no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPITooManyRequests]))
 
+        kwargs.setdefault("follow_redirects", True)
+
         retry_count = 0
         while True:
-            response = await client.request(method, url, headers=headers, **kwargs)
+            try:
+                response = await client.request(method, url, headers=headers, **kwargs)
+            except httpx.RequestError as exc:
+                if retry_count == retries:
+                    raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
+                await asyncio.sleep(2**retry_count)
+                retry_count += 1
+                continue
+
             if response.status_code >= 400:
                 try:
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(response.json().get("errors"))
