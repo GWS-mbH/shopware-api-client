@@ -95,6 +95,7 @@ from .core.state_machine import StateMachine, StateMachineEndpoint
 from .core.state_machine_history import StateMachineHistory, StateMachineHistoryEndpoint
 from .core.state_machine_state import StateMachineState, StateMachineStateEndpoint
 from .core.state_machine_transition import StateMachineTransition, StateMachineTransitionEndpoint
+from .core.system_config import SystemConfig, SystemConfigEndpoint
 from .core.tag import Tag, TagEndpoint
 from .core.tax import Tax, TaxEndpoint
 from .core.tax_rule import TaxRule, TaxRuleEndpoint
@@ -188,6 +189,7 @@ __all__ = [
     "StateMachineHistory",
     "StateMachineState",
     "StateMachineTransition",
+    "SystemConfig",
     "Tag",
     "Tax",
     "TaxRule",
@@ -345,6 +347,7 @@ class AdminEndpoints:
         self.state_machine_history = StateMachineHistoryEndpoint(client)
         self.state_machine_state = StateMachineStateEndpoint(client)
         self.state_machine_transition = StateMachineTransitionEndpoint(client)
+        self.system_config = SystemConfigEndpoint(client)
         self.tag = TagEndpoint(client)
         self.tax = TaxEndpoint(client)
         self.tax_rule = TaxRuleEndpoint(client)
