@@ -1,7 +1,17 @@
 import asyncio
 import json
 from datetime import UTC, datetime
-from typing import Any, AsyncGenerator, Callable, Generic, Self, Type, TypeVar, get_origin, overload
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Generic,
+    Self,
+    Type,
+    TypeVar,
+    get_origin,
+    overload,
+)
 
 import httpx
 from pydantic import (
@@ -274,7 +284,7 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
         endpoint: EndpointClass = getattr(self._get_client(), self._identifier).__class__(self._get_client())  # type: ignore
         return endpoint
 
-    async def save(self, force_insert: bool = False, update_fields: IncEx = None) -> Self | dict | None:
+    async def save(self, force_insert: bool = False, update_fields: IncEx | None = None) -> Self | dict | None:
         endpoint = self._get_endpoint()
 
         if force_insert or self.id is None:
@@ -452,7 +462,7 @@ class EndpointBase(Generic[ModelClass]):
         return self._parse_response(result_data)
 
     async def update(
-        self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx = None
+        self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx | None = None
     ) -> ModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True, include=update_fields)
@@ -654,7 +664,7 @@ class EndpointBase(Generic[ModelClass]):
                 else:
                     yield self._parse_response(entry)
 
-            if "next" in result_dict.get("links", {}) and len(result_data) > 0:
+            if len(result_data) >= self._limit:
                 page += 1
             else:
                 break
