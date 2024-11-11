@@ -54,7 +54,7 @@ class ApiInfoEndpoint(EndpointBase[ApiInfo]):
     async def create(self, obj: ApiInfo | dict[str, Any]) -> ApiInfo | dict[str, Any] | None:
         raise SWAPIMethodNotAvailable()
 
-    async def update(self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx = None) -> ApiInfo | dict[str, Any] | None:
+    async def update(self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx | None = None) -> ApiInfo | dict[str, Any] | None:
         raise SWAPIMethodNotAvailable()
 
     async def bulk_upsert(
