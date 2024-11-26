@@ -23,7 +23,7 @@ class OrderLineItemBase(ApiModelBase[EndpointClass]):
     referenced_id: str | None = None
     quantity: int
     label: str
-    payload: dict[str, Any] | None = None
+    payload: dict[str, Any] | list | None = None
     good: bool | None = None
     removable: bool | None = None
     stackable: bool | None = None
