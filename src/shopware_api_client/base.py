@@ -237,6 +237,9 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
     def __getattribute__(self, name: str) -> Any:
         from .endpoints.relations import ForeignRelation, ManyRelation
 
+        if name.startswith("__pydantic"):
+            return super().__getattribute__(name)
+
         fields = super().__getattribute__("model_fields")
 
         # hack to get the actual ForeignKey-Instance
