@@ -52,8 +52,8 @@ class Promotion(PromotionBase["PromotionEndpoint"], PromotionRelations):
 
 
 class PromotionEndpoint(EndpointBase[Promotion]):
-    name = "tag"
-    path = "/tag"
+    name = "promotion"
+    path = "/promotion"
     model_class = Promotion
 
 
