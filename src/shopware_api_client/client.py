@@ -153,6 +153,8 @@ class AdminClient(ClientBase, AdminEndpoints):
         data = {f"delete-{name}": {"entity": name, "action": "delete", "payload": obj_list}}
 
         request_kwargs.setdefault("timeout", 600)
+        # remove indexing-behavior queing behavior because it's not supported in bulk delete.
+        request_kwargs.setdefault("headers", {}).pop("indexing-behavior", None)
 
         try:
             response = await self.post("/_action/sync", json=data, **request_kwargs)
