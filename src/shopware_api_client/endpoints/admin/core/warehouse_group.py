@@ -8,7 +8,7 @@ class WarehouseGroupBase(ApiModelBase[EndpointClass]):
     
     name: str
     description: str | None = None
-    priority: int
+    priority: int | None = None
     rule_id: IdField | None = None
     
 
