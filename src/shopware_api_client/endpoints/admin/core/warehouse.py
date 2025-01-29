@@ -11,7 +11,7 @@ class WarehouseBase(ApiModelBase[EndpointClass]):
 
 class WarehouseRelations:
     product_warehouses: ManyRelation["ProductWarehouse"]
-    # groups: ManyRelation["WarehouseGroup"]
+    groups: ManyRelation["WarehouseGroup"]
     # order_products: ManyRelation["???"]
 
 
@@ -26,3 +26,4 @@ class WarehouseEndpoint(EndpointBase[Warehouse]):
 
 
 from .product_warehouse import ProductWarehouse  # noqa: E402
+from .warehouse_group import WarehouseGroup  # noqa: E402
