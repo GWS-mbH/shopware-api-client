@@ -103,6 +103,8 @@ from .core.tax_rule_type import TaxRuleType, TaxRuleTypeEndpoint
 from .core.unit import Unit, UnitEndpoint
 from .core.user import User, UserEndpoint
 from .core.warehouse import Warehouse, WarehouseEndpoint
+from .core.warehouse_group import WarehouseGroup, WarehouseGroupEndpoint
+from .core.warehouse_group_warehouse import WarehouseGroupWarehouse, WarehouseGroupWarehouseEndpoint
 
 __all__ = [
     "AclRole",
@@ -197,6 +199,8 @@ __all__ = [
     "Unit",
     "User",
     "Warehouse",
+    "WarehouseGroup",
+    "WarehouseGroupWarehouse",
 ]
 
 
@@ -355,3 +359,5 @@ class AdminEndpoints:
         self.unit = UnitEndpoint(client)
         self.user = UserEndpoint(client)
         self.warehouse = WarehouseEndpoint(client)
+        self.warehouse_group = WarehouseGroupEndpoint(client)
+        self.warehouse_group_warehouse = WarehouseGroupWarehouseEndpoint(client)
