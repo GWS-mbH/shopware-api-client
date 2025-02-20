@@ -73,7 +73,7 @@ class Cart(ApiModelBase["CartEndpoint"]):
     token: str
     price: Price
     line_items: list[LineItem]
-    errors: list[dict[str, Any]]
+    errors: list[dict[str, Any]] | dict[str, Any] | None = None
     deliveries: list[CartDelivery]
     transactions: list[dict[str, Any]]
     modified: bool
