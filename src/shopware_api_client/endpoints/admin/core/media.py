@@ -12,10 +12,10 @@ class MediaBase(ApiModelBase[EndpointClass]):
 
     user_id: IdField | None = None
     media_folder_id: IdField | None = Field(default=None)
-    mime_type: str | None = Field(default=None, exclude=True)
+    mime_type: str | None = Field(default=None)
     file_extension: str | None = Field(default=None, exclude=True)
     uploaded_at: AwareDatetime | None = Field(default=None, exclude=True)
-    file_name: str | None = Field(default=None, exclude=True)
+    file_name: str | None = Field(default=None)
     file_size: int | None = Field(default=None, exclude=True)
     meta_data: dict[str, Any] | None = Field(default=None, exclude=True)
     media_type: dict[str, Any] | None = Field(default=None, exclude=True)
@@ -23,7 +23,7 @@ class MediaBase(ApiModelBase[EndpointClass]):
     alt: str | None = None
     title: str | None = None
     url: str | None = Field(default=None, description="Runtime field, cannot be used as part of the criteria.")
-    path: str | None = Field(default=None, exclude=True)
+    path: str | None = Field(default=None)
     has_file: bool | None = Field(default=None, description="Runtime field, cannot be used as part of the criteria.")
     private: bool | None = False
     custom_fields: dict[str, Any] | None = None
