@@ -104,8 +104,13 @@ class ClientBase:
             response = await client.request(method, url, headers=headers, **kwargs)
             if response.status_code >= 400:
                 try:
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(response.json().get("errors"))
-                except json.JSONDecodeError:
+                    errors: list = response.json().get("errors")
+                    # ensure `errors` attribute is a list/tuple, fallback to from_response if not
+                    if not isinstance(errors, (list, tuple)):
+                       raise ValueError("`error` attribute in json not a list/tuple!")
+                    
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)
+                except (json.JSONDecodeError, ValueError):
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
 
                 if isinstance(error, SWAPIErrorList) and len(error.errors) == 1:
