@@ -107,7 +107,7 @@ class ClientBase:
                     errors: list = response.json().get("errors")
                     # ensure `errors` attribute is a list/tuple, fallback to from_response if not
                     if not isinstance(errors, (list, tuple)):
-                       raise ValueError("`error` attribute in json not a list/tuple!")
+                       raise ValueError("`errors` attribute in json not a list/tuple!")
                     
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)
                 except (json.JSONDecodeError, ValueError):
