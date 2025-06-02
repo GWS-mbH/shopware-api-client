@@ -11,7 +11,7 @@ class CustomerBase(ApiModelBase[EndpointClass]):
     _identifier: str = "customer"
 
     group_id: IdField
-    default_payment_method_id: IdField
+    default_payment_method_id: IdField | None = None
     sales_channel_id: IdField
     language_id: IdField
     last_payment_method_id: IdField | None = None
