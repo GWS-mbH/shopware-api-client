@@ -33,6 +33,7 @@ class TestAdminClient:
         exc: SWAPIError = exc_info.value
         assert exc.status == 500
         assert exc.title == "Internal Server Error"
+        assert "x-trace-id" in exc.headers
         assert "bla" in exc.detail
 
     def test_creation(self) -> None:
