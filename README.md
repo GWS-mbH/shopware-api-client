@@ -290,6 +290,12 @@ We have two classes `Base` and `Relations`. This way we can [reuse the Base-Mode
 
 ## Development
 
+### Testing
+
+You can use `poetry build` and `poetry run pip install -e .` to install the current src.
+
+Then run `poetry run pytest .` to execute the tests.
+
 ### Model Creation
 
 Shopware provides API-definitions for their whole API. You can download it from `<shopurl>/api/_info/openapi3.json`
