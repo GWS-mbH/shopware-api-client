@@ -1,4 +1,5 @@
 import asyncio
+from functools import cached_property
 import json
 from datetime import UTC, datetime
 from typing import (
@@ -61,11 +62,11 @@ class ClientBase:
         self.raw = raw
 
     async def __aenter__(self) -> "Self":
-        self._get_client()
+        self.http_client
         return self
 
     async def __aexit__(self, *args: Any) -> None:
-        await self._get_client().aclose()
+        await self.http_client.aclose()
 
     async def log_request(self, request: httpx.Request) -> None:
         if not hasattr(request, "_content"):
@@ -81,8 +82,14 @@ class ClientBase:
             response.content,
             response.headers,
         )
+    
+    @cached_property
+    def http_client(self) -> httpx.AsyncClient:
+        return self._get_client()
 
     def _get_client(self) -> httpx.AsyncClient:
+        # FIXME: rename _get_client -> _get_http_client to avoid confusion with ApiModelBase._get_client 
+        #        (fix middleware usage of private method usage first)
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
@@ -95,12 +102,12 @@ class ClientBase:
 
     @property
     def timeout(self) -> httpx.Timeout:
-        client = self._get_client()
+        client = self.http_client
         return client.timeout
 
     @timeout.setter
     def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
-        client = self._get_client()
+        client = self.http_client
         client.timeout = timeout  # type: ignore
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
@@ -108,7 +115,7 @@ class ClientBase:
             url = relative_url
         else:
             url = f"{self.api_url}{relative_url}"
-        client = self._get_client()
+        client = self.http_client
 
         headers = self._get_headers()
         headers.update(kwargs.pop("headers", {}))
@@ -163,6 +170,22 @@ class ClientBase:
                 await asyncio.sleep(2**retry_count)
                 retry_count += 1
             else:
+                # guard against "200 okay" responses with malformed json
+                try:
+                    response.json_cached = response.json()
+                except json.JSONDecodeError:
+                    # retries exhausted?
+                    if retry_count == retries:
+                        # promote response to http 500
+                        response.status_code = 500
+                        exc = SWAPIError.from_response(response)
+                        # prefix details with x-trace-header to 
+                        exc.detail = f"x-trace-id: {str(response.headers.get("x-trace-id", "not-set"))}" + exc.text
+                    
+                    # schedule retry
+                    retry_count += 1
+                    continue
+                
                 return response
 
     async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
@@ -187,7 +210,7 @@ class ClientBase:
         )
 
     async def close(self) -> None:
-        await self._get_client().aclose()
+        await self.http_client.aclose()
 
     async def bulk_upsert(
         self,
@@ -289,7 +312,8 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
 
     def _get_endpoint(self) -> EndpointClass:
         # we want a fresh endpoint
-        endpoint: EndpointClass = getattr(self._get_client(), self._identifier).__class__(self._get_client())  # type: ignore
+        client = self._get_client()
+        endpoint: EndpointClass = getattr(client, self._identifier).__class__(client)  # type: ignore
         return endpoint
 
     async def save(self, force_insert: bool = False, update_fields: IncEx | None = None) -> Self | dict | None:

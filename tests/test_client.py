@@ -25,7 +25,7 @@ class TestAdminClient:
 
     def test_get_client(self) -> None:
         client = AdminClient(config=self.admin_config)
-        httpx_client = client._get_client()
+        httpx_client = client.http_client
         assert isinstance(httpx_client, httpx.AsyncClient)
 
     def test_wrong_config(self) -> None:
@@ -33,7 +33,7 @@ class TestAdminClient:
         client = AdminClient(config=self.admin_config)
 
         with pytest.raises(SWAPIConfigException):
-            client._get_client()
+            client.http_client
 
     async def test_error_on_invalid_data_from_shopware(
         self, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
@@ -64,18 +64,18 @@ class TestStoreClient:
 
     def test_get_client(self) -> None:
         client = StoreClient(config=self.store_config)
-        httpx_client = client._get_client()
+        httpx_client = client.http_client
         assert isinstance(httpx_client, httpx.AsyncClient)
 
     def test_context_token(self) -> None:
         config = StoreConfig(url="https://localhost", access_key="ACCESS_KEY", context_token="CONTEXT_TOKEN")
         client = StoreClient(config=config)
-        httpx_client = client._get_client()
+        httpx_client = client.http_client
         headers = httpx_client.headers
         assert headers.get("sw-context-token") == "CONTEXT_TOKEN"
 
     def test_context_token_not_set(self) -> None:
         client = StoreClient(config=self.store_config)
-        httpx_client = client._get_client()
+        httpx_client = client.http_client
         headers = httpx_client.headers
         assert headers.get("sw-context-token") is None

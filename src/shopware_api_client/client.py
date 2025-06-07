@@ -164,7 +164,10 @@ class AdminClient(ClientBase, AdminEndpoints):
 
             result = await self._retry_bulk_parts(action="delete", name=name, objs=objs, exception=e, **request_kwargs)
         else:
-            result = response.json()
+            if hasattr(response, "json_cached"):
+                result = response.json_cached
+            else:
+                result = response.json()
 
         return result
 
