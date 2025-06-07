@@ -32,7 +32,7 @@ class TestAdminClient:
 
         exc: SWAPIError = exc_info.value
         assert exc.status == 500
-        assert exc.title == "Internal Server Error"
+        assert exc.title == httpx.codes.get_reason_phrase(500)
         assert "x-trace-id" in exc.headers
         assert "bla" in exc.detail
 
