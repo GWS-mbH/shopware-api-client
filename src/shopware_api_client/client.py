@@ -19,7 +19,7 @@ class AdminClient(ClientBase, AdminEndpoints):
         self._client: httpx.AsyncClient | None = None
         self.init_endpoints(self)
 
-    def _get_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> httpx.AsyncClient:
         if self._client is None:
             self._client = httpx.AsyncClient(
                 event_hooks={"request": [self.log_request], "response": [self.log_response]}
@@ -180,7 +180,7 @@ class StoreClient(ClientBase, StoreEndpoints):
         self._client: httpx.AsyncClient | None = None
         self.init_endpoints(self)
 
-    def _get_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> httpx.AsyncClient:
         if self._client is None:
             self._client = httpx.AsyncClient(
                 event_hooks={"request": [self.log_request], "response": [self.log_response]},

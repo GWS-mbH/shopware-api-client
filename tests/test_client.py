@@ -23,7 +23,7 @@ class TestAdminClient:
         mocker.patch(
             "httpx.AsyncClient.request",
             AsyncMock(
-                return_value=httpx.Response(status_code=200, content="read error", headers={"x-trace-id": "bla"})
+                return_value=httpx.Response(status_code=200, content="read error", headers={"x-trace-id": "bla", "content-type": "application/json"})
             ),
         )
         client = AdminClient(config=self.admin_config)
@@ -48,9 +48,12 @@ class TestAdminClient:
     def test_wrong_config(self) -> None:
         self.admin_config.client_id = None
         client = AdminClient(config=self.admin_config)
+        httpx_client = None
 
         with pytest.raises(SWAPIConfigException):
-            client.http_client
+            httpx_client = client.http_client
+        
+        assert httpx_client is None
 
     async def test_error_on_invalid_data_from_shopware(
         self, mocker: MockerFixture, caplog: pytest.LogCaptureFixture

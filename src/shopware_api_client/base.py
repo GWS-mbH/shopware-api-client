@@ -44,6 +44,8 @@ from .exceptions import (
 )
 from .logging import logger
 
+APPLICATION_JSON = "application/json"
+
 EndpointClass = TypeVar("EndpointClass", bound="EndpointBase[Any]")
 ModelClass = TypeVar("ModelClass", bound="ApiModelBase[Any]")
 
@@ -63,7 +65,8 @@ class ClientBase:
         self.raw = raw
 
     async def __aenter__(self) -> "Self":
-        self.http_client
+        client = self.http_client
+        assert isinstance(client, httpx.AsyncClient), "http_client must be an instance of httpx.AsyncClient"
         return self
 
     async def __aexit__(self, *args: Any) -> None:
@@ -86,15 +89,13 @@ class ClientBase:
 
     @cached_property
     def http_client(self) -> httpx.AsyncClient:
-        return self._get_client()
+        return self._get_http_client()
 
-    def _get_client(self) -> httpx.AsyncClient:
-        # FIXME: rename _get_client -> _get_http_client to avoid confusion with ApiModelBase._get_client
-        #        (fix middleware usage of private method usage first)
+    def _get_http_client(self) -> httpx.AsyncClient:
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        headers = {"Content-Type": APPLICATION_JSON, "Accept": APPLICATION_JSON}
 
         if self.language_id is not None:
             headers["sw-language-id"] = str(self.language_id)
@@ -154,7 +155,7 @@ class ClientBase:
                         raise ValueError("`errors` attribute in json not a list/tuple!")
 
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)
-                except (json.JSONDecodeError, ValueError):
+                except ValueError:
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
 
                 if isinstance(error, SWAPIErrorList) and len(error.errors) == 1:
@@ -175,10 +176,11 @@ class ClientBase:
 
                 await self.retry_sleep(retry_wait_base, retry_count)
                 retry_count += 1
-            else:
+            elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
                 # guard against "200 okay" responses with malformed json
                 try:
                     setattr(response, "json_cached", response.json())
+                    return response
                 except json.JSONDecodeError:
                     # retries exhausted?
                     if retry_count >= retries:
@@ -193,8 +195,7 @@ class ClientBase:
                     # schedule retry
                     await self.retry_sleep(retry_wait_base, retry_count)
                     retry_count += 1
-                    continue
-
+            else:
                 return response
 
     async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
