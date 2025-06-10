@@ -44,6 +44,8 @@ from .exceptions import (
 )
 from .logging import logger
 
+APPLICATION_JSON = "application/json"
+
 EndpointClass = TypeVar("EndpointClass", bound="EndpointBase[Any]")
 ModelClass = TypeVar("ModelClass", bound="ApiModelBase[Any]")
 
@@ -94,7 +96,7 @@ class ClientBase:
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        headers = {"Content-Type": APPLICATION_JSON, "Accept": APPLICATION_JSON}
 
         if self.language_id is not None:
             headers["sw-language-id"] = str(self.language_id)
@@ -175,7 +177,7 @@ class ClientBase:
 
                 await self.retry_sleep(retry_wait_base, retry_count)
                 retry_count += 1
-            elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith("application/json"):
+            elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
                 # guard against "200 okay" responses with malformed json
                 try:
                     setattr(response, "json_cached", response.json())
