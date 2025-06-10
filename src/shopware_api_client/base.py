@@ -1,6 +1,7 @@
 import asyncio
 import json
 from datetime import UTC, datetime
+from functools import cached_property
 from typing import (
     Any,
     AsyncGenerator,
@@ -9,6 +10,7 @@ from typing import (
     Self,
     Type,
     TypeVar,
+    cast,
     get_origin,
     overload,
 )
@@ -61,11 +63,11 @@ class ClientBase:
         self.raw = raw
 
     async def __aenter__(self) -> "Self":
-        self._get_client()
+        self.http_client
         return self
 
     async def __aexit__(self, *args: Any) -> None:
-        await self._get_client().aclose()
+        await self.http_client.aclose()
 
     async def log_request(self, request: httpx.Request) -> None:
         if not hasattr(request, "_content"):
@@ -82,7 +84,13 @@ class ClientBase:
             response.headers,
         )
 
+    @cached_property
+    def http_client(self) -> httpx.AsyncClient:
+        return self._get_client()
+
     def _get_client(self) -> httpx.AsyncClient:
+        # FIXME: rename _get_client -> _get_http_client to avoid confusion with ApiModelBase._get_client
+        #        (fix middleware usage of private method usage first)
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
@@ -95,24 +103,30 @@ class ClientBase:
 
     @property
     def timeout(self) -> httpx.Timeout:
-        client = self._get_client()
+        client = self.http_client
         return client.timeout
 
     @timeout.setter
     def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
-        client = self._get_client()
+        client = self.http_client
         client.timeout = timeout  # type: ignore
+
+    async def retry_sleep(self, retry_wait_base: int, retry_count: int) -> None:
+        retry_sleep = retry_wait_base**retry_count
+        logger.debug(f"Try failed, retrying in {retry_sleep} seconds.")
+        await asyncio.sleep(retry_sleep)
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
             url = relative_url
         else:
             url = f"{self.api_url}{relative_url}"
-        client = self._get_client()
+        client = self.http_client
 
         headers = self._get_headers()
         headers.update(kwargs.pop("headers", {}))
 
+        retry_wait_base = int(kwargs.pop("retriy_wait_base", 2))
         retries = int(kwargs.pop("retries", 0))
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
@@ -126,7 +140,7 @@ class ClientBase:
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
             except httpx.RequestError as exc:
-                if retry_count == retries:
+                if retry_count >= retries:
                     raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
                 await asyncio.sleep(2**retry_count)
                 retry_count += 1
@@ -137,8 +151,8 @@ class ClientBase:
                     errors: list = response.json().get("errors")
                     # ensure `errors` attribute is a list/tuple, fallback to from_response if not
                     if not isinstance(errors, (list, tuple)):
-                       raise ValueError("`errors` attribute in json not a list/tuple!")
-                    
+                        raise ValueError("`errors` attribute in json not a list/tuple!")
+
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)
                 except (json.JSONDecodeError, ValueError):
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
@@ -159,10 +173,28 @@ class ClientBase:
                 if retry_count == retries:
                     raise error
 
-                logger.debug(f"Try failed, retrying in {2 ** retry_count} seconds.")
-                await asyncio.sleep(2**retry_count)
+                await self.retry_sleep(retry_wait_base, retry_count)
                 retry_count += 1
             else:
+                # guard against "200 okay" responses with malformed json
+                try:
+                    setattr(response, "json_cached", response.json())
+                except json.JSONDecodeError:
+                    # retries exhausted?
+                    if retry_count >= retries:
+                        response.status_code = 500
+                        exception = SWAPIError.from_response(response)
+                        # prefix details with x-trace-header to
+                        exception.detail = (
+                            f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
+                        )
+                        raise exception
+
+                    # schedule retry
+                    await self.retry_sleep(retry_wait_base, retry_count)
+                    retry_count += 1
+                    continue
+
                 return response
 
     async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
@@ -187,7 +219,7 @@ class ClientBase:
         )
 
     async def close(self) -> None:
-        await self._get_client().aclose()
+        await self.http_client.aclose()
 
     async def bulk_upsert(
         self,
@@ -289,7 +321,8 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
 
     def _get_endpoint(self) -> EndpointClass:
         # we want a fresh endpoint
-        endpoint: EndpointClass = getattr(self._get_client(), self._identifier).__class__(self._get_client())  # type: ignore
+        client = self._get_client()
+        endpoint: EndpointClass = getattr(client, self._identifier).__class__(client)  # type: ignore
         return endpoint
 
     async def save(self, force_insert: bool = False, update_fields: IncEx | None = None) -> Self | dict | None:
@@ -372,7 +405,7 @@ class EndpointBase(Generic[ModelClass]):
         field = self.model_class.model_fields[name]
 
         if get_origin(field.annotation) in [ForeignRelation, ManyRelation]:
-            return to_camel(name)
+            return cast(str, to_camel(name))
         else:
             return self.model_class.model_fields[name].serialization_alias or name
 

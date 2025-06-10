@@ -52,7 +52,7 @@ python_files = ["test_*.py", "*_test.py"]
 filterwarnings = ["ignore::DeprecationWarning"]
 asyncio_mode = "auto"
 addopts = [
-    "--rootdir=./test",
+    "--rootdir=./tests",
     "--cov-branch",
     "--cov=src",
     "--cov-report=xml",

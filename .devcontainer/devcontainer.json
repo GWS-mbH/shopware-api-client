@@ -4,6 +4,7 @@
 	"service": "services",
 	"workspaceFolder": "/workspaces",
 	"remoteUser": "vscode",
+	"files.eol": "\n",
 	"postCreateCommand": "bash .devcontainer/post-create.sh",
 	"postStartCommand": "bash .devcontainer/post-start.sh",
 	"customizations": {
