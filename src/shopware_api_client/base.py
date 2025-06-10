@@ -175,10 +175,11 @@ class ClientBase:
 
                 await self.retry_sleep(retry_wait_base, retry_count)
                 retry_count += 1
-            else:
+            elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith("application/json"):
                 # guard against "200 okay" responses with malformed json
                 try:
                     setattr(response, "json_cached", response.json())
+                    return response
                 except json.JSONDecodeError:
                     # retries exhausted?
                     if retry_count >= retries:
@@ -193,8 +194,7 @@ class ClientBase:
                     # schedule retry
                     await self.retry_sleep(retry_wait_base, retry_count)
                     retry_count += 1
-                    continue
-
+            else:
                 return response
 
     async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
