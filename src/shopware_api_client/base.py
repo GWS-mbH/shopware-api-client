@@ -65,7 +65,8 @@ class ClientBase:
         self.raw = raw
 
     async def __aenter__(self) -> "Self":
-        self.http_client
+        client = self.http_client
+        assert isinstance(client, httpx.AsyncClient), "http_client must be an instance of httpx.AsyncClient"
         return self
 
     async def __aexit__(self, *args: Any) -> None:
@@ -88,11 +89,9 @@ class ClientBase:
 
     @cached_property
     def http_client(self) -> httpx.AsyncClient:
-        return self._get_client()
+        return self._get_http_client()
 
-    def _get_client(self) -> httpx.AsyncClient:
-        # FIXME: rename _get_client -> _get_http_client to avoid confusion with ApiModelBase._get_client
-        #        (fix middleware usage of private method usage first)
+    def _get_http_client(self) -> httpx.AsyncClient:
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
