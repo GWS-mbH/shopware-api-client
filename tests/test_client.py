@@ -23,7 +23,7 @@ class TestAdminClient:
         mocker.patch(
             "httpx.AsyncClient.request",
             AsyncMock(
-                return_value=httpx.Response(status_code=200, content="read error", headers={"x-trace-id": "bla"})
+                return_value=httpx.Response(status_code=200, content="read error", headers={"x-trace-id": "bla", "content-type": "application/json"})
             ),
         )
         client = AdminClient(config=self.admin_config)
