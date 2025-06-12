@@ -351,6 +351,8 @@ class EndpointBase(Generic[ModelClass]):
     path: str
     model_class: Type[ModelClass]
     raw: bool
+    always_post: bool = False
+    search_prefix: str = "/search"
 
     def __init__(self, client: ClientBase):
         self.client = client
@@ -481,9 +483,12 @@ class EndpointBase(Generic[ModelClass]):
         data = self._get_data_dict()
 
         if self._is_search_query():
-            result = await self.client.post(f"/search{self.path}", json=data)
+            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data)
         else:
-            result = await self.client.get(f"{self.path}", params=data)
+            if self.always_post:
+                result = await self.client.post(self.path, json=data)
+            else:
+                result = await self.client.get(self.path, params=data)
 
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
@@ -495,7 +500,10 @@ class EndpointBase(Generic[ModelClass]):
         return self._parse_response(result_data)
 
     async def get(self, pk: str) -> ModelClass | dict[str, Any]:
-        result = await self.client.get(f"{self.path}/{pk}")
+        if self.always_post:
+            result = await self.client.post(f"{self.path}/{pk}")    
+        else:
+            result = await self.client.get(f"{self.path}/{pk}")
         result_data: dict[str, Any] = self._prase_data_single(result.json())
 
         if self.raw:
@@ -692,7 +700,7 @@ class EndpointBase(Generic[ModelClass]):
 
         while True:
             data["page"] = page
-            if self._is_search_query():
+            if self.always_post or self._is_search_query():
                 result = await self.client.post(url, json=data)
             else:
                 result = await self.client.get(url, params=data)

@@ -76,26 +76,6 @@ class ProductBase(ApiModelBase[EndpointClass]):
     stock: int | None = None
     translated: dict[str, Any] | None = None
 
-    @field_validator('name')
-    def ensure_name_or_parent(cls, value: str | None, info: FieldValidationInfo, **kwargs: Any) -> str | None:
-        if value is None and info.data['parent_id'] is None:
-            raise ValueError('name may only be empty if parent_id is set')
-
-        return value
-
-    @field_validator('tax_id')
-    def ensure_tax_id_or_parent(cls, value: IdField | None, info: FieldValidationInfo, **kwargs: Any) -> IdField | None:
-        if value is None and info.data['parent_id'] is None:
-            raise ValueError('tax_id may only be empty if parent_id is set')
-
-        return value
-
-    @field_validator('price')
-    def ensure_price_or_parent(cls, value: list[dict[str, Any]] | None, info: FieldValidationInfo, **kwargs: Any) -> list[dict[str, Any]] | None:
-        if value is None and info.data['parent_id'] is None:
-            raise ValueError('price may only be empty if parent_id is set')
-
-        return value
 
 class ProductRelations:
     downloads: ManyRelation["ProductDownload"]
@@ -122,7 +102,7 @@ class ProductRelations:
     order_line_items: ManyRelation["OrderLineItem"]
     wishlists: ManyRelation["CustomerWishlistProduct"]
     options: ManyRelation["PropertyGroupOption"]
-    properties: ManyRelation["PropertyGroupOption"]
+    properties: ManyRelation["PropertyGroup"]
     categories: ManyRelation["Category"]
     streams: ManyRelation["ProductStream"]
     categories_ro: ManyRelation["Category"]
@@ -134,7 +114,30 @@ class ProductRelations:
     """
 
 
-class Product(ProductBase["ProductEndpoint"], ProductRelations):
+class ProductValidators:
+    @field_validator('name')
+    def ensure_name_or_parent(cls, value: str | None, info: FieldValidationInfo, **kwargs: Any) -> str | None:
+        if value is None and info.data['parent_id'] is None:
+            raise ValueError('name may only be empty if parent_id is set')
+
+        return value
+
+    @field_validator('tax_id')
+    def ensure_tax_id_or_parent(cls, value: IdField | None, info: FieldValidationInfo, **kwargs: Any) -> IdField | None:
+        if value is None and info.data['parent_id'] is None:
+            raise ValueError('tax_id may only be empty if parent_id is set')
+
+        return value
+
+    @field_validator('price')
+    def ensure_price_or_parent(cls, value: list[dict[str, Any]] | None, info: FieldValidationInfo, **kwargs: Any) -> list[dict[str, Any]] | None:
+        if value is None and info.data['parent_id'] is None:
+            raise ValueError('price may only be empty if parent_id is set')
+
+        return value
+
+
+class Product(ProductBase["ProductEndpoint"], ProductRelations, ProductValidators):
     pass
 
 
@@ -163,6 +166,7 @@ from .product_search_keyword import ProductSearchKeyword  # noqa: E402
 from .product_stream import ProductStream  # noqa: E402
 from .product_visibility import ProductVisibility  # noqa: E402
 from .property_group_option import PropertyGroupOption  # noqa: E402
+from .property_group import PropertyGroup  # noqa: E402
 from .seo_url import SeoUrl  # noqa: E402
 from .tag import Tag  # noqa: E402
 from .tax import Tax  # noqa: E402
