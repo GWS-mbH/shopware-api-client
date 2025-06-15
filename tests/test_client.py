@@ -40,6 +40,11 @@ class TestAdminClient:
         client = AdminClient(config=self.admin_config)
         assert isinstance(client, AdminClient)
 
+    def test_instance(self) -> None:
+        client = AdminClient.instance(config=self.admin_config)
+        client2 = AdminClient.instance(config=self.admin_config)
+        assert id(client) == id(client2)
+
     def test_get_client(self) -> None:
         client = AdminClient(config=self.admin_config)
         httpx_client = client.http_client
@@ -81,6 +86,11 @@ class TestStoreClient:
     def test_creation(self) -> None:
         client = StoreClient(config=self.store_config)
         assert isinstance(client, StoreClient)
+
+    def test_instance(self) -> None:
+        client = StoreClient.instance(config=self.store_config)
+        client2 = StoreClient.instance(config=self.store_config)
+        assert id(client) == id(client2)
 
     def test_get_client(self) -> None:
         client = StoreClient(config=self.store_config)
