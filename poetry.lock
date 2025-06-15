@@ -135,6 +135,29 @@ files = [
 toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 
 [[package]]
+name = "fakeredis"
+version = "2.29.0"
+description = "Python implementation of redis API, can be used for testing purposes."
+optional = false
+python-versions = "<4.0,>=3.7"
+groups = ["dev"]
+files = [
+    {file = "fakeredis-2.29.0-py3-none-any.whl", hash = "sha256:f644c0a69dc088455d75a9b259d101e28a1c5659381aa6d9ee6c2b31eb5a909f"},
+    {file = "fakeredis-2.29.0.tar.gz", hash = "sha256:159cebf2c53e2c2bd7d18220fa93aa5f1d7152f6b6dd7896c46234d674342398"},
+]
+
+[package.dependencies]
+redis = {version = ">=4.3", markers = "python_full_version > \"3.8.0\""}
+sortedcontainers = ">=2,<3"
+
+[package.extras]
+bf = ["pyprobables (>=0.6,<0.7)"]
+cf = ["pyprobables (>=0.6,<0.7)"]
+json = ["jsonpath-ng (>=1.6,<2.0)"]
+lua = ["lupa (>=2.1,<3.0)"]
+probabilistic = ["pyprobables (>=0.6,<0.7)"]
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -743,7 +766,7 @@ version = "6.2.0"
 description = "Python client for Redis database and key-value store"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "redis-6.2.0-py3-none-any.whl", hash = "sha256:c8ddf316ee0aab65f04a11229e94a64b2618451dab7a67cb2f77eb799d872d5e"},
     {file = "redis-6.2.0.tar.gz", hash = "sha256:e821f129b75dde6cb99dd35e5c76e8c49512a5a0d8dfdc560b2fbd44b85ca977"},
@@ -792,6 +815,18 @@ groups = ["main"]
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
+]
+
+[[package]]
+name = "sortedcontainers"
+version = "2.4.0"
+description = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
+optional = false
+python-versions = "*"
+groups = ["dev"]
+files = [
+    {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
+    {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
 ]
 
 [[package]]
@@ -1032,4 +1067,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "6dc8fe80b8053279f0363ae6a6c72b4601adf12ae5c5b73e54e6fff5610d9a54"
+content-hash = "4f236677fb2b311d2a1085524fcba2aaf876174f099c171ce3e18744f1c8fb62"

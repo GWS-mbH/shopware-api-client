@@ -23,7 +23,8 @@ class AdminClient(ClientBase, AdminEndpoints):
     def _get_http_client(self) -> httpx.AsyncClient:
         if self._client is None:
             self._client = httpx.AsyncClient(
-                event_hooks={"request": [self.log_request], "response": [self.log_response]}
+                event_hooks={"request": [self.log_request], "response": [self.log_response]},
+                **self.httpx_init_kwargs,
             )
 
             # increase default(10s) timeouts
@@ -34,7 +35,7 @@ class AdminClient(ClientBase, AdminEndpoints):
             if self.config.grant_type == "client_credentials":
                 if self.config.client_id is not None and self.config.client_secret is not None:
                     # determine if we want to use redis cache backend for oauth caching
-                    if (redis_client := self.config.extra.get("redis_cache_client", None)) is not None:  # type: ignore
+                    if (redis_client := self.config.extra.pop("redis_cache_client", None)) is not None:  # type: ignore
                         TokenMemoryCacheRedis.redis_client = redis_client
                         auth_class = OAuth2ClientCredentialsRedisCached  # type: ignore
                     else:
@@ -42,6 +43,7 @@ class AdminClient(ClientBase, AdminEndpoints):
 
                     # init auth
                     self._client.auth = auth_class(
+                        client=httpx.Client(**self.httpx_init_kwargs),
                         token_url=auth_url,
                         client_id=self.config.client_id,
                         client_secret=self.config.client_secret,
@@ -52,7 +54,7 @@ class AdminClient(ClientBase, AdminEndpoints):
             elif self.config.grant_type == "password":
                 if self.config.username is not None and self.config.password is not None:
                     # determine if we want to use redis cache backend for oauth caching
-                    if (redis_client := self.config.extra.get("redis_cache_client", None)) is not None:  # type: ignore
+                    if (redis_client := self.config.extra.pop("redis_cache_client", None)) is not None:  # type: ignore
                         TokenMemoryCacheRedis.redis_client = redis_client
                         auth_class = OAuth2ResourceOwnerPasswordCredentialsRedisCached  # type: ignore
                     else:
@@ -60,6 +62,7 @@ class AdminClient(ClientBase, AdminEndpoints):
 
                     # init auth
                     self._client.auth = auth_class(
+                        client=httpx.Client(**self.httpx_init_kwargs),
                         token_url=auth_url,
                         username=self.config.username,
                         password=self.config.password,
@@ -201,6 +204,7 @@ class StoreClient(ClientBase, StoreEndpoints):
         if self._client is None:
             self._client = httpx.AsyncClient(
                 event_hooks={"request": [self.log_request], "response": [self.log_response]},
+                **self.httpx_init_kwargs,
             )
 
             headers = {
@@ -239,11 +243,11 @@ class TokenMemoryCacheRedis(TokenMemoryCache):
         **on_missing_token_kwargs: dict,
     ) -> str:
         redis_client = self.__class__.redis_client  # type: ignore
-        if isinstance(redis_client, Redis):
-            # check redis cache
+        if isinstance(redis_client, Redis) and key not in self.tokens:
+            # restore token from redis cache
             redis_cached = cast(str, redis_client.get(f"httpx_oauth_token_{key}"))
             if redis_cached:
-                return redis_cached
+                self.tokens[key] = json.loads(redis_cached)
 
         return cast(
             str,
@@ -266,8 +270,10 @@ class TokenMemoryCacheRedis(TokenMemoryCache):
         """
         redis_client = self.__class__.redis_client  # type: ignore
         if isinstance(redis_client, Redis):
-            # store in redis cache
-            redis_client.set(f"httpx_oauth_token_{key}", token, px=int(expiry * 1000))
+            # also store token in redis cache
+            redis_client.set(
+                f"httpx_oauth_token_{key}", json.dumps((token, expiry, refresh_token)), px=int(expiry * 1000)
+            )
 
         super()._add_token(key, token, expiry, refresh_token)
 

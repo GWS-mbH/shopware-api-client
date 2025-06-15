@@ -60,7 +60,7 @@ class ConfigBase:
         for k, v in self.__dict__.items():
             if isinstance(v, dict):
                 # support dict hashing
-                items.append((k, json.dumps(v)))
+                items.append((k, repr(v)))
             else:
                 items.append((k, v))
         return hash(tuple(items))
@@ -77,6 +77,8 @@ class ClientBase:
     def __init__(self, config: ConfigBase, raw: bool = False):
         self.api_url = config.url
         self.raw = raw
+        # helper dict to allow additional httpx client kwarg injections
+        self.httpx_init_kwargs: dict = {}
 
     _instances: dict[str, Self] = {}
 

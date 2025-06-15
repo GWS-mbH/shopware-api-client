@@ -1,11 +1,13 @@
 import logging
+from typing import cast
 from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+from fakeredis import FakeRedis
 from pytest_mock import MockerFixture
 
-from shopware_api_client.client import AdminClient, StoreClient
+from shopware_api_client.client import AdminClient, OAuth2ClientCredentialsRedisCached, StoreClient
 from shopware_api_client.config import AdminConfig, StoreConfig
 from shopware_api_client.exceptions import SWAPIConfigException, SWAPIDataValidationError, SWAPIError
 
@@ -23,7 +25,11 @@ class TestAdminClient:
         mocker.patch(
             "httpx.AsyncClient.request",
             AsyncMock(
-                return_value=httpx.Response(status_code=200, content="read error", headers={"x-trace-id": "bla", "content-type": "application/json"})
+                return_value=httpx.Response(
+                    status_code=200,
+                    content="read error",
+                    headers={"x-trace-id": "bla", "content-type": "application/json"},
+                )
             ),
         )
         client = AdminClient(config=self.admin_config)
@@ -57,7 +63,7 @@ class TestAdminClient:
 
         with pytest.raises(SWAPIConfigException):
             httpx_client = client.http_client
-        
+
         assert httpx_client is None
 
     async def test_error_on_invalid_data_from_shopware(
@@ -77,6 +83,48 @@ class TestAdminClient:
         assert caplog.records[0].id == 1
         assert caplog.records[1].id is None
         assert caplog.records[2].id == 3
+
+    async def test_redis_cache(self, redis_client: FakeRedis):
+        self.setup_method()
+        self.admin_config.extra["redis_cache_client"] = redis_client
+
+        #
+        # test client setting up cache in httpx client
+        #
+        client = AdminClient.instance(config=self.admin_config)
+
+        httpx_call_count = 0
+
+        def httpx_mock_request(request):
+            nonlocal httpx_call_count
+            httpx_call_count += 1
+            return httpx.Response(
+                200,
+                content='{"access_token": "test-token","token_type":"Bearer","expires_in":3600,"refresh_token":"refresh-token"}',
+            )
+
+        # mock httpx client
+        client.httpx_init_kwargs["transport"] = httpx.MockTransport(httpx_mock_request)
+
+        httpx_client = client.http_client
+        assert isinstance(httpx_client.auth, OAuth2ClientCredentialsRedisCached)
+
+        #
+        # test cache
+        #
+        client_auth = cast(OAuth2ClientCredentialsRedisCached, client.http_client.auth)
+
+        # add non-cached token
+        request = httpx.Request("get", "/test")
+        httpx_client = next(client_auth.auth_flow(request))
+        assert httpx_call_count == 1
+        assert request.headers.get(client_auth.header_name) == "Bearer test-token"
+
+        # get cached token
+        request = httpx.Request("get", "/test")
+        httpx_client = next(client_auth.auth_flow(request))
+        assert httpx_call_count == 1  # cached, should stay at 1
+        assert request.headers.get(client_auth.header_name) == "Bearer test-token"
 
 
 class TestStoreClient:

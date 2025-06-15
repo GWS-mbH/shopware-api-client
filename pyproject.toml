@@ -36,6 +36,7 @@ ruff = ">=0.5.0,<0.10"
 pytest-asyncio = ">=0.23.3,<0.26.0"
 pytest-recording = "^0.13.1"
 pytest-mock = "^3.14.0"
+fakeredis = "^2.29.0"
 
 [build-system]
 requires = ["poetry-core"]
