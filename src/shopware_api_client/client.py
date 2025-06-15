@@ -225,7 +225,7 @@ class StoreClient(ClientBase, StoreEndpoints):
 
 
 #
-# httpx_auth.TokenMemoryCache that uses redis classes
+# httpx_auth.TokenMemoryCache that uses redis as additional cache backend
 #
 
 
