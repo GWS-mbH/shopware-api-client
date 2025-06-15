@@ -203,8 +203,7 @@ class ClientBase:
                 if retry_count == retries:
                     raise error
 
-                logger.debug(f"Try failed, retrying in {2**retry_count} seconds.")
-                await asyncio.sleep(2**retry_count)
+                await self.retry_sleep(retry_wait_base, retry_count)
                 retry_count += 1
             elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
                 # guard against "200 okay" responses with malformed json
