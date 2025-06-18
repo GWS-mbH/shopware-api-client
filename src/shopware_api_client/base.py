@@ -147,7 +147,7 @@ class ClientBase:
                 retry_count += 1
                 continue
 
-            if response.status_code >= 400:
+            if response.status_code >= 400 and response.status_code != 429:
                 try:
                     errors: list = response.json().get("errors")
                     # ensure `errors` attribute is a list/tuple, fallback to from_response if not
