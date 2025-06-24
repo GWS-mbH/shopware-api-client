@@ -146,8 +146,12 @@ class ClientBase:
                 await asyncio.sleep(2**retry_count)
                 retry_count += 1
                 continue
-
-            if response.status_code >= 400 and response.status_code != 429:
+            if response.status_code == 429:
+                # directly raise 429
+                error: SWAPIError = SWAPIError.from_response(response)
+                raise error
+            elif response.status_code >= 400:
+                # retry other failure codes
                 try:
                     errors: list = response.json().get("errors")
                     # ensure `errors` attribute is a list/tuple, fallback to from_response if not
