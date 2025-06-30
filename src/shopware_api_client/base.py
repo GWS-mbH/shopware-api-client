@@ -127,7 +127,7 @@ class ClientBase:
         headers = self._get_headers()
         headers.update(kwargs.pop("headers", {}))
 
-        retry_wait_base = int(kwargs.pop("retriy_wait_base", 2))
+        retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
         retries = int(kwargs.pop("retries", 0))
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
@@ -158,8 +158,8 @@ class ClientBase:
                     if not isinstance(errors, (list, tuple)):
                         raise ValueError("`errors` attribute in json not a list/tuple!")
 
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)
-                except ValueError:
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)  # type: ignore
+                except (json.JSONDecodeError, ValueError):
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
 
                 if isinstance(error, SWAPIErrorList) and len(error.errors) == 1:

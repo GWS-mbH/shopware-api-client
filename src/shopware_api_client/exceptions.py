@@ -95,7 +95,7 @@ class SWAPIError(SWAPIException):
     @classmethod
     def from_response(cls, response: Response) -> "SWAPIError":
         exception_class = cls.get_exception_class(response.status_code)
-        response.headers["requested-url"] = response.request.url
+        response.headers["requested-url"] = str(response.request.url)
         return exception_class(
             status=response.status_code,
             title=response.reason_phrase,
