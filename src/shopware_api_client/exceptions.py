@@ -95,7 +95,13 @@ class SWAPIError(SWAPIException):
     @classmethod
     def from_response(cls, response: Response) -> "SWAPIError":
         exception_class = cls.get_exception_class(response.status_code)
-        response.headers["requested-url"] = str(response.request.url)
+
+        try:
+            response.headers["requested-url"] = str(response.request.url)
+        except RuntimeError:
+            # If the request URL is not available, we can ignore it.
+            pass
+
         return exception_class(
             status=response.status_code,
             title=response.reason_phrase,
