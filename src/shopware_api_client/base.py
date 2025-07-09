@@ -51,8 +51,22 @@ ModelClass = TypeVar("ModelClass", bound="ApiModelBase[Any]")
 
 
 class ConfigBase:
-    def __init__(self, url: str):
+    def __init__(self, url: str, extra: dict[str, Any] = {}):
         self.url = url.rstrip("/")
+        self.extra = extra
+
+    def __hash__(self) -> int:
+        items = []
+        for k, v in self.__dict__.items():
+            if isinstance(v, dict):
+                # support dict hashing
+                items.append((k, repr(v)))
+            else:
+                items.append((k, v))
+        return hash(tuple(items))
+
+
+T = TypeVar("T", bound="ClientBase")
 
 
 class ClientBase:
@@ -63,6 +77,21 @@ class ClientBase:
     def __init__(self, config: ConfigBase, raw: bool = False):
         self.api_url = config.url
         self.raw = raw
+        # helper dict to allow additional httpx client kwarg injections
+        self.httpx_init_kwargs: dict = {}
+
+    _instances: dict[str, Self] = {}
+
+    @classmethod
+    def instance(cls: Type[T], config: ConfigBase, raw: bool = False) -> T:
+        """
+        Get client instance, uses cache to avoid reinstantiations.
+        """
+        key = str(hash((config, raw)))
+        if (instance := cls._instances.get(key, None)) is None:
+            cls._instances[key] = instance = cls(config, raw)
+
+        return cast(T, instance)
 
     async def __aenter__(self) -> "Self":
         client = self.http_client
