@@ -53,11 +53,6 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 strict_optional = true
 
-[[tool.mypy.overrides]]
-# Mypy does not find the stubs in redis >5.0
-module = "redis.asyncio"
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 python_files = ["test_*.py", "*_test.py"]
 filterwarnings = ["ignore::DeprecationWarning"]
