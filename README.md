@@ -4,7 +4,12 @@ A Django-ORM like, Python 3.12, async Shopware 6 admin and store-front API clien
 
 ## Installation
 
+```sh
 pip install shopware-api-client
+
+# If you want to use the redis cache
+pip install shopware-api-client[redis]
+```
 
 ## Usage
 
@@ -126,7 +131,7 @@ await client.ce_blog.all()
 
 # Pydantic Model for the custom entity ce_blog
 CeBlog = client.ce_blog.model_class
-``` 
+```
 Since custom entities are completely dynamic no autocompletion in IDE is available. However there are some pydantic validations added for the field-types of the custom entity. Relations are currently not supported, but everything else should work as expected.
 
 ### client.StoreClient
@@ -149,6 +154,39 @@ config = StoreConfig(url=SHOP_URL, access_key=STORE_API_ACCESS_KEY, context_toke
 ```
 
 This config can be used with the `StoreClient`, which works exactly like the `AdminClient`.
+
+### Redis Caching for Rate Limits
+
+Both the AdminClient and the StoreClient use a built-in rate limiter. Shopware's rate limits differ based on the endpoints, both for the [SaaS-](https://docs.shopware.com/en/en/shopware-6-en/saas/rate-limits) and the [on-premise-solution](https://developer.shopware.com/docs/guides/hosting/infrastructure/rate-limiter.html).
+
+To be able to respect the rate limit when sending requests from multiple clients, it is possible to use redis as a chache-backend for route-based rate-limit data. If redis is not used, each Client independently keeps track of the rate limit. Please note that the non-Redis cache is not thread-safe.
+
+To use redis, simply hand over a redis-client to the client config:
+```py
+import redis
+from shopware_api_client.config import AdminConfig, StoreConfig
+from shopware_api_client.client import AdminClient, StoreClient
+
+redis_client = redis.Redis()
+
+admin_config = AdminConfig(
+    url='',
+    client_id='...',
+    client_secre='...',
+    redis_client=redis_client,
+)
+admin_client = AdminClient(config=config)  # <- This client uses the redis client now
+
+store_config = StoreConfig(
+    url='',
+    access_key='',
+    context_token=''
+    redis_client=redis_client,
+)
+store_client = StoreClient(config=config)  # <- Works for store client as well (Only do this in safe environments)
+```
+
+__Note:__ Shopware currently enforces rate limits on a per–public‑IP basis. As a result, you should only share Redis‑backed rate‑limit caching among clients that originate from the same public IP address.
 
 ## EndpointBase
 The `base.EndpointBase` class should be used for creating new Endpoints. It provides some usefull functions to call
