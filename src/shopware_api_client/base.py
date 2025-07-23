@@ -265,8 +265,6 @@ class ClientBase:
                     asyncio.sleep(retry_wait_time),
                 )
 
-                continue
-
             elif response.status_code >= 400:
                 # retry other failure codes
                 try:

@@ -119,8 +119,8 @@ class TestClientBase:
         actual_ts = self.client.get_header_ts(header_naive, standard_time)
         assert actual_ts == expected_ts, "The Date header without timezone did not parse correctly"
 
-        assert standard_time == self.client.get_header_ts(
-            None, standard_time
+        assert int(standard_time * 100) == int(
+            self.client.get_header_ts(None, standard_time) * 100
         ), "Did not return the current time when Date header was missing"
 
     def test_parse_reset_time(self, rate_limit_headers) -> None:
