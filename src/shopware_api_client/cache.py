@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from time import time
-from typing import Any, NamedTuple, cast
+from typing import Any, Awaitable, NamedTuple, cast
 
 try:
     from redis.asyncio import Redis
@@ -72,9 +72,8 @@ class RedisCache(CacheBase):
         return self._json_decode(value)
 
     async def get_and_decrement(self, key: str) -> int | None:
-        return_value = await self.client.eval(self._DECR_IF_EXISTS, 1, key)
-        value = cast(int | None, return_value)
-        return None if value is None else value + 1
+        return_value = await cast(Awaitable[int | None], self.client.eval(self._DECR_IF_EXISTS, 1, key))
+        return None if return_value is None else return_value + 1
 
     async def has_lock(self, key: str, ttl: int) -> bool:
         return await self.client.set(key, 1, ex=ttl, nx=True) or False

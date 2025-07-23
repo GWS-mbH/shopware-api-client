@@ -159,7 +159,7 @@ This config can be used with the `StoreClient`, which works exactly like the `Ad
 
 Both the AdminClient and the StoreClient use a built-in rate limiter. Shopware's rate limits differ based on the endpoints, both for the [SaaS-](https://docs.shopware.com/en/en/shopware-6-en/saas/rate-limits) and the [on-premise-solution](https://developer.shopware.com/docs/guides/hosting/infrastructure/rate-limiter.html).
 
-To be able to respect the rate limit when sending requests from multiple clients, it is possible to use redis as a chache-backend for route-based rate-limit data. If redis is not used, each Client independently keeps track of the rate limit. Please note that the non-Redis cache is not thread-safe.
+To be able to respect the rate limit when sending requests from multiple clients, it is possible to use redis as a cache-backend for route-based rate-limit data. If redis is not used, each Client independently keeps track of the rate limit. Please note that the non-Redis cache is not thread-safe.
 
 To use redis, simply hand over a redis-client to the client config:
 ```py
