@@ -24,6 +24,10 @@ class SWAPIConfigException(SWAPIException):
     pass
 
 
+class SWAPIRetryException(SWAPIException):
+    pass
+
+
 class SWAPIMethodNotAvailable(SWAPIConfigException):
     def __init__(self, msg: str | None = None, *args: list[Any], **kwargs: dict[Any, Any]) -> None:
         if not msg:
