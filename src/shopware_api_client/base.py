@@ -167,17 +167,17 @@ class ClientBase:
     def parse_retry_after(self, headers: httpx.Headers) -> int:
         retry_header: str | None = headers.get("Retry-After")
         if retry_header is None:
-            return 0
+            return 1
 
         if retry_header.isdigit():
-            return int(retry_header)
+            return max(1, int(retry_header))
 
         current_time = time()
         server_ts = self.get_header_ts(headers.get("Date"), current_time)
         retry_ts = self.get_header_ts(retry_header, current_time)
         adjusted_time = retry_ts - server_ts
 
-        return max(0, ceil(adjusted_time))
+        return max(1, ceil(adjusted_time))
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):

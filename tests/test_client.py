@@ -136,7 +136,12 @@ class TestClientBase:
 
     def test_parse_retry_after(self) -> None:
         response = httpx.Response(status_code=429)
-        assert 0 == self.client.parse_retry_after(response.headers), "Missing Retry-After header did not return 0"
+        assert 1 == self.client.parse_retry_after(response.headers), "Missing Retry-After header did not return 1"
+
+        response = httpx.Response(status_code=429, headers={"Retry-After": "0"})
+        assert 1 == self.client.parse_retry_after(
+            response.headers
+        ), "Retry-After header of 0 did not result in returning 1"
 
         response = httpx.Response(status_code=200, headers={"Retry-After": "5"})
         assert 5 == self.client.parse_retry_after(
@@ -152,6 +157,16 @@ class TestClientBase:
         assert 10 == self.client.parse_retry_after(
             response.headers
         ), "Missing Retry-After header did not parse date format correctly"
+
+        headers.update(
+            {
+                "Retry-After": (now - timedelta(seconds=10)).strftime("%a, %d %b %Y %H:%M:%S"),
+            }
+        )
+        response = httpx.Response(status_code=200, headers=headers)
+        assert 1 == self.client.parse_retry_after(
+            response.headers
+        ), "Negative time-delay from Retry-After header did not result in returning 1"
 
     async def test_x_rate_limit_retry(self, patch_request, rate_limit_headers, monkeypatch) -> None:
         now = datetime.now()
