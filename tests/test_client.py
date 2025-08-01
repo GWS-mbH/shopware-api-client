@@ -27,13 +27,17 @@ from shopware_api_client.exceptions import (
 
 @pytest.fixture
 def rate_limit_headers():
-    def _rate_limit_headers(remaining: int, reset: int, now: datetime = datetime.now()):
-        return {
+    def _rate_limit_headers(remaining: int, reset: int | None, now: datetime = datetime.now()):
+        headers = {
             "Date": now.strftime("%a, %d %b %Y %H:%M:%S"),
             HEADER_X_RATE_LIMIT_LIMIT: "1",
             HEADER_X_RATE_LIMIT_REMAINING: f"{remaining}",
-            HEADER_X_RATE_LIMIT_RESET: str(int(now.timestamp()) + reset),
         }
+
+        if reset is not None:
+            headers[HEADER_X_RATE_LIMIT_RESET] = str(int(now.timestamp()) + reset)
+
+        return headers
 
     return _rate_limit_headers
 
@@ -211,6 +215,19 @@ class TestClientBase:
         assert 1 == await self.client.cache.get(self.limit_key), "Limit was not cached properly"
         assert 0 == await self.client.cache.get(self.remaining_key), "Remaining requests were not cached properly"
         await self.assert_cached_reset_timestamp(now, wait_time)
+
+    async def test_x_rate_limit_retry_0_reset_time(self, patch_request, rate_limit_headers) -> None:
+        patch_request(status=200, content="{}", headers=rate_limit_headers(remaining=1, reset=0))
+        await self.client._make_request(self.method, self.relative_url)
+        assert (
+            self.client.cache._cache.get(self.reset_key) is None  # type: ignore
+        ), f"Cache key was set for {self.reset_key!r} but it shouldn't be set"
+
+        patch_request(status=200, content="{}", headers=rate_limit_headers(remaining=0, reset=None))
+        await self.client._make_request(self.method, self.relative_url)
+        assert (
+            self.client.cache._cache.get(self.reset_key) is None  # type: ignore
+        ), f"Cache key was set for {self.reset_key!r} but it shouldn't be set"
 
     async def test_x_rate_limit_retry_threshold(self, patch_request, rate_limit_headers) -> None:
         patch_request(status=200, content="{}", headers=rate_limit_headers(remaining=0, reset=60))

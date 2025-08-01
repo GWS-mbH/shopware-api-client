@@ -241,11 +241,15 @@ class ClientBase:
                 wait_time = self.parse_reset_time(response.headers)
                 remaining_requests = int(response.headers.get(HEADER_X_RATE_LIMIT_REMAINING))
 
-                await asyncio.gather(
-                    self.cache.set(x_retry_limit_cache_key, x_retry_limit),
-                    self.cache.set(x_retry_reset_cache_key, int(time()) + wait_time, wait_time),
+                tasks = [
                     self.cache.set(x_retry_remaining_cache_key, remaining_requests),
-                )
+                    self.cache.set(x_retry_limit_cache_key, x_retry_limit),
+                ]
+
+                if wait_time > 0:
+                    tasks.append(self.cache.set(x_retry_reset_cache_key, int(time()) + wait_time, wait_time))
+
+                await asyncio.gather(*tasks)
 
                 if got_lock:
                     await self.cache.delete(x_retry_lock_cache_key)
