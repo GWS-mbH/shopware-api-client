@@ -13,7 +13,7 @@ class MediaBase(ApiModelBase[EndpointClass]):
     user_id: IdField | None = None
     media_folder_id: IdField | None = Field(default=None)
     mime_type: str | None = Field(default=None)
-    file_extension: str | None = Field(default=None, exclude=True)
+    file_extension: str | None = Field(default=None)
     uploaded_at: AwareDatetime | None = Field(default=None, exclude=True)
     file_name: str | None = Field(default=None)
     file_size: int | None = Field(default=None, exclude=True)
