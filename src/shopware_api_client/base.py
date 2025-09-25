@@ -277,7 +277,7 @@ class ClientBase:
                     if not isinstance(errors, (list, tuple)):
                         raise ValueError("`errors` attribute in json not a list/tuple!")
 
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)  # type: ignore
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors, response)  # type: ignore
                 except ValueError:
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
 

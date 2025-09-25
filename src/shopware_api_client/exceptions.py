@@ -47,6 +47,8 @@ class SWAPIError(SWAPIException):
         self.source = kwargs.get("source", {})
         self.meta = kwargs.get("meta", {})
         self.headers = kwargs.get("headers", {})
+        self.request = kwargs.get("request", None)
+        self.response = kwargs.get("response", None)
 
     def __str__(self) -> str:
         return f"Status: {self.status} {self.title} - {self.detail} - {self.source}"
@@ -87,10 +89,11 @@ class SWAPIError(SWAPIException):
                 return SWAPIError
 
     @classmethod
-    def from_errors(cls, errors: list[dict[str, Any]]) -> "SWAPIErrorList":
+    def from_errors(cls, errors: list[dict[str, Any]], response: Response) -> "SWAPIErrorList":
         errlist = []
 
         for error in errors:
+            error.update({"response": response, "request": response.request})
             exception_class = cls.get_exception_class(int(error["status"]))
             errlist.append(exception_class(**error))
 
@@ -111,6 +114,8 @@ class SWAPIError(SWAPIException):
             title=response.reason_phrase,
             detail=response.text,
             headers=response.headers,
+            request=response.request,
+            response=response,
         )
 
 
