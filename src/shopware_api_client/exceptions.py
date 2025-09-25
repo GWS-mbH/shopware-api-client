@@ -114,7 +114,7 @@ class SWAPIError(SWAPIException):
             title=response.reason_phrase,
             detail=response.text,
             headers=response.headers,
-            request=response.request,
+            request=response._request,
             response=response,
         )
 
