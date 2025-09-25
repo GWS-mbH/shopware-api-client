@@ -1,8 +1,12 @@
 import asyncio
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
+from email.utils import parsedate_to_datetime
 from functools import cached_property
+from math import ceil
+from time import time
 from typing import (
+    TYPE_CHECKING,
     Any,
     AsyncGenerator,
     Callable,
@@ -29,6 +33,7 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 
+from .cache import DictCache, RedisCache
 from .endpoints.base_fields import IdField
 from .exceptions import (
     SWAPIDataValidationError,
@@ -37,22 +42,41 @@ from .exceptions import (
     SWAPIException,
     SWAPIGatewayTimeout,
     SWAPIInternalServerError,
+    SWAPIRetryException,
     SWAPIServiceUnavailable,
-    SWAPITooManyRequests,
     SWFilterException,
     SWNoClientProvided,
 )
 from .logging import logger
 
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
+
 APPLICATION_JSON = "application/json"
 
 EndpointClass = TypeVar("EndpointClass", bound="EndpointBase[Any]")
 ModelClass = TypeVar("ModelClass", bound="ApiModelBase[Any]")
+RETRY_CACHE_KEY = "shopware-api-client:retry:{url}:{method}"
+HEADER_X_RATE_LIMIT_LIMIT = "X-Rate-Limit-Limit"
+HEADER_X_RATE_LIMIT_REMAINING = "X-Rate-Limit-Remaining"
+HEADER_X_RATE_LIMIT_RESET = "X-Rate-Limit-Reset"
 
 
 class ConfigBase:
-    def __init__(self, url: str):
+    def __init__(
+        self,
+        url: str,
+        retry_after_threshold: int = 60,
+        redis_client: "Redis | None" = None,
+        local_cache_cleanup_cycle_seconds: int = 10,
+    ) -> None:
         self.url = url.rstrip("/")
+        self.retry_after_threshold = retry_after_threshold
+        self.cache = (
+            RedisCache(redis_client)
+            if redis_client
+            else DictCache(cleanup_cycle_seconds=local_cache_cleanup_cycle_seconds)
+        )
 
 
 class ClientBase:
@@ -60,8 +84,10 @@ class ClientBase:
     raw: bool
     language_id: IdField | None = None
 
-    def __init__(self, config: ConfigBase, raw: bool = False):
+    def __init__(self, config: ConfigBase, raw: bool = False) -> None:
         self.api_url = config.url
+        self.retry_after_threshold = config.retry_after_threshold
+        self.cache = config.cache
         self.raw = raw
 
     async def __aenter__(self) -> "Self":
@@ -112,10 +138,46 @@ class ClientBase:
         client = self.http_client
         client.timeout = timeout  # type: ignore
 
-    async def retry_sleep(self, retry_wait_base: int, retry_count: int) -> None:
-        retry_sleep = retry_wait_base**retry_count
-        logger.debug(f"Try failed, retrying in {retry_sleep} seconds.")
-        await asyncio.sleep(retry_sleep)
+    async def sleep_and_increment(self, retry_wait_base: int, retry_count: int) -> int:
+        retry_count += 1
+        sleep_and_increment = retry_wait_base**retry_count
+        logger.debug(f"Try failed, retrying in {sleep_and_increment} seconds.")
+        await asyncio.sleep(sleep_and_increment)
+        return retry_count
+
+    def get_header_ts(self, header: str | None, fallback_time: float) -> float:
+        if header is None:
+            return fallback_time
+
+        server_dt = parsedate_to_datetime(header)
+        # ensure timezone-aware UTC
+        if server_dt.tzinfo is None:
+            server_dt = server_dt.replace(tzinfo=timezone.utc)
+
+        return server_dt.timestamp()
+
+    def parse_reset_time(self, headers: httpx.Headers) -> int:
+        """Determine reset wait time based on server time"""
+        server_ts = self.get_header_ts(headers.get("Date"), time())
+        reset_ts = float(headers.get(HEADER_X_RATE_LIMIT_RESET, "0"))
+        adjusted_time = reset_ts - server_ts
+
+        return max(0, ceil(adjusted_time))
+
+    def parse_retry_after(self, headers: httpx.Headers) -> int:
+        retry_header: str | None = headers.get("Retry-After")
+        if retry_header is None:
+            return 1
+
+        if retry_header.isdigit():
+            return max(1, int(retry_header))
+
+        current_time = time()
+        server_ts = self.get_header_ts(headers.get("Date"), current_time)
+        retry_ts = self.get_header_ts(retry_header, current_time)
+        adjusted_time = retry_ts - server_ts
+
+        return max(1, ceil(adjusted_time))
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
@@ -127,34 +189,95 @@ class ClientBase:
         headers = self._get_headers()
         headers.update(kwargs.pop("headers", {}))
 
-        retry_wait_base = int(kwargs.pop("retriy_wait_base", 2))
+        retry_after_threshold = int(kwargs.pop("retry_after_threshold", self.retry_after_threshold))
+        retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
         retries = int(kwargs.pop("retries", 0))
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
-        no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPITooManyRequests]))
+        no_retry_errors = tuple(kwargs.pop("no_retry_errors", []))
 
         kwargs.setdefault("follow_redirects", True)
 
+        key_base = RETRY_CACHE_KEY.format(
+            url=url.removeprefix("https://").removeprefix("http://"),
+            method=method,
+        )
+        x_retry_limit_cache_key = key_base + ":limit"
+        x_retry_remaining_cache_key = key_base + ":remaining"
+        x_retry_reset_cache_key = key_base + ":reset"
+        x_retry_lock_cache_key = key_base + ":lock"
+        got_lock = False
+
         retry_count = 0
         while True:
+            x_retry_remaining = await self.cache.get_and_decrement(x_retry_remaining_cache_key)
+            if x_retry_remaining is not None and x_retry_remaining <= 0 and not got_lock:
+                current_time = int(time())
+                reset_time = cast(int, await self.cache.get(x_retry_reset_cache_key)) or 0
+                wait_time = max(1, reset_time - current_time)
+
+                if wait_time > retry_after_threshold:
+                    raise SWAPIRetryException(
+                        f"Retry threshold exceeded for endpoint {url!r}. Threshold: {retry_after_threshold}s, Retry-After: {wait_time}s"
+                    )
+
+                await asyncio.sleep(wait_time)
+
+                got_lock = await self.cache.has_lock(x_retry_lock_cache_key, wait_time)
+                continue
+
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
             except httpx.RequestError as exc:
                 if retry_count >= retries:
                     raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
-                await asyncio.sleep(2**retry_count)
-                retry_count += 1
+                retry_count = await self.sleep_and_increment(retry_wait_base, retry_count)
                 continue
 
-            if response.status_code >= 400:
+            # Set retry-cache if headers are present
+            if rl_limit := response.headers.get(HEADER_X_RATE_LIMIT_LIMIT):
+                x_retry_limit = int(rl_limit)
+                wait_time = self.parse_reset_time(response.headers)
+                remaining_requests = int(response.headers.get(HEADER_X_RATE_LIMIT_REMAINING))
+
+                tasks = [
+                    self.cache.set(x_retry_remaining_cache_key, remaining_requests),
+                    self.cache.set(x_retry_limit_cache_key, x_retry_limit),
+                ]
+
+                if wait_time > 0:
+                    tasks.append(self.cache.set(x_retry_reset_cache_key, int(time()) + wait_time, wait_time))
+
+                await asyncio.gather(*tasks)
+
+                if got_lock:
+                    await self.cache.delete(x_retry_lock_cache_key)
+                    got_lock = False
+
+            if response.status_code == 429:
+                retry_wait_time = self.parse_retry_after(response.headers)
+                if retry_wait_time > retry_after_threshold:
+                    error = SWAPIError.from_response(response)
+                    raise SWAPIRetryException(
+                        f"Retry threshold exceeded for endpoint {url!r}. Threshold: {retry_after_threshold}s, Retry-After: {retry_wait_time}s"
+                    ) from error
+
+                # If 429 is thrown, Retry-After == X-Rate-Limit-Reset
+                await asyncio.gather(
+                    self.cache.set(x_retry_reset_cache_key, int(time()) + retry_wait_time, retry_wait_time),
+                    asyncio.sleep(retry_wait_time),
+                )
+
+            elif response.status_code >= 400:
+                # retry other failure codes
                 try:
                     errors: list = response.json().get("errors")
                     # ensure `errors` attribute is a list/tuple, fallback to from_response if not
                     if not isinstance(errors, (list, tuple)):
                         raise ValueError("`errors` attribute in json not a list/tuple!")
 
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors)
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors, response)  # type: ignore
                 except ValueError:
                     error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
 
@@ -171,11 +294,10 @@ class ClientBase:
                 elif isinstance(error, no_retry_errors) or not isinstance(error, retry_errors):
                     raise error
 
-                if retry_count == retries:
+                if retry_count >= retries:
                     raise error
 
-                await self.retry_sleep(retry_wait_base, retry_count)
-                retry_count += 1
+                retry_count = await self.sleep_and_increment(retry_wait_base, retry_count)
             elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
                 # guard against "200 okay" responses with malformed json
                 try:
@@ -192,9 +314,7 @@ class ClientBase:
                         )
                         raise exception
 
-                    # schedule retry
-                    await self.retry_sleep(retry_wait_base, retry_count)
-                    retry_count += 1
+                    retry_count = await self.sleep_and_increment(retry_wait_base, retry_count)
             else:
                 return response
 
@@ -405,6 +525,9 @@ class EndpointBase(Generic[ModelClass]):
         if not self.model_class.__pydantic_complete__:
             self.model_class.model_rebuild()
 
+        if name == getattr(self.model_class, "_identifier").get_default():
+            return name
+
         field = self.model_class.model_fields[name]
 
         if get_origin(field.annotation) in [ForeignRelation, ManyRelation]:
@@ -584,7 +707,9 @@ class EndpointBase(Generic[ModelClass]):
         return self
 
     def only(self, **kwargs: list[str]) -> Self:
-        self._includes.update({self._serialize_field_name(field): data for field, data in kwargs.items()})
+        for field, data in kwargs.items():
+            self._includes[self._serialize_field_name(field)] = [self._serialize_field_name(d) for d in data]
+
         return self
 
     def filter(self, **kwargs: Any) -> Self:

@@ -14,6 +14,7 @@ class AdminConfig(ConfigBase):
         client_secret: str | None = None,
         grant_type: str = "client_credentials",
         extra: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         match grant_type:
             case "client_credentials":
@@ -27,7 +28,7 @@ class AdminConfig(ConfigBase):
             case _:
                 raise SWAPIConfigException("Invalid 'grant_type'. Must be one of: 'client_credentials', 'password'")
 
-        super().__init__(url=url)
+        super().__init__(url=url, **kwargs)
         self.username = username
         self.password = password
         self.client_id = client_id
@@ -37,7 +38,7 @@ class AdminConfig(ConfigBase):
 
 
 class StoreConfig(ConfigBase):
-    def __init__(self, url: str, access_key: str, context_token: str | None = None):
-        super().__init__(url=url)
+    def __init__(self, url: str, access_key: str, context_token: str | None = None, **kwargs: Any):
+        super().__init__(url=url, **kwargs)
         self.access_key = access_key
         self.context_token = context_token

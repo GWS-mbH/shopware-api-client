@@ -24,6 +24,10 @@ class SWAPIConfigException(SWAPIException):
     pass
 
 
+class SWAPIRetryException(SWAPIException):
+    pass
+
+
 class SWAPIMethodNotAvailable(SWAPIConfigException):
     def __init__(self, msg: str | None = None, *args: list[Any], **kwargs: dict[Any, Any]) -> None:
         if not msg:
@@ -43,6 +47,8 @@ class SWAPIError(SWAPIException):
         self.source = kwargs.get("source", {})
         self.meta = kwargs.get("meta", {})
         self.headers = kwargs.get("headers", {})
+        self.request = kwargs.get("request", None)
+        self.response = kwargs.get("response", None)
 
     def __str__(self) -> str:
         return f"Status: {self.status} {self.title} - {self.detail} - {self.source}"
@@ -83,10 +89,11 @@ class SWAPIError(SWAPIException):
                 return SWAPIError
 
     @classmethod
-    def from_errors(cls, errors: list[dict[str, Any]]) -> "SWAPIErrorList":
+    def from_errors(cls, errors: list[dict[str, Any]], response: Response) -> "SWAPIErrorList":
         errlist = []
 
         for error in errors:
+            error.update({"response": response, "request": response.request})
             exception_class = cls.get_exception_class(int(error["status"]))
             errlist.append(exception_class(**error))
 
@@ -95,11 +102,20 @@ class SWAPIError(SWAPIException):
     @classmethod
     def from_response(cls, response: Response) -> "SWAPIError":
         exception_class = cls.get_exception_class(response.status_code)
+
+        try:
+            response.headers["requested-url"] = str(response.request.url)
+        except RuntimeError:
+            # If the request URL is not available, we can ignore it.
+            pass
+
         return exception_class(
             status=response.status_code,
             title=response.reason_phrase,
             detail=response.text,
             headers=response.headers,
+            request=response._request,
+            response=response,
         )
 
 
