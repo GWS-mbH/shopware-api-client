@@ -523,6 +523,9 @@ class EndpointBase(Generic[ModelClass]):
         if not self.model_class.__pydantic_complete__:
             self.model_class.model_rebuild()
 
+        if name == getattr(self.model_class, "_identifier").get_default():
+            return name
+
         field = self.model_class.model_fields[name]
 
         if get_origin(field.annotation) in [ForeignRelation, ManyRelation]:
@@ -696,7 +699,9 @@ class EndpointBase(Generic[ModelClass]):
         return self
 
     def only(self, **kwargs: list[str]) -> Self:
-        self._includes.update({self._serialize_field_name(field): data for field, data in kwargs.items()})
+        for field, data in kwargs.items():
+            self._includes[self._serialize_field_name(field)] = [self._serialize_field_name(d) for d in data]
+
         return self
 
     def filter(self, **kwargs: Any) -> Self:
