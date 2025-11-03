@@ -10,7 +10,7 @@ from ...relations import ForeignRelation
 
 class MediaThumbnailBase(ApiModelBase[EndpointClass]):
     _identifier = "media_thumbnail"
-    created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
+    created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)  # type: ignore
 
     media_id: IdField
     width: int = Field(default=0, exclude=True)
