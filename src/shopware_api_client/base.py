@@ -597,7 +597,7 @@ class EndpointBase(Generic[ModelClass]):
 
         return data
 
-    def _prase_data_single(self, reponse_dict: dict[str, Any]) -> dict[str, Any]:
+    def _parse_data_single(self, reponse_dict: dict[str, Any]) -> dict[str, Any]:
         return self._parse_data(reponse_dict)[0]
 
     async def all(self) -> list[ModelClass] | list[dict[str, Any]]:
@@ -619,7 +619,7 @@ class EndpointBase(Generic[ModelClass]):
 
     async def get(self, pk: str) -> ModelClass | dict[str, Any]:
         result = await self.client.get(f"{self.path}/{pk}")
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
+        result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw:
             return result_data
@@ -639,7 +639,7 @@ class EndpointBase(Generic[ModelClass]):
         if result.status_code == 204:
             return None
 
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
+        result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw:
             return result_data
@@ -669,7 +669,7 @@ class EndpointBase(Generic[ModelClass]):
         if result.status_code == 204:
             return None
 
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
+        result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw:
             return result_data

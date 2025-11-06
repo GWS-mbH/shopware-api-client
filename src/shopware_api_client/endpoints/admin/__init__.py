@@ -4,6 +4,11 @@ if TYPE_CHECKING:
     from ...client import AdminClient
 
 from .commercial.b2b_components_role import B2bComponentsRole, B2bComponentsRoleEndpoint
+from .commercial.b2b_components_shopping_list import B2bComponentsShoppingList, B2bComponentsShoppingListEndpoint
+from .commercial.b2b_components_shopping_list_line_item import (
+    B2bComponentsShoppingListLineItem,
+    B2bComponentsShoppingListLineItemEndpoint,
+)
 from .commercial.b2b_employee import B2bEmployee, B2bEmployeeEndpoint
 from .commercial.dynamic_access import DynamicAccess, DynamicAccessEndpoint
 from .core.acl_role import AclRole, AclRoleEndpoint
@@ -111,6 +116,8 @@ __all__ = [
     "AdminEndpoints",
     "B2bComponentsRole",
     "B2bEmployee",
+    "B2bComponentsShoppingList",
+    "B2bComponentsShoppingListLineItem",
     "ApiInfo",
     "App",
     "AppScriptCondition",
@@ -269,6 +276,8 @@ class AdminEndpoints:
         self.b2b_employee = B2bEmployeeEndpoint(client)
         self.b2b_components_role = B2bComponentsRoleEndpoint(client)
         self.dynamic_access = DynamicAccessEndpoint(client)
+        self.b2b_components_shopping_list = B2bComponentsShoppingListEndpoint(client)
+        self.b2b_components_shopping_list_line_item = B2bComponentsShoppingListLineItemEndpoint(client)
 
         # Core
         self.acl_role = AclRoleEndpoint(client)
