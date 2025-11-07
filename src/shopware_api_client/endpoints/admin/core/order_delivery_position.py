@@ -1,35 +1,14 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField, Price
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.order_delivery_position import OrderDeliveryPosition as OrderDeliveryPositionBase
 
 
-class OrderDeliveryPositionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "order_delivery_position"
-
-    version_id: IdField | None = None
-    order_delivery_id: IdField
-    order_delivery_version_id: IdField | None = None
-    order_line_item_id: IdField
-    order_line_item_version_id: IdField | None = None
-    price: Price | None = None
-    unit_price: float | None = None
-    total_price: float | None = None
-    quantity: int | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class OrderDeliveryPositionRelations:
+class OrderDeliveryPosition(OrderDeliveryPositionBase, AdminModel["OrderDeliveryPositionEndpoint"]):
     order_delivery: ForeignRelation["OrderDelivery"]
     order_line_item: ForeignRelation["OrderLineItem"]
 
 
-class OrderDeliveryPosition(OrderDeliveryPositionBase["OrderDeliveryPositionEndpoint"], OrderDeliveryPositionRelations):
-    pass
-
-
-class OrderDeliveryPositionEndpoint(EndpointBase[OrderDeliveryPosition]):
+class OrderDeliveryPositionEndpoint(AdminEndpoint[OrderDeliveryPosition]):
     name = "order_delivery_position"
     path = "/order-delivery-position"
     model_class = OrderDeliveryPosition

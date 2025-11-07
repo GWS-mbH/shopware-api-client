@@ -1,36 +1,17 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
-
-
-class ProductConfiguratorSettingBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_configurator_setting"
-
-    version_id: IdField | None = None
-    product_id: IdField
-    product_version_id: IdField | None = None
-    media_id: IdField | None = None
-    option_id: IdField
-    price: dict[str, Any] | None = None
-    position: int | None = None
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_configurator_setting import (
+    ProductConfiguratorSetting as ProductConfiguratorSettingBase,
+)
 
 
-class ProductConfiguratorSettingRelations:
+class ProductConfiguratorSetting(ProductConfiguratorSettingBase, AdminModel["ProductConfiguratorSettingEndpoint"]):
     product: ForeignRelation["Product"]
     media: ForeignRelation["Media"]
     option: ForeignRelation["PropertyGroupOption"]
 
 
-class ProductConfiguratorSetting(
-    ProductConfiguratorSettingBase["ProductConfiguratorSettingEndpoint"], ProductConfiguratorSettingRelations
-):
-    pass
-
-
-class ProductConfiguratorSettingEndpoint(EndpointBase[ProductConfiguratorSetting]):
+class ProductConfiguratorSettingEndpoint(AdminEndpoint[ProductConfiguratorSetting]):
     name = "product_configurator_setting"
     path = "/product-configurator-setting"
     model_class = ProductConfiguratorSetting

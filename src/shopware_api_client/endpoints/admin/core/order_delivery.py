@@ -1,30 +1,9 @@
-from typing import Any
-
-from pydantic import AwareDatetime, Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Amount, IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.order_delivery import OrderDelivery as OrderDeliveryBase
 
 
-class OrderDeliveryBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "order_delivery"
-
-    version_id: IdField | None = None
-    order_id: IdField
-    order_version_id: IdField | None = None
-    shipping_order_address_id: IdField
-    shipping_order_address_version_id: IdField | None = None
-    shipping_method_id: IdField
-    state_id: IdField = Field(..., exclude=True)
-    tracking_codes: list[str]
-    shipping_date_earliest: AwareDatetime
-    shipping_date_latest: AwareDatetime
-    shipping_costs: Amount | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class OrderDeliveryRelations:
+class OrderDelivery(OrderDeliveryBase, AdminModel["OrderDeliveryEndpoint"]):
     state: ForeignRelation["StateMachineState"]
     order: ForeignRelation["Order"]
     shipping_order_address: ForeignRelation["OrderAddress"]
@@ -32,11 +11,7 @@ class OrderDeliveryRelations:
     positions: ManyRelation["OrderDeliveryPosition"]
 
 
-class OrderDelivery(OrderDeliveryBase["OrderDeliveryEndpoint"], OrderDeliveryRelations):
-    pass
-
-
-class OrderDeliveryEndpoint(EndpointBase[OrderDelivery]):
+class OrderDeliveryEndpoint(AdminEndpoint[OrderDelivery]):
     name = "order_delivery"
     path = "/order-delivery"
     model_class = OrderDelivery

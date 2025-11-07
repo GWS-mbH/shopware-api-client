@@ -1,33 +1,15 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.state_machine_transition import StateMachineTransition as StateMachineTransitionBase
 
 
-class StateMachineTransitionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "state_machine_transition"
-
-    action_name: str
-    state_machine_id: IdField
-    from_state_id: IdField
-    to_state_id: IdField
-    custom_fields: dict[str, Any] | None = None
-
-
-class StateMachineTransitionRelations:
+class StateMachineTransition(StateMachineTransitionBase, AdminModel["StateMachineTransitionEndpoint"]):
     state_machine: ForeignRelation["StateMachine"]
     from_state: ForeignRelation["StateMachineState"]
     to_state: ForeignRelation["StateMachineState"]
 
 
-class StateMachineTransition(
-    StateMachineTransitionBase["StateMachineTransitionEndpoint"], StateMachineTransitionRelations
-):
-    pass
-
-
-class StateMachineTransitionEndpoint(EndpointBase[StateMachineTransition]):
+class StateMachineTransitionEndpoint(AdminEndpoint[StateMachineTransition]):
     name = "state_machine_transition"
     path = "/state-machine-transition"
     model_class = StateMachineTransition

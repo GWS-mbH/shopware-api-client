@@ -1,23 +1,9 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.property_group_option import PropertyGroupOption as PropertyGroupOptionBase
 
 
-class PropertyGroupOptionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "property_group_option"
-
-    group_id: IdField | None = None
-    name: str | None = None
-    position: int | None = None
-    color_hex_code: str | None = None
-    media_id: IdField | None = None
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
-
-
-class PropertyGroupOptionRelations:
+class PropertyGroupOption(PropertyGroupOptionBase, AdminModel["PropertyGroupOptionEndpoint"]):
     media: ForeignRelation["Media"]
     group: ForeignRelation["PropertyGroup"]
     product_configurator_settings: ManyRelation["ProductConfiguratorSetting"]
@@ -25,11 +11,7 @@ class PropertyGroupOptionRelations:
     product_options: ManyRelation["Product"]
 
 
-class PropertyGroupOption(PropertyGroupOptionBase["PropertyGroupOptionEndpoint"], PropertyGroupOptionRelations):
-    pass
-
-
-class PropertyGroupOptionEndpoint(EndpointBase[PropertyGroupOption]):
+class PropertyGroupOptionEndpoint(AdminEndpoint[PropertyGroupOption]):
     name = "property_group_option"
     path = "/property-group-option"
     model_class = PropertyGroupOption

@@ -1,31 +1,15 @@
-from typing import Any
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.tax import Tax as TaxBase
 
 
-class TaxBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "tax"
-
-    tax_rate: float
-    name: str
-    position: int = Field(..., description="Added since version: 6.4.0.0.")
-    custom_fields: dict[str, Any] | None = None
-
-
-class TaxRelations:
+class Tax(TaxBase, AdminModel["TaxEndpoint"]):
     products: ManyRelation["Product"]
     rules: ManyRelation["Rule"]
     shipping_methods: ManyRelation["ShippingMethod"]
 
 
-class Tax(TaxBase["TaxEndpoint"], TaxRelations):
-    pass
-
-
-class TaxEndpoint(EndpointBase[Tax]):
+class TaxEndpoint(AdminEndpoint[Tax]):
     name = "tax"
     path = "/tax"
     model_class = Tax

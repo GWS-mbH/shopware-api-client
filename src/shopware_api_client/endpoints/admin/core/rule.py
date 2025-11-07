@@ -1,24 +1,9 @@
-from typing import Any
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.rule import Rule as RuleBase
 
 
-class RuleBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "rule"
-
-    name: str
-    priority: int
-    description: str | None = None
-    invalid: bool | None = Field(default=None, exclude=True)
-    areas: list[str] | None = Field(default=None, exclude=True)
-    custom_fields: dict[str, Any] | None = None
-    module_types: dict[str, Any] | None = None
-
-
-class RuleRelations:
+class Rule(RuleBase, AdminModel["RuleEndpoint"]):
     product_prices: ManyRelation["ProductPrice"]
     shipping_methods: ManyRelation["ShippingMethod"]
     payment_methods: ManyRelation["PaymentMethod"]
@@ -37,11 +22,7 @@ class RuleRelations:
     """
 
 
-class Rule(RuleBase["RuleEndpoint"], RuleRelations):
-    pass
-
-
-class RuleEndpoint(EndpointBase[Rule]):
+class RuleEndpoint(AdminEndpoint[Rule]):
     name = "rule"
     path = "/rule"
     model_class = Rule

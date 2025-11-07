@@ -1,40 +1,16 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_review import ProductReview as ProductReviewBase
 
 
-class ProductReviewBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_review"
-
-    product_id: IdField
-    product_version_id: IdField | None = None
-    customer_id: IdField | None = None
-    sales_channel_id: IdField
-    language_id: IdField
-    external_user: str | None = None
-    external_email: str | None = None
-    title: str
-    content: str
-    points: float | None = None
-    status: bool | None = None
-    comment: str | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class ProductReviewRelations:
+class ProductReview(ProductReviewBase, AdminModel["ProductReviewEndpoint"]):
     product: ForeignRelation["Product"]
     customer: ForeignRelation["Customer"]
     sales_channel: ForeignRelation["SalesChannel"]
     language: ForeignRelation["Language"]
 
 
-class ProductReview(ProductReviewBase["ProductReviewEndpoint"], ProductReviewRelations):
-    pass
-
-
-class ProductReviewEndpoint(EndpointBase[ProductReview]):
+class ProductReviewEndpoint(AdminEndpoint[ProductReview]):
     name = "product_review"
     path = "/product-review"
     model_class = ProductReview

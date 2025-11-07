@@ -1,21 +1,9 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.state_machine_state import StateMachineState as StateMachineStateBase
 
 
-class StateMachineStateBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "state_machine_state"
-
-    technical_name: str
-    name: str
-    state_machine_id: IdField
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
-
-
-class StateMachineStateRelations:
+class StateMachineState(StateMachineStateBase, AdminModel["StateMachineStateEndpoint"]):
     state_machine: ForeignRelation["StateMachine"]
     from_state_machine_transitions: ManyRelation["StateMachineTransition"]
     to_state_machine_transitions: ManyRelation["StateMachineTransition"]
@@ -28,11 +16,7 @@ class StateMachineStateRelations:
     from_state_machine_history_entries: ManyRelation["StateMachineHistory"]
 
 
-class StateMachineState(StateMachineStateBase["StateMachineStateEndpoint"], StateMachineStateRelations):
-    pass
-
-
-class StateMachineStateEndpoint(EndpointBase[StateMachineState]):
+class StateMachineStateEndpoint(AdminEndpoint[StateMachineState]):
     name = "state_machine_state"
     path = "/state-machine-state"
     model_class = StateMachineState

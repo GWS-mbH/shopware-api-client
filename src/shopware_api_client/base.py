@@ -29,6 +29,7 @@ from pydantic import (
     Field,
     ValidationError,
     model_serializer,
+    PydanticUserError,
 )
 from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
@@ -47,6 +48,7 @@ from .exceptions import (
     SWFilterException,
     SWNoClientProvided,
 )
+from .fieldsets import FieldSetBase
 from .logging import logger
 
 if TYPE_CHECKING:
@@ -54,8 +56,12 @@ if TYPE_CHECKING:
 
 APPLICATION_JSON = "application/json"
 
-EndpointClass = TypeVar("EndpointClass", bound="EndpointBase[Any]")
-ModelClass = TypeVar("ModelClass", bound="ApiModelBase[Any]")
+EndpointClass = TypeVar("EndpointClass", bound="EndpointBase")
+AdminEndpointClass = TypeVar("AdminEndpointClass", bound="AdminEndpoint[AdminModel]")
+ModelClass = TypeVar("ModelClass", bound="ApiModelBase")
+AdminModelClass = TypeVar("AdminModelClass", bound="AdminModel[AdminEndpoint]")
+FieldSet = TypeVar("FieldSet", bound="FieldSetBase")
+
 RETRY_CACHE_KEY = "shopware-api-client:retry:{url}:{method}"
 HEADER_X_RATE_LIMIT_LIMIT = "X-Rate-Limit-Limit"
 HEADER_X_RATE_LIMIT_REMAINING = "X-Rate-Limit-Remaining"
@@ -82,7 +88,7 @@ class ConfigBase:
 class ClientBase:
     api_url: str
     raw: bool
-    language_id: IdField | None = None
+    language_id: "IdField | None" = None
 
     def __init__(self, config: ConfigBase, raw: bool = False) -> None:
         self.api_url = config.url
@@ -285,10 +291,10 @@ class ClientBase:
                     error = error.errors[0]
 
                 if isinstance(error, SWAPIErrorList):
-                    if any([isinstance(err, no_retry_errors) for err in error.errors]):
+                    if any(isinstance(err, no_retry_errors) for err in error.errors):
                         raise error
 
-                    if not any([isinstance(err, retry_errors) for err in error.errors]):
+                    if not any(isinstance(err, retry_errors) for err in error.errors):
                         raise error
 
                 elif isinstance(error, no_retry_errors) or not isinstance(error, retry_errors):
@@ -360,11 +366,34 @@ class ClientBase:
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
 
-    def set_language(self, language_id: IdField | None) -> None:
+    def set_language(self, language_id: "IdField | None") -> None:
         self.language_id = language_id
 
 
-class ApiModelBase(BaseModel, Generic[EndpointClass]):
+class EndpointMixin(Generic[EndpointClass]):
+    def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
+        self._client = client
+        super().__init__(**kwargs)
+
+    @classmethod
+    def using(cls, client: ClientBase) -> EndpointClass:
+        # we want a fresh endpoint
+        endpoint: EndpointClass = getattr(client, cls._identifier.get_default()).__class__(client)  # type: ignore
+        return endpoint
+
+    def _get_client(self) -> ClientBase:
+        if self._client is None:
+            raise SWNoClientProvided("Model has no api client set. Use `using` to set a client.")
+        return self._client
+
+    def _get_endpoint(self) -> EndpointClass:
+        # we want a fresh endpoint
+        client = self._get_client()
+        endpoint: EndpointClass = getattr(client, self._identifier).__class__(client)  # type: ignore
+        return endpoint
+
+
+class ApiModelBase(BaseModel):
     model_config = ConfigDict(
         alias_generator=AliasGenerator(
             validation_alias=lambda field_name: AliasChoices(field_name, to_camel(field_name)),
@@ -373,13 +402,23 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
         validate_assignment=True,
     )
 
-    id: IdField | None = None
-    created_at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
+    id: "IdField | None" = None
+    version_id: IdField | None = None
+    translated: dict[str, Any] | list[Any] | None = None
+    created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
 
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
-        super().__init__(**kwargs)
-        self._client = client
+        _ = client
+
+        if translations := kwargs.get("translated"):
+            kwargs.update(translations)
+
+        try:
+            super().__init__(**kwargs)
+        except PydanticUserError:
+            self.model_rebuild()
+            super().__init__(**kwargs)
 
     def __setattr__(self, name: str, value: Any) -> Any:
         from .endpoints.relations import ForeignRelation, ManyRelation
@@ -429,23 +468,8 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
 
         return ser_dict
 
-    @classmethod
-    def using(cls: type[Self], client: ClientBase) -> EndpointClass:
-        # we want a fresh endpoint
-        endpoint: EndpointClass = getattr(client, cls._identifier.get_default()).__class__(client)  # type: ignore
-        return endpoint
 
-    def _get_client(self) -> ClientBase:
-        if self._client is None:
-            raise SWNoClientProvided("Model has no api client set. Use `using` to set a client.")
-        return self._client
-
-    def _get_endpoint(self) -> EndpointClass:
-        # we want a fresh endpoint
-        client = self._get_client()
-        endpoint: EndpointClass = getattr(client, self._identifier).__class__(client)  # type: ignore
-        return endpoint
-
+class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminEndpointClass]):
     async def save(self, force_insert: bool = False, update_fields: IncEx | None = None) -> Self | dict | None:
         endpoint = self._get_endpoint()
 
@@ -466,17 +490,46 @@ class ApiModelBase(BaseModel, Generic[EndpointClass]):
         return await endpoint.delete(pk=self.id)
 
 
-class EndpointBase(Generic[ModelClass]):
+class CustomFieldsMixin:
+    custom_fields: dict[str, Any] | None = None
+
+
+class EndpointBase:
     name: str
     path: str
-    model_class: Type[ModelClass]
     raw: bool
-    always_post: bool = False
     search_prefix: str = "/search"
 
-    def __init__(self, client: ClientBase):
+    def __init__(self, client: ClientBase, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
         self.client = client
         self.raw = client.raw
+
+    def _parse_data(self, response_dict: dict[str, Any]) -> list[dict[str, Any]]:
+        if "data" in response_dict:
+            key = "data"
+        elif "elements" in response_dict:
+            key = "elements"
+        else:
+            key = None
+
+        data: list[dict[str, Any]] | dict[str, Any] = response_dict[key] if key else response_dict
+
+        if isinstance(data, dict):
+            return [data]
+
+        return data
+
+    def _prase_data_single(self, reponse_dict: dict[str, Any]) -> dict[str, Any]:
+        return self._parse_data(reponse_dict)[0]
+
+
+class EndpointSearchMixin(Generic[ModelClass]):
+    model_class: Type[ModelClass]
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+
         self._filter: list[dict[str, Any]] = []
         self._limit: int | None = None
         self._page: int | None = None
@@ -534,173 +587,6 @@ class EndpointBase(Generic[ModelClass]):
             return cast(str, to_camel(name))
         else:
             return self.model_class.model_fields[name].serialization_alias or name
-
-    @overload
-    def _parse_response(self, data: list[dict[str, Any]]) -> list[ModelClass]:
-        # typing overload
-        ...
-
-    @overload
-    def _parse_response(self, data: dict[str, Any]) -> ModelClass:
-        # typing overload
-        ...
-
-    def _parse_response(self, data: list[dict[str, Any]] | dict[str, Any]) -> list[ModelClass] | ModelClass:
-        single = False
-
-        if isinstance(data, dict):
-            single = True
-            data = [data]
-
-        result_list: list[ModelClass] = []
-        errors = []
-
-        for entry in data:
-            model_class = self.model_class
-
-            try:
-                if "attributes" in entry:
-                    obj = model_class(client=self.client, id=entry["id"], **entry["attributes"])
-                else:
-                    obj = model_class(client=self.client, **entry)
-            except ValidationError as exc:
-                # catch pydantic validation errors, log faulty result with tracking data and attach to errors
-                # (errors will be raised after checking all result objects)
-                data = dict(id=entry["id"], **entry["attributes"]) if "attributes" in entry else entry
-                logger.error(
-                    "Invalid Shopware data",
-                    extra={"model": self.model_class, "id": data.get("id"), "data": data, "detail": str(exc)},
-                )
-                errors.append(exc)
-                continue
-
-            result_list.append(obj)
-
-        if errors:
-            raise SWAPIDataValidationError(errors=errors)
-
-        if single:
-            return result_list[0]
-
-        return result_list
-
-    def _parse_data(self, response_dict: dict[str, Any]) -> list[dict[str, Any]]:
-        if "data" in response_dict:
-            key = "data"
-        elif "elements" in response_dict:
-            key = "elements"
-        else:
-            key = None
-
-        data: list[dict[str, Any]] | dict[str, Any] = response_dict[key] if key else response_dict
-
-        if isinstance(data, dict):
-            return [data]
-
-        return data
-
-    def _prase_data_single(self, reponse_dict: dict[str, Any]) -> dict[str, Any]:
-        return self._parse_data(reponse_dict)[0]
-
-    async def all(self) -> list[ModelClass] | list[dict[str, Any]]:
-        data = self._get_data_dict()
-
-        if self._is_search_query():
-            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data)
-        else:
-            if self.always_post:
-                result = await self.client.post(self.path, json=data)
-            else:
-                result = await self.client.get(self.path, params=data)
-
-        result_data: list[dict[str, Any]] = self._parse_data(result.json())
-
-        self._reset_endpoint()
-
-        if self.raw:
-            return result_data
-
-        return self._parse_response(result_data)
-
-    async def get(self, pk: str) -> ModelClass | dict[str, Any]:
-        if self.always_post:
-            result = await self.client.post(f"{self.path}/{pk}")    
-        else:
-            result = await self.client.get(f"{self.path}/{pk}")
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
-
-        if self.raw:
-            return result_data
-
-        return self._parse_response(result_data)
-
-    async def update(
-        self, pk: str, obj: ModelClass | dict[str, Any], update_fields: IncEx | None = None
-    ) -> ModelClass | dict[str, Any] | None:
-        if isinstance(obj, ApiModelBase):
-            data = obj.model_dump_json(by_alias=True, include=update_fields)
-        else:
-            data = json.dumps(obj)
-
-        result = await self.client.patch(f"{self.path}/{pk}", data=data)
-        # 204 - "no data" handling
-        if result.status_code == 204:
-            return None
-
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
-
-        if self.raw:
-            return result_data
-
-        return self._parse_response(result_data)
-
-    async def first(self) -> ModelClass | dict[str, Any] | None:
-        self._limit = 1
-        result = await self.all()
-
-        self._reset_endpoint()
-
-        # return None instead of an KeyError, if result is empty
-        if len(result) == 0:
-            return None
-
-        return result[0]
-
-    async def create(self, obj: ModelClass | dict[str, Any]) -> ModelClass | dict[str, Any] | None:
-        if isinstance(obj, ApiModelBase):
-            data = obj.model_dump_json(by_alias=True)
-        else:
-            data = json.dumps(obj)
-
-        result = await self.client.post(f"{self.path}", data=data)
-        # 204 - "no data" handling
-        if result.status_code == 204:
-            return None
-
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
-
-        if self.raw:
-            return result_data
-
-        return self._parse_response(result_data)
-
-    async def delete(self, pk: str) -> bool:
-        response = await self.client.delete(f"{self.path}/{pk}")
-
-        if response.status_code == 204:
-            return True
-
-        return False
-
-    async def get_related(self, parent: ModelClass, relation: str) -> list[ModelClass] | list[dict[str, Any]]:
-        parent_endpoint = parent._get_endpoint()
-        result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
-        result_data: list[dict[str, Any]] = self._parse_data(result.json())
-
-        if self.raw:
-            return result_data
-
-        return self._parse_response(result_data)
 
     def select_related(self, **kwargs: Any) -> Self:
         self._associations.update({self._serialize_field_name(field): data for field, data in kwargs.items()})
@@ -773,16 +659,6 @@ class EndpointBase(Generic[ModelClass]):
 
         return self
 
-    async def bulk_upsert(
-        self, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
-    ) -> dict[str, Any]:
-        return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
-
-    async def bulk_delete(
-        self, objs: list[ModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
-    ) -> dict[str, Any]:
-        return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
-
     def limit(self, count: int | None) -> "Self":
         self._limit = count
         return self
@@ -813,7 +689,164 @@ class EndpointBase(Generic[ModelClass]):
 
         return self
 
-    async def iter(self, batch_size: int = 100) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
+
+class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass]):
+    model_class: Type[AdminModelClass]
+
+    @overload
+    def _parse_response(self, data: list[dict[str, Any]]) -> list[AdminModelClass]:
+        # typing overload
+        ...
+
+    @overload
+    def _parse_response(self, data: dict[str, Any]) -> AdminModelClass:
+        # typing overload
+        ...
+
+    def _parse_response(self, data: list[dict[str, Any]] | dict[str, Any]) -> list[AdminModelClass] | AdminModelClass:
+        single = False
+
+        if isinstance(data, dict):
+            single = True
+            data = [data]
+
+        result_list: list[AdminModelClass] = []
+        errors = []
+
+        for entry in data:
+            model_class = self.model_class
+
+            try:
+                if "attributes" in entry:
+                    obj = model_class(client=self.client, id=entry["id"], **entry["attributes"])
+                else:
+                    obj = model_class(client=self.client, **entry)
+            except ValidationError as exc:
+                # catch pydantic validation errors, log faulty result with tracking data and attach to errors
+                # (errors will be raised after checking all result objects)
+                data = dict(id=entry["id"], **entry["attributes"]) if "attributes" in entry else entry
+                logger.error(
+                    "Invalid Shopware data",
+                    extra={"model": self.model_class, "id": data.get("id"), "data": data, "detail": str(exc)},
+                )
+                errors.append(exc)
+                continue
+
+            result_list.append(obj)
+
+        if errors:
+            raise SWAPIDataValidationError(errors=errors)
+
+        if single:
+            return result_list[0]
+
+        return result_list
+
+    async def all(self) -> list[AdminModelClass] | list[dict[str, Any]]:
+        data = self._get_data_dict()
+
+        if self._is_search_query():
+            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data)
+        else:
+            result = await self.client.get(self.path, params=data)
+
+        result_data: list[dict[str, Any]] = self._parse_data(result.json())
+
+        self._reset_endpoint()
+
+        if self.raw:
+            return result_data
+
+        return self._parse_response(result_data)
+
+    async def get(self, pk: str) -> AdminModelClass | dict[str, Any]:
+        result = await self.client.get(f"{self.path}/{pk}")
+        result_data: dict[str, Any] = self._prase_data_single(result.json())
+
+        if self.raw:
+            return result_data
+
+        return self._parse_response(result_data)
+
+    async def update(
+        self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None
+    ) -> AdminModelClass | dict[str, Any] | None:
+        if isinstance(obj, ApiModelBase):
+            data = obj.model_dump_json(by_alias=True, include=update_fields)
+        else:
+            data = json.dumps(obj)
+
+        result = await self.client.patch(f"{self.path}/{pk}", data=data)
+        # 204 - "no data" handling
+        if result.status_code == 204:
+            return None
+
+        result_data: dict[str, Any] = self._prase_data_single(result.json())
+
+        if self.raw:
+            return result_data
+
+        return self._parse_response(result_data)
+
+    async def first(self) -> AdminModelClass | dict[str, Any] | None:
+        self._limit = 1
+        result = await self.all()
+
+        self._reset_endpoint()
+
+        # return None instead of an KeyError, if result is empty
+        if len(result) == 0:
+            return None
+
+        return result[0]
+
+    async def create(self, obj: AdminModelClass | dict[str, Any]) -> AdminModelClass | dict[str, Any] | None:
+        if isinstance(obj, ApiModelBase):
+            data = obj.model_dump_json(by_alias=True)
+        else:
+            data = json.dumps(obj)
+
+        result = await self.client.post(f"{self.path}", data=data)
+        # 204 - "no data" handling
+        if result.status_code == 204:
+            return None
+
+        result_data: dict[str, Any] = self._prase_data_single(result.json())
+
+        if self.raw:
+            return result_data
+
+        return self._parse_response(result_data)
+
+    async def delete(self, pk: str) -> bool:
+        response = await self.client.delete(f"{self.path}/{pk}")
+
+        if response.status_code == 204:
+            return True
+
+        return False
+
+    async def get_related(self, parent: AdminModelClass, relation: str) -> list[AdminModelClass] | list[dict[str, Any]]:
+        parent_endpoint = parent._get_endpoint()
+        result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
+        result_data: list[dict[str, Any]] = self._parse_data(result.json())
+
+        if self.raw:
+            return result_data
+
+        return self._parse_response(result_data)
+
+    async def bulk_upsert(
+        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+    ) -> dict[str, Any]:
+        return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
+
+    async def bulk_delete(
+        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+    ) -> dict[str, Any]:
+        return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
+
+    async def iter(self, batch_size: int = 100) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
         page = 1
@@ -825,10 +858,7 @@ class EndpointBase(Generic[ModelClass]):
 
         while True:
             data["page"] = page
-            if self.always_post or self._is_search_query():
-                result = await self.client.post(url, json=data)
-            else:
-                result = await self.client.get(url, params=data)
+            result = await self.client.get(url, params=data)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
@@ -843,3 +873,108 @@ class EndpointBase(Generic[ModelClass]):
                 page += 1
             else:
                 break
+
+
+class StoreEndpoint(EndpointBase):
+    @overload
+    @staticmethod
+    def _parse_response(data: list[dict[str, Any]], cls: Type[ModelClass | FieldSet]) -> list[ModelClass | FieldSet]:
+        # typing overload
+        ...
+
+    @overload
+    @staticmethod
+    def _parse_response(data: dict[str, Any], cls: Type[ModelClass | FieldSet]) -> ModelClass | FieldSet:
+        # typing overload
+        ...
+
+    @staticmethod
+    def _parse_response(
+        data: list[dict[str, Any]] | dict[str, Any], cls: Type[ModelClass | FieldSet]
+    ) -> list[ModelClass | FieldSet] | ModelClass | FieldSet:
+        single = False
+
+        if isinstance(data, dict):
+            single = True
+            data = [data]
+
+        result_list: list[ModelClass | FieldSet] = []
+        errors = []
+
+        for entry in data:
+            try:
+                obj = cls(**entry)
+            except ValidationError as exc:
+                # catch pydantic validation errors, log faulty result with tracking data and attach to errors
+                # (errors will be raised after checking all result objects)
+                logger.error(
+                    "Invalid Shopware data",
+                    extra={"ModelClass": cls, "id": entry.get("id"), "data": entry, "detail": str(exc)},
+                )
+                errors.append(exc)
+                continue
+
+            result_list.append(obj)
+
+        if errors:
+            raise SWAPIDataValidationError(errors=errors)
+
+        if single:
+            return result_list[0]
+
+        return result_list
+
+
+class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass]):
+    path: str
+
+    async def all(self) -> list[ModelClass] | list[dict[str, Any]]:
+        data = self._get_data_dict()
+
+        print(json.dumps(data))
+
+        result = await self.client.post(self.path, json=data)
+
+        result_data: list[dict[str, Any]] = result.json().get("elements", [])
+
+        print(json.dumps(result_data))
+
+        if self.raw:
+            return result_data
+
+        return self._parse_response(result_data, cls=self.model_class)
+
+    async def iter(self, batch_size: int = 100) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
+        self._limit = batch_size
+        data = self._get_data_dict()
+        page = 1
+
+        while True:
+            data["page"] = page
+            result = await self.client.post(self.path, json=data)
+
+            result_dict: dict[str, Any] = result.json()
+            result_data: list[dict[str, Any]] = self._parse_data(result_dict)
+
+            for entry in result_data:
+                if self.raw:
+                    yield entry
+                else:
+                    yield self._parse_response(entry, cls=self.model_class)
+
+            if "next" in result_dict.get("links", {}) and len(result_data) > 0:
+                page += 1
+            else:
+                break
+
+    async def first(self) -> ModelClass | dict[str, Any] | None:
+        self._limit = 1
+        result = await self.all()
+
+        self._reset_endpoint()
+
+        # return None instead of an KeyError, if result is empty
+        if len(result) == 0:
+            return None
+
+        return result[0]

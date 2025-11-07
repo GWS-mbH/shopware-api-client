@@ -1,38 +1,18 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Amount, IdField
-from ...relations import ForeignRelation
-
-
-class OrderTransactionCaptureRefundPositionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "order_transaction_capture_refund_position"
-
-    version_id: IdField | None = None
-    refund_id: IdField
-    refund_version_id: IdField | None = None
-    order_line_item_id: IdField
-    order_line_item_version_id: IdField | None = None
-    external_reference: str | None = None
-    reason: str | None = None
-    quantity: int | None = None
-    amount: Amount
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminEndpoint, AdminModel
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.order_transaction_capture_refund_position import (
+    OrderTransactionCaptureRefundPosition as OrderTransactionCaptureRefundPositionBase,
+)
 
 
-class OrderTransactionCaptureRefundPositionRelations:
+class OrderTransactionCaptureRefundPosition(
+    OrderTransactionCaptureRefundPositionBase, AdminModel["OrderTransactionCaptureRefundPositionEndpoint"]
+):
     order_line_item: ForeignRelation["OrderLineItem"]
     refund: ForeignRelation["OrderTransactionCaptureRefund"]
 
 
-class OrderTransactionCaptureRefundPosition(
-    OrderTransactionCaptureRefundPositionBase["OrderTransactionCaptureRefundPositionEndpoint"],
-    OrderTransactionCaptureRefundPositionRelations,
-):
-    pass
-
-
-class OrderTransactionCaptureRefundPositionEndpoint(EndpointBase[OrderTransactionCaptureRefundPosition]):
+class OrderTransactionCaptureRefundPositionEndpoint(AdminEndpoint[OrderTransactionCaptureRefundPosition]):
     name = "order_transaction_capture_refund_position"
     path = "/order-transaction-capture-refund-position"
     model_class = OrderTransactionCaptureRefundPosition

@@ -1,30 +1,14 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
-
-
-class DeliveryTimeBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "delivery_time"
-
-    name: str
-    min: int
-    max: int
-    unit: str
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.delivery_time import DeliveryTime as DeliveryTimeBase
 
 
-class DeliveryTimeRelations:
+class DeliveryTime(DeliveryTimeBase, AdminModel["DeliveryTimeEndpoint"]):
     shipping_methods: ManyRelation["ShippingMethod"]
     products: ManyRelation["Product"]
 
 
-class DeliveryTime(DeliveryTimeBase["DeliveryTimeEndpoint"], DeliveryTimeRelations):
-    pass
-
-
-class DeliveryTimeEndpoint(EndpointBase[DeliveryTime]):
+class DeliveryTimeEndpoint(AdminEndpoint[DeliveryTime]):
     name = "delivery_time"
     path = "/delivery-time"
     model_class = DeliveryTime

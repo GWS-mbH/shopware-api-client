@@ -4,7 +4,7 @@ from typing import Any, Literal
 import httpx
 from httpx_auth import OAuth2ClientCredentials, OAuth2ResourceOwnerPasswordCredentials
 
-from .base import ApiModelBase, ClientBase, ModelClass
+from .base import ClientBase, ModelClass, ApiModelBase
 from .config import AdminConfig, StoreConfig
 from .endpoints.admin import AdminEndpoints
 from .endpoints.store import StoreEndpoints

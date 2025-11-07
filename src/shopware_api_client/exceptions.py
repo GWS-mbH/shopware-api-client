@@ -145,6 +145,10 @@ class SWNoClientProvided(SWModelException):
     pass
 
 
+class SWNoEndpointClass(SWModelException):
+    pass
+
+
 class SWAPIBadRequest(SWAPIError):
     pass
 

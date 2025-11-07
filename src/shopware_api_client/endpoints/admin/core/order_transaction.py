@@ -1,36 +1,16 @@
-from typing import Any
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Amount, IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.order_transaction import OrderTransaction as OrderTransactionBase
 
 
-class OrderTransactionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "order_transaction"
-
-    version_id: IdField | None = None
-    order_id: IdField
-    order_version_id: IdField | None = None
-    payment_method_id: IdField
-    amount: Amount
-    state_id: IdField = Field(..., exclude=True)
-    custom_fields: dict[str, Any] | None = None
-
-
-class OrderTransactionRelations:
+class OrderTransaction(OrderTransactionBase, AdminModel["OrderTransactionEndpoint"]):
     state: ForeignRelation["StateMachineState"]
     order: ForeignRelation["Order"]
     payment_method: ForeignRelation["PaymentMethod"]
     captures: ManyRelation["OrderTransactionCapture"]
 
 
-class OrderTransaction(OrderTransactionBase["OrderTransactionEndpoint"], OrderTransactionRelations):
-    pass
-
-
-class OrderTransactionEndpoint(EndpointBase[OrderTransaction]):
+class OrderTransactionEndpoint(AdminEndpoint[OrderTransaction]):
     name = "order_transaction"
     path = "/order-transaction"
     model_class = OrderTransaction

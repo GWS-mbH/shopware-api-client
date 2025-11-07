@@ -1,32 +1,14 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.order_line_item_download import OrderLineItemDownload as OrderLineItemDownloadBase
 
 
-class OrderLineItemDownloadBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "order_line_item_download"
-
-    version_id: IdField | None = None
-    order_line_item_id: IdField
-    order_line_item_version_id: IdField | None = None
-    media_id: IdField
-    position: int
-    access_granted: bool
-    custom_fields: dict[str, Any] | None = None
-
-
-class OrderLineItemDownloadRelations:
+class OrderLineItemDownload(OrderLineItemDownloadBase, AdminModel["OrderLineItemDownloadEndpoint"]):
     order_line_item: ForeignRelation["OrderLineItem"]
     media: ForeignRelation["Media"]
 
 
-class OrderLineItemDownload(OrderLineItemDownloadBase["OrderLineItemDownloadEndpoint"], OrderLineItemDownloadRelations):
-    pass
-
-
-class OrderLineItemDownloadEndpoint(EndpointBase[OrderLineItemDownload]):
+class OrderLineItemDownloadEndpoint(AdminEndpoint[OrderLineItemDownload]):
     name = "order_line_item_download"
     path = "/order-line-item-download"
     model_class = OrderLineItemDownload

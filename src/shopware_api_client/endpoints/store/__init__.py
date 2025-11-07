@@ -8,7 +8,7 @@ from .core.address import Address, AddressEndpoint
 from .core.cart import Cart, CartEndpoint
 from .core.product import Product, ProductEndpoint
 
-__all__ = ["Address", "Cart", "Product"]
+__all__ = ["Address", "Cart", "Product", "StoreEndpoints"]
 
 
 class StoreEndpoints:
@@ -16,4 +16,3 @@ class StoreEndpoints:
         self.address = AddressEndpoint(client)
         self.cart = CartEndpoint(client)
         self.product = ProductEndpoint(client)
-

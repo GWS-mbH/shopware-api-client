@@ -1,27 +1,14 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_visibility import ProductVisibility as ProductVisibilityBase
 
 
-class ProductVisibilityBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_visibility"
-
-    product_id: IdField
-    product_version_id: IdField | None = None
-    sales_channel_id: IdField
-    visibility: int
-
-
-class ProductVisibilityRelations:
+class ProductVisibility(ProductVisibilityBase, AdminModel["ProductVisibilityEndpoint"]):
     sales_channel: ForeignRelation["SalesChannel"]
     product: ForeignRelation["Product"]
 
 
-class ProductVisibility(ProductVisibilityBase["ProductVisibilityEndpoint"], ProductVisibilityRelations):
-    pass
-
-
-class ProductVisibilityEndpoint(EndpointBase[ProductVisibility]):
+class ProductVisibilityEndpoint(AdminEndpoint[ProductVisibility]):
     name = "product_visibility"
     path = "/product-visibility"
     model_class = ProductVisibility

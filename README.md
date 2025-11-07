@@ -195,13 +195,15 @@ the Shopware-API.
 The base structure of an Endpoint is pretty simple:
 
 ```python
-from shopware_api_client.base import ApiModelBase, EndpointBase
+from shopware_api_client.base import EndpointMixin, AdminEndpointBase
 
-class CustomerGroup(ApiModelBase["CustomerGroupEndpoint"]):
+
+class CustomerGroup(EndpointMixin["CustomerGroupEndpoint"]):
     # Model definition
     pass
 
-class CustomerGroupEndpoint(EndpointBase[CustomerGroup]):
+
+class CustomerGroupEndpoint(AdminEndpointBase[CustomerGroup]):
     name = "customer_group"  # name of the Shopware-Endpoint (snaky)
     path = "/customer-group"  # path of the Shopware-Endpoint
     model_class = CustomerGroup  # Pydantic-Model of this Endpoint
@@ -261,9 +263,10 @@ The base structure of an Endpoint-Model looks like this. Field names are convert
 ```python
 from pydantic import Field
 from typing import Any
-from shopware_api_client.base import ApiModelBase
+from shopware_api_client.base import EndpointMixin
 
-class CustomerGroup(ApiModelBase["CustomerGroupEndpoint"]):
+
+class CustomerGroup(EndpointMixin["CustomerGroupEndpoint"]):
     _identifier = "customer_group"  # name of the Shopware-Endpoint (snaky)
 
     name: str  # Field with type
@@ -293,20 +296,22 @@ relation links.
   - `class`: Class of the related model
 
 Example (Customer):
+
 ```python
 from pydantic import Field
 from typing import TYPE_CHECKING
 
-from shopware_api_client.base import ApiModelBase, EndpointClass
-from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import EndpointMixin, EndpointClass
+from shopware_api_client.models.relations import ForeignRelation, ManyRelation
 
 from ...base_fields import IdField
 
 if TYPE_CHECKING:
     from shopware_api_client.endpoints.admin import CustomerAddress
 
+
 # Base-Class for the normal model fields
-class CustomerBase(ApiModelBase[EndpointClass]):
+class CustomerBase(EndpointMixin[EndpointClass]):
     # we have an id so we can create a ForeignRelation to it
     default_billing_address_id: IdField
 

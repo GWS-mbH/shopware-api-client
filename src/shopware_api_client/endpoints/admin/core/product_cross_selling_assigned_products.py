@@ -1,30 +1,18 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_cross_selling_assigned_products import (
+    ProductCrossSellingAssignedProducts as ProductCrossSellingAssignedProductsBase,
+)
 
 
-class ProductCrossSellingAssignedProductsBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_cross_selling_assigned_products"
-
-    cross_selling_id: IdField
-    product_id: IdField
-    product_version_id: IdField | None = None
-    position: int | None = None
-
-
-class ProductCrossSellingAssignedProductsRelations:
+class ProductCrossSellingAssignedProducts(
+    ProductCrossSellingAssignedProductsBase, AdminModel["ProductCrossSellingAssignedProductsEndpoint"]
+):
     product: ForeignRelation["Product"]
     cross_selling: ForeignRelation["ProductCrossSelling"]
 
 
-class ProductCrossSellingAssignedProducts(
-    ProductCrossSellingAssignedProductsBase["ProductCrossSellingAssignedProductsEndpoint"],
-    ProductCrossSellingAssignedProductsRelations,
-):
-    pass
-
-
-class ProductCrossSellingAssignedProductsEndpoint(EndpointBase[ProductCrossSellingAssignedProducts]):
+class ProductCrossSellingAssignedProductsEndpoint(AdminEndpoint[ProductCrossSellingAssignedProducts]):
     name = "product_cross_selling_assigned_products"
     path = "/product-cross-selling-assigned-products"
     model_class = ProductCrossSellingAssignedProducts

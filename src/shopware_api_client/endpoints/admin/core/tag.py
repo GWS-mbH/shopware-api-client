@@ -1,14 +1,9 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.tag import Tag as TagBase
 
 
-class TagBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "tag"
-
-    name: str
-
-
-class TagRelations:
+class Tag(TagBase, AdminModel["TagEndpoint"]):
     products: ManyRelation["Product"]
     media: ManyRelation["Media"]
     categories: ManyRelation["Category"]
@@ -24,11 +19,7 @@ class TagRelations:
     """
 
 
-class Tag(TagBase["TagEndpoint"], TagRelations):
-    pass
-
-
-class TagEndpoint(EndpointBase[Tag]):
+class TagEndpoint(AdminEndpoint[Tag]):
     name = "tag"
     path = "/tag"
     model_class = Tag

@@ -1,11 +1,11 @@
 from typing import Any
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
+from ....base import EndpointMixin, AdminEndpointBase, EndpointClass
 from ...base_fields import IdField
 from ...relations import ForeignRelation, ManyRelation
 
 
-class B2bComponentsRoleBase(ApiModelBase[EndpointClass]):
+class B2bComponentsRoleBase(EndpointMixin[EndpointClass]):
     _identifier: str = "b2b_components_role"
 
     business_partner_customer_id: IdField | None = None
@@ -23,7 +23,7 @@ class B2bComponentsRole(B2bComponentsRoleBase["B2bComponentsRoleEndpoint"], B2bC
     pass
 
 
-class B2bComponentsRoleEndpoint(EndpointBase[B2bComponentsRole]):
+class B2bComponentsRoleEndpoint(AdminEndpointBase[B2bComponentsRole]):
     name = "b2b_components_role"
     path = "/b2b-components-role"
     model_class = B2bComponentsRole

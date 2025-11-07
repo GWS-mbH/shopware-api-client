@@ -1,29 +1,14 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField, Rounding
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.currency_country_rounding import CurrencyCountryRounding as CurrencyCountryRoundingBase
 
 
-class CurrencyCountryRoundingBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "currency_country_rounding"
-
-    currency_id: IdField
-    country_id: IdField
-    item_rounding: Rounding
-    total_rounding: Rounding
-
-
-class CurrencyCountryRoundingRelations:
+class CurrencyCountryRounding(CurrencyCountryRoundingBase, AdminModel["CurrencyCountryRoundingEndpoint"]):
     currency: ForeignRelation["Currency"]
     country: ForeignRelation["Country"]
 
 
-class CurrencyCountryRounding(
-    CurrencyCountryRoundingBase["CurrencyCountryRoundingEndpoint"], CurrencyCountryRoundingRelations
-):
-    pass
-
-
-class CurrencyCountryRoundingEndpoint(EndpointBase[CurrencyCountryRounding]):
+class CurrencyCountryRoundingEndpoint(AdminEndpoint[CurrencyCountryRounding]):
     name = "currency_country_rounding"
     path = "/currency-country-rounding"
     model_class = CurrencyCountryRounding

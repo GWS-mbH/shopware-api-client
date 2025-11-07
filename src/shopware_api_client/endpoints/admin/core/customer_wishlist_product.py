@@ -1,28 +1,14 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.customer_wishlist_product import CustomerWishlistProduct as CustomerWishlistProductBase
 
 
-class CustomerWishlistProductBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "customer_wishlist_product"
-
-    product_id: IdField
-    product_version_id: IdField | None = None
-    wishlist_id: IdField
-
-
-class CustomerWishlistProductRelations:
+class CustomerWishlistProduct(CustomerWishlistProductBase, AdminModel["CustomerWishlistProductEndpoint"]):
     wishlist: ForeignRelation["CustomerWishlist"]
     product: ForeignRelation["Product"]
 
 
-class CustomerWishlistProduct(
-    CustomerWishlistProductBase["CustomerWishlistProductEndpoint"], CustomerWishlistProductRelations
-):
-    pass
-
-
-class CustomerWishlistProductEndpoint(EndpointBase[CustomerWishlistProduct]):
+class CustomerWishlistProductEndpoint(AdminEndpoint[CustomerWishlistProduct]):
     name = "customer_wishlist_product"
     path = "/customer-wishlist-product"
     model_class = CustomerWishlistProduct

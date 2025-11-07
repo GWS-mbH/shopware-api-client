@@ -1,31 +1,9 @@
-from typing import Any
-
-from pydantic import AwareDatetime
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.user import User as UserBase
 
 
-class UserBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "user"
-
-    locale_id: IdField
-    username: str
-    first_name: str
-    last_name: str
-    password: str | None = None
-    title: str | None = None
-    email: str
-    active: bool | None = None
-    admin: bool | None = None
-    last_updated_password_at: AwareDatetime | None = None
-    time_zone: str
-    custom_fields: dict[str, Any] | None = None
-    avatar_id: IdField | None = None
-
-
-class UserRelations:
+class User(UserBase, AdminModel["UserEndpoint"]):
     locale: ForeignRelation["Locale"]
     avatar_media: ManyRelation["Media"]
     media: ManyRelation["Media"]
@@ -43,11 +21,7 @@ class UserRelations:
     """
 
 
-class User(UserBase["UserEndpoint"], UserRelations):
-    pass
-
-
-class UserEndpoint(EndpointBase[User]):
+class UserEndpoint(AdminEndpoint[User]):
     name = "user"
     path = "/user"
     model_class = User

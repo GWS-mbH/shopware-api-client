@@ -1,6 +1,5 @@
-from ....endpoints.admin.core.unit import UnitBase
+from shopware_api_client.models.unit import Unit as UnitBase
 
 
 class Unit(UnitBase):
-    short_code: str | None = None  # type: ignore
-    name: str | None = None  # type: ignore
+    pass

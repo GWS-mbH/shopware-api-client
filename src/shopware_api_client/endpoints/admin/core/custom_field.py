@@ -1,22 +1,12 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.models.custom_field import CustomField as CustomFieldBase
 
 
-class CustomFieldBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "custom_field"
-    
-    name: str
-    custom_field_set_id: str | None = None
-
-
-class CustomFieldRelations:
+class CustomField(CustomFieldBase, AdminModel["CustomFieldEndpoint"]):
     pass
 
 
-class CustomField(CustomFieldBase["CustomFieldEndpoint"], CustomFieldRelations):
-    pass
-
-
-class CustomFieldEndpoint(EndpointBase[CustomField]):
+class CustomFieldEndpoint(AdminEndpoint[CustomField]):
     name = "custom_field"
     path = "/custom-field"
     model_class = CustomField

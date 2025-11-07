@@ -1,23 +1,9 @@
-from typing import Any
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.product_stream import ProductStream as ProductStreamBase
 
 
-class ProductStreamBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_stream"
-
-    api_filter: dict[str, Any] | None = Field(default=None, exclude=True)
-    invalid: bool | None = Field(default=None, exclude=True)
-    name: str
-    description: str | None = None
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
-
-
-class ProductStreamRelations:
+class ProductStream(ProductStreamBase, AdminModel["ProductStreamEndpoint"]):
     product_cross_sellings: ManyRelation["ProductCrossSelling"]
     product_exports: ManyRelation["ProductExport"]
     categories: ManyRelation["Category"]
@@ -28,11 +14,7 @@ class ProductStreamRelations:
     """
 
 
-class ProductStream(ProductStreamBase["ProductStreamEndpoint"], ProductStreamRelations):
-    pass
-
-
-class ProductStreamEndpoint(EndpointBase[ProductStream]):
+class ProductStreamEndpoint(AdminEndpoint[ProductStream]):
     name = "product_stream"
     path = "/product-stream"
     model_class = ProductStream
