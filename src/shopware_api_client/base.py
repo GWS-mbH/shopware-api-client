@@ -520,7 +520,7 @@ class EndpointBase:
 
         return data
 
-    def _prase_data_single(self, reponse_dict: dict[str, Any]) -> dict[str, Any]:
+    def _parse_data_single(self, reponse_dict: dict[str, Any]) -> dict[str, Any]:
         return self._parse_data(reponse_dict)[0]
 
 
@@ -761,7 +761,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
     async def get(self, pk: str) -> AdminModelClass | dict[str, Any]:
         result = await self.client.get(f"{self.path}/{pk}")
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
+        result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw:
             return result_data
@@ -781,7 +781,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         if result.status_code == 204:
             return None
 
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
+        result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw:
             return result_data
@@ -811,7 +811,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         if result.status_code == 204:
             return None
 
-        result_data: dict[str, Any] = self._prase_data_single(result.json())
+        result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw:
             return result_data
