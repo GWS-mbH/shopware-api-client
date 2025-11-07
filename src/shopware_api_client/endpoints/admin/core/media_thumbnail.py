@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import Field
+from pydantic import AwareDatetime, Field
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
 from ...base_fields import IdField
@@ -9,6 +10,7 @@ from ...relations import ForeignRelation
 
 class MediaThumbnailBase(ApiModelBase[EndpointClass]):
     _identifier = "media_thumbnail"
+    created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)  # type: ignore
 
     media_id: IdField
     width: int = Field(default=0, exclude=True)
