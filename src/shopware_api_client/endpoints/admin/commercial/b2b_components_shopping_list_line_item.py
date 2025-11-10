@@ -1,7 +1,7 @@
 from typing import Any
 
 from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField, Price
+from ...base_fields import IdField
 from ...relations import ForeignRelation
 
 
