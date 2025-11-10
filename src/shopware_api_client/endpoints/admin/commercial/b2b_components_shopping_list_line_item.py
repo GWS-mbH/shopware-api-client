@@ -10,7 +10,7 @@ class B2bComponentsShoppingListLineItemBase(ApiModelBase[EndpointClass]):
     product_id: IdField
     product_version_id: IdField | None = None
     quantity: int
-    price: Price | None = None
+    price: dict[str, Any] | None = None
     custom_fields: dict[str, Any] | None = None
     shopping_list_id: IdField
 
