@@ -1,9 +1,11 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.state_machine_state import StateMachineState as StateMachineStateBase
 
 
 class StateMachineState(StateMachineStateBase, AdminModel["StateMachineStateEndpoint"]):
+    state_machine_id: IdField
     state_machine: ForeignRelation["StateMachine"]
     from_state_machine_transitions: ManyRelation["StateMachineTransition"]
     to_state_machine_transitions: ManyRelation["StateMachineTransition"]

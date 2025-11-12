@@ -1,9 +1,12 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.sales_channel import SalesChannel as SalesChannelBase
 
 
 class SalesChannel(SalesChannelBase, AdminModel["SalesChannelEndpoint"]):
+    type_id: IdField
+    access_key: str
     currencies: ManyRelation["Currency"]
     languages: ManyRelation["Language"]
     countries: ManyRelation["Country"]

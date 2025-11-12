@@ -9,7 +9,6 @@ from shopware_api_client.endpoints.base_fields import IdField
 class SalesChannel(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "sales_channel"
 
-    type_id: IdField
     language_id: IdField
     customer_group_id: IdField
     currency_id: IdField
@@ -29,7 +28,6 @@ class SalesChannel(ApiModelBase, CustomFieldsMixin):
     name: str
     short_name: str | None = None
     tax_calculation_type: str | None = None
-    access_key: str
     configuration: dict[str, Any] | None = None
     active: bool | None = None
     hreflang_active: bool | None = None

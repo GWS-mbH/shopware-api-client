@@ -1,9 +1,11 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.order_address import OrderAddress as OrderAddressBase
 
 
 class OrderAddress(OrderAddressBase, AdminModel["OrderAddressEndpoint"]):
+    order_id: IdField
     country: ForeignRelation["Country"]
     country_state: ForeignRelation["CountryState"]
     order: ForeignRelation["Order"]

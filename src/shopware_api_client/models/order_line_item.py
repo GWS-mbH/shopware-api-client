@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import Amount, IdField
+from shopware_api_client.endpoints.base_fields import IdField
 
 
 class OrderLineItem(ApiModelBase, CustomFieldsMixin):
@@ -27,7 +27,6 @@ class OrderLineItem(ApiModelBase, CustomFieldsMixin):
     stackable: bool | None = None
     position: int
     states: list[str]
-    price: Amount
     price_definition: dict[str, Any] | None = None
     unit_price: float | None = None
     total_price: float | None = None

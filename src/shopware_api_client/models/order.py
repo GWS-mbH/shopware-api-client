@@ -1,7 +1,7 @@
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import Amount, Price, Rounding, IdField
+from shopware_api_client.endpoints.base_fields import Amount, Price, IdField
 
 
 class Order(ApiModelBase, CustomFieldsMixin):
@@ -29,9 +29,6 @@ class Order(ApiModelBase, CustomFieldsMixin):
     campaign_code: str | None = None
     customer_comment: str | None = None
     source: str | None = None
-    state_id: IdField = Field(..., exclude=True)
     rule_ids: list[str] | None = None
     created_by_id: IdField | None = None
     updated_by_id: IdField | None = None
-    item_rounding: Rounding
-    total_rounding: Rounding

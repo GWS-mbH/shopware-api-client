@@ -23,9 +23,8 @@ class CartEndpoint(StoreEndpoint):
         return self._parse_response(result, cls=Cart)
 
     async def delete(self) -> bool:
-        result: dict[str, Any] = (await self.client.delete(self.path)).json()
-        success: bool = result.get("success", True)
-        return success
+        response = await self.client.delete(self.path)
+        return bool(response.is_success)
 
     async def add_items(self, items: list["LineItem"]) -> Cart:
         result: dict[str, Any] = (

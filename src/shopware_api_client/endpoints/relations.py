@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, Generic, get_args
+from typing import Any, Coroutine, Generic, get_args, TypeGuard
 
 from pydantic import GetCoreSchemaHandler, ValidationInfo
 from pydantic.alias_generators import to_camel
@@ -91,6 +91,10 @@ class ManyRelation(Generic[AdminModelClass]):
                 if elem._client is None:
                     elem._client = client
 
+    @staticmethod
+    def _assert_admin_model_list(items: list[Any]) -> TypeGuard[list[AdminModelClass]]:
+        return all(isinstance(item, AdminModel) for item in items)
+
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
         assert handler.field_name is not None
@@ -134,7 +138,7 @@ class ManyRelation(Generic[AdminModelClass]):
         endpoint: AdminEndpoint[AdminModelClass] = model_class.using(instance._get_client())
         data = await endpoint.get_related(instance, relation=api_link)
 
-        assert data is None or isinstance(data, AdminModel)
+        assert data is None or self._assert_admin_model_list(data)
 
         self.data = data
         return self.data

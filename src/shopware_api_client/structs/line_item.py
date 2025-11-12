@@ -1,5 +1,7 @@
 from typing import Any, Literal
 
+from pydantic import Field
+
 from .absolute_price_definition import AbsolutPriceDefinition
 from .calculated_price import CalculatedPrice
 from .delivery_information import DeliveryInformation
@@ -21,7 +23,7 @@ class LineItem(FieldSetBase):
     label: str | None = None
     modified: bool | None = False
     modified_by_app: bool | None = False
-    payload: dict[str, Any] | None = None
+    payload: dict[str, Any] | None = Field(default=None)
     price: CalculatedPrice | None = None
     price_definition: AbsolutPriceDefinition | QuantityPriceDefinition | ReferencePriceDefinition | None = None
     quantity: int | None = 1

@@ -6,7 +6,6 @@ class OrderCustomer(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_customer"
 
     customer_id: IdField | None = None
-    order_id: IdField
     order_version_id: IdField | None = None
     email: str
     salutation_id: IdField | None = None

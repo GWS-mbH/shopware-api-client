@@ -1,29 +1,14 @@
-from typing import Any
-
-from ....base import EndpointMixin, AdminEndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminEndpoint, AdminModel
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.b2b_components_role import B2bComponentsRole as B2bComponentsRoleBase
 
 
-class B2bComponentsRoleBase(EndpointMixin[EndpointClass]):
-    _identifier: str = "b2b_components_role"
-
-    business_partner_customer_id: IdField | None = None
-    name: str
-    permissions: dict[str, Any] | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class B2bComponentsRoleRelations:
+class B2bComponentsRole(B2bComponentsRoleBase, AdminModel["B2bComponentsRoleEndpoint"]):
     employees: ManyRelation["B2bEmployee"]
     business_partner_customer: ForeignRelation["Customer"]
 
 
-class B2bComponentsRole(B2bComponentsRoleBase["B2bComponentsRoleEndpoint"], B2bComponentsRoleRelations):
-    pass
-
-
-class B2bComponentsRoleEndpoint(AdminEndpointBase[B2bComponentsRole]):
+class B2bComponentsRoleEndpoint(AdminEndpoint[B2bComponentsRole]):
     name = "b2b_components_role"
     path = "/b2b-components-role"
     model_class = B2bComponentsRole

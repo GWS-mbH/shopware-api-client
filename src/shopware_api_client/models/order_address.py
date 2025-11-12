@@ -7,7 +7,6 @@ class OrderAddress(ApiModelBase, CustomFieldsMixin):
 
     country_id: IdField
     country_state_id: IdField | None = None
-    order_id: IdField
     order_version_id: IdField | None = None
     salutation_id: IdField | None = None
     first_name: str

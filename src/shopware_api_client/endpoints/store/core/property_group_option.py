@@ -4,7 +4,6 @@ from shopware_api_client.models.property_group_option import PropertyGroupOption
 class PropertyGroupOption(PropertyGroupOptionBase):
     media: "Media | None" = None
     group: "PropertyGroup"
-    option: str
 
 
 from .media import Media  # noqa: E402

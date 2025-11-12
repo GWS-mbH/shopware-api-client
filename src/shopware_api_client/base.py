@@ -409,8 +409,6 @@ class ApiModelBase(BaseModel):
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
 
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
-        _ = client
-
         if translations := kwargs.get("translated"):
             kwargs.update(translations)
 
@@ -419,6 +417,10 @@ class ApiModelBase(BaseModel):
         except PydanticUserError:
             self.model_rebuild()
             super().__init__(**kwargs)
+
+        # Pydantic doesn't do a good job at calling the parents, so we have to help
+        if isinstance(self, EndpointMixin):
+            self._client = client
 
     def __setattr__(self, name: str, value: Any) -> Any:
         from .endpoints.relations import ForeignRelation, ManyRelation
@@ -490,8 +492,8 @@ class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminE
         return await endpoint.delete(pk=self.id)
 
 
-class CustomFieldsMixin:
-    custom_fields: dict[str, Any] | None = None
+class CustomFieldsMixin(BaseModel):
+    custom_fields: dict[str, Any] | None = Field(default=None)
 
 
 class EndpointBase:
@@ -500,7 +502,7 @@ class EndpointBase:
     raw: bool
     search_prefix: str = "/search"
 
-    def __init__(self, client: ClientBase, *args: Any, **kwargs: Any):
+    def __init__(self, client: ClientBase, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.client = client
         self.raw = client.raw
@@ -931,13 +933,9 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def all(self) -> list[ModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
-        print(json.dumps(data))
-
         result = await self.client.post(self.path, json=data)
 
         result_data: list[dict[str, Any]] = result.json().get("elements", [])
-
-        print(json.dumps(result_data))
 
         if self.raw:
             return result_data

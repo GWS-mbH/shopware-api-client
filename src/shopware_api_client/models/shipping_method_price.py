@@ -1,5 +1,6 @@
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField, Price
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.price import Price
 
 
 class ShippingMethodPrice(ApiModelBase, CustomFieldsMixin):
