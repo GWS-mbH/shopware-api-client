@@ -76,7 +76,7 @@ Endpoint:
 customer = await client.customer.first()
 ```
 
-All available Endpoint functions can be found in the [EndpointBase](#list-of-available-functions) section.
+All available Endpoint functions can be found in the [AdminEndpoint](#list-of-available-functions) section.
 
 There are two additional ways how the client can be utilized by using it with the Endpoint-Class directly or the
 associated Pydantic Model:
@@ -153,7 +153,9 @@ SHOP_URL = "https://pets24.shop"
 config = StoreConfig(url=SHOP_URL, access_key=STORE_API_ACCESS_KEY, context_token=CONTEXT_TOKEN)
 ```
 
-This config can be used with the `StoreClient`, which works exactly like the `AdminClient`.
+This config can be used with the `StoreClient`, ~~which works exactly like the `AdminClient`~~.
+The `StoreClient` has far less endpoints and does mostly not support full updated of models, but uses
+helper-functions.
 
 ### Redis Caching for Rate Limits
 
@@ -188,14 +190,14 @@ store_client = StoreClient(config=config)  # <- Works for store client as well (
 
 __Note:__ Shopware currently enforces rate limits on a per–public‑IP basis. As a result, you should only share Redis‑backed rate‑limit caching among clients that originate from the same public IP address.
 
-## EndpointBase
-The `base.EndpointBase` class should be used for creating new Endpoints. It provides some usefull functions to call
+## AdminEndpoint
+The `base.AdminEndpoint` class should be used for creating new Admin-Endpoints. It provides some usefull functions to call
 the Shopware-API.
 
 The base structure of an Endpoint is pretty simple:
 
 ```python
-from shopware_api_client.base import EndpointMixin, AdminEndpointBase
+from shopware_api_client.base import EndpointMixin, AdminEndpoint
 
 
 class CustomerGroup(EndpointMixin["CustomerGroupEndpoint"]):
@@ -203,7 +205,7 @@ class CustomerGroup(EndpointMixin["CustomerGroupEndpoint"]):
     pass
 
 
-class CustomerGroupEndpoint(AdminEndpointBase[CustomerGroup]):
+class CustomerGroupEndpoint(AdminEndpoint[CustomerGroup]):
     name = "customer_group"  # name of the Shopware-Endpoint (snaky)
     path = "/customer-group"  # path of the Shopware-Endpoint
     model_class = CustomerGroup  # Pydantic-Model of this Endpoint
@@ -227,6 +229,7 @@ class CustomerGroupEndpoint(AdminEndpointBase[CustomerGroup]):
 - `bulk_delete(objs: list[ModelClass] | list[dict[str, Any]` deletes multiple objects. Does always return dict or plain response. (POST /_action/sync)
 
 Not all functions are available for the StoreClient-Endpoints. But some of them have some additional functions.
+StoreClient-Endpoints using the `base.StoreSearchEndpoint` can use most of the filter functions, but not create/update/delete.
 
 ### Filter
 
@@ -263,19 +266,23 @@ The base structure of an Endpoint-Model looks like this. Field names are convert
 ```python
 from pydantic import Field
 from typing import Any
-from shopware_api_client.base import EndpointMixin
+from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class CustomerGroup(EndpointMixin["CustomerGroupEndpoint"]):
+class CustomerGroup(ApiModelBase, CustomFieldsMixin):
     _identifier = "customer_group"  # name of the Shopware-Endpoint (snaky)
 
     name: str  # Field with type
     display_gross: bool | None = None
-    custom_fields: dict[str, Any] | None = None
     # other fields...
 ```
 
-The `id`, `created_at` and `updated_at` attributes are provided in the ApiModelBase and must not be added.
+This Base-Models live in `shopware_api_client.models`
+
+The `id`, `version_id`, `created_at`, `updated_at` and `translated` attributes are provided in the ApiModelBase and
+must not be added. This are default fields of Shopwares `Entity` class, even they are not always used.
+
+If an entity supports the `EntityCustomFieldsTrait` you can add the `CustomFieldsMixin` to add the custom_fields field.
 
 ### List of available Function
 
@@ -283,7 +290,7 @@ The `id`, `created_at` and `updated_at` attributes are provided in the ApiModelB
 - `delete()` executes `Endpoint.delete()`
 
 
-### Relations
+### AdminModel + Relations
 
 To make relations to other models work, we have to define them in the Model. There are two classes to make this work:
 `endpoints.relations.ForeignRelation` and `endpoints.relations.ManyRelation`.
@@ -299,37 +306,31 @@ Example (Customer):
 
 ```python
 from pydantic import Field
-from typing import TYPE_CHECKING
 
-from shopware_api_client.base import EndpointMixin, EndpointClass
-from shopware_api_client.models.relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.customer import Customer as CustomerBase
 
-from ...base_fields import IdField
-
-if TYPE_CHECKING:
-    from shopware_api_client.endpoints.admin import CustomerAddress
-
-
-# Base-Class for the normal model fields
-class CustomerBase(EndpointMixin[EndpointClass]):
+"""
+// shopware_api_client.models.customer.Customer:
+class Customer(ApiModelBase):
     # we have an id so we can create a ForeignRelation to it
     default_billing_address_id: IdField
+"""
 
-
-# Relations-Class for the related fields
-class CustomerRelations:
+# final model containing relations for admin api. Must be AdminModel
+class Customer(CustomerBase, AdminModel["CustomerEndpoint"]):
     default_billing_address: ForeignRelation["CustomerAddress"]
 
     # We don't have a field for all addresses of a customer, but there is a relation for it!
     addresses: ManyRelation["CustomerAddress"]
 
+# model relation classes have to be imported at the end. pydantic needs the full import (not just TYPE_CHECKING)
+# and this saves us from circular imports
+from shopware_api_client.endpoints.admin import CustomerAddress  # noqa: E402
 
-# Final Class, that combines both of them
-class Customer(CustomerBase["CustomerEndpoint"], CustomerRelations):
-    pass
 ```
-
-We have two classes `Base` and `Relations`. This way we can [reuse the Base-Model](#reusing-admin-models-for-store-endpoints).
 
 ## Development
 
@@ -350,7 +351,7 @@ datamodel-codegen --input openapi3.json --output model_openapi3.py --snake-case-
 
 The file may look confusing at first, but you can search for Endpoint-Name + JsonApi (Example: class CustomerJsonApi)
 to get all returned fields + relationships class as an overview over the available Relations. However, the Models will
-need some Modifications. But it's a good start.
+need some modifications. But it's a good start.
 
 Not all fields returned by the API are writeable and the API will throw an error when you try to set it. So this fields
 must have an `exclude=True` in their definition. To find out which fields need to be excluded check the Shopware
@@ -364,245 +365,8 @@ don't get cleaned away as unused imports by code-formaters/cleaners.
 We need to import all related models at the **end** of the file. If we don't add them, Pydantic fails to build the model. If we add them before
 our model definition, we run into circular imports.
 
-### Step by Step Example (Admin Endpoint Media Thumbnail)
-
-1. Create the file for the endpoint. Since Media Thumbnail is an Admin > Core Endpoint we create a file called `media_thumbnail.py` in `endpoints/admin/core/`
-
-2. You can copy & paste the following example as a base for the new Endpoint:
-
-```python
-from typing import Any
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class YourModelBase(ApiModelBase[EndpointClass]):
-    _identifier = "your_model"
-
-    foreign_id: IdField
-    # more direct fields
-
-
-class YourModelRelations:
-    foreign: ForeignRelation["ForeignRelationModel"]
-    many: ManyRelation["ManyRelationModel"]
-
-
-class YourModel(YourModelBase["YourModelEndpoint"], YourModelRelations):
-    pass
-
-
-class YourModelEndpoint(EndpointBase[YourModel]):
-    name = "your_model"
-    path = "/your-model"
-    model_class = YourModel
-
-
-from .foreign_relation_model import ForeignRelationModel  # noqa: E402
-from .may_relation_model import ManyRelationModel  # noqa: E402
-
-```
-
-3. Update the example to your needs (Media Thumbnail Example):
-    * Replace `YourModel` with `MediaThumbnail`
-    * Replace `your_model` with `media_thumbnail`
-    * Replace `your-model` with `media-thumbnail`
-
-4. Assuming you used the datamodel-codegen command above to generate datamodels you can search the file for
-`class MediaThumbnailJsonApi` and copy all fields except `id`, `created_at`, `updated_at` (included in ApiModelBase) and `relationships`.
-ID-Fields will use the type `constr(pattern=r"^[0-9a-f]{32}$")`. Replace it with `IdField` from `endpoints.base_fields`.
-Remove the generated alias entries, because we use a generator for this.
-
-5. Now your `media_thumbnail.py` should look like this:
-
-```python
-from typing import TYPE_CHECKING, Any, ClassVar
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class MediaThumbnailBase(ApiModelBase[EndpointClass]):
-    _identifier = "media_thumbnail"
-
-    media_id: IdField
-    width: int
-    height: int
-    url: str | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria."
-    )
-    path: str | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class MediaThumbnailRelations:
-    foreign: ClassVar[ForeignRelation["ForeignRelationModel"]] = ForeignRelation("ForeignRelationModel", "foreign_id")
-    many: ClassVar[ManyRelation["ManyRelationModel"]] = ManyRelation("ManyRelationModel", "manyRelation")
-
-
-class MediaThumbnail(MediaThumbnailBase["MediaThumbnailEndpoint"], MediaThumbnailRelations):
-    pass
-
-
-class MediaThumbnailEndpoint(EndpointBase[MediaThumbnail]):
-    name = "media_thumbnail"
-    path = "/media-thumbnail"
-    model_class = MediaThumbnail
-
-
-from .foreign_relation_model import ForeignRelationModel  # noqa: E402
-from .may_relation_model import ManyRelationModel  # noqa: E402
-```
-
-6. Next up: Relations. For this check the type of the `relationships`. `MediaThumbnail` has only one relation to `media`.
-If you follow the types of `media > data` you can see the actual model type in the `type` field as examples attribute: media.
-So it relates to the Media Endpoint.
-For this relation our related Field looks like this:
-`media: ForeignRelation["Media"]`.
-We add it to the Relations class.
-
-7. Updated `media_thumbnails.py`:
-```python
-from typing import Any
-
-from pydantic import Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
-
-
-class MediaThumbnailBase(ApiModelBase[EndpointClass]):
-    _identifier = "media_thumbnail"
-
-    media_id: IdField
-    width: int
-    height: int
-    url: str | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria."
-    )
-    path: str | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class MediaThumbnailRelations:
-    media: ForeignRelation["Media"]
-
-
-class MediaThumbnail(MediaThumbnailBase["MediaThumbnailEndpoint"], MediaThumbnailRelations):
-    pass
-
-
-class MediaThumbnailEndpoint(EndpointBase[MediaThumbnail]):
-    name = "media_thumbnail"
-    path = "/media-thumbnail"
-    model_class = MediaThumbnail
-
-
-from .media import Media  # noqa: E402
-```
-
-8. Now we have to check, which fields are read-only fields. The easiest way for this is to head to the POST section of the documentation of this Endpoint: https://shopware.stoplight.io/docs/admin-api/9724c473cce7d-create-a-new-media-thumbnail-resources
-All fields that aren't listed here are read-only fields. So for our example this are: width, height, path, created_at and updated_at. We need to add an `exclude=True` to this fields, to make Pydantic ignore this fields when we send them back to the
-API for saving or creating entries. We try to provide default values for excluded fields which are required, so we don't have to set them, when we create
-a new object.
-
-9. After adding `exclude=True` our final file should look like this:
-```python
-from typing import Any
-
-from pydantic import AwareDatetime, Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ....client import registry
-from ...base_fields import IdField
-from ...relations import ForeignRelation
-
-
-class MediaThumbnailBase(ApiModelBase[EndpointClass]):
-    _identifier = "media_thumbnail"
-
-    media_id: IdField
-    width: int = Field(default=0, exclude=True)
-    height: int = Field(default=0, exclude=True)
-    url: str | None = Field(
-        None, description="Runtime field, cannot be used as part of the criteria."
-    )
-    path: str | None = Field(None, exclude=True)
-    custom_fields: dict[str, Any] | None = None
-
-
-class MediaThumbnailRelations:
-    media: ClassVar[ForeignRelation["Media"]] = ForeignRelation("Media", "media_id")
-
-
-class MediaThumbnail(MediaThumbnailBase["MediaThumbnailEndpoint"], MediaThumbnailRelations):
-    pass
-
-
-class MediaThumbnailEndpoint(EndpointBase[MediaThumbnail]):
-    name = "media_thumbnail"
-    path = "/media-thumbnail"
-    model_class = MediaThumbnail
-
-
-from .media import Media  # noqa: E402
-```
-10. As final step we need to add an import for the Model to `endpoints/admin/__init__.py` and add the Model to `__all__` and to the `AdminEndpoints.init_endpoints`
-```python
-# other imports
-from .core.admin.media_thumbnail import MediaThumbnail, MediaThumbnailEndpoint
-# more imports
-
-__all__ = [
-  # other models
-  "MediaThumbnail",
-  # more models
-]
-
-...
-
-class AdminEndpoints:
-    def init_endpoints(self, client: "AdminClient"):
-        # other endpoints
-        self.media_thumbnail = MediaThumbnailEndpoint(client)
-        # more endpoints
-```
-
-We are done and you are now ready to use your new endpoint! 🎉
-
-### Reusing Admin-Models for Store-Endpoints
-
-The Store-Endpoints use the same Model structure as the Admin-Endpoints, but have no relations. Some of the related
-objects are added to the response directly. We can use the Base-Models from our Admin-Endpoints for this purpose:
-
-```python
-from ...admin.core.country import CountryBase
-from ...admin.core.country_state import CountryStateBase
-from ...admin.core.customer_address import CustomerAddressBase
-from ...admin.core.salutation import SalutationBase
-
-
-class Address(CustomerAddressBase["AddressEndpoint"]):
-    _identifier = "address"
-
-    country: CountryBase | None = None
-    customer_state: CountryStateBase | None = None
-    salutation: SalutationBase | None = None
-```
-
-Since country, customerState and salutation are returned in the response, we can use their Base-Models to define
-their types.
-
-This "related" fields should always be optional, because their value is not always returned (object-creation).
+Every model has a base model that lives in `models/<model_file>.py`. This model only contains direct fields (no relations), which are used by
+both endpoints (store & admin). This base models are extended in the endpoints to contain relations (`endpoints/admin/core/<model_file>.py` & `endpoints/store/core/<model_file>.py`).
 
 ### Structure
 
@@ -617,7 +381,10 @@ This "related" fields should always be optional, because their value is not alwa
     > core  -- StoreAPI > Core
     > commercial  -- StoreAPI > Commercial
     > digital_sales_rooms  -- StoreAPI > Digital Sales Rooms
-base.py  -- All the Base Classes
+> models  -- base models to be extended in admin/store endpoints (shopware => Entity)
+> structs  -- data structures that do not have a model (shopware => Struct)
+base.py  -- All the Base Classes (nearly)
+fieldsets.py  -- FieldSetBase has its own file to prevent pydantic problems
 client.py  -- Clients & Registry
 config.py  -- Configs
 exceptions.py  -- Exceptions

@@ -5,7 +5,7 @@ from shopware_api_client.models.order_customer import OrderCustomer as OrderCust
 
 
 class OrderCustomer(OrderCustomerBase, AdminModel["OrderCustomerEndpoint"]):
-    state_machine_id: IdField
+    order_id: IdField
     order: ForeignRelation["Order"]
     customer: ForeignRelation["Customer"]
     salutation: ForeignRelation["Salutation"]

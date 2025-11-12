@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
@@ -15,7 +17,7 @@ class Order(ApiModelBase, CustomFieldsMixin):
     language_id: IdField
     sales_channel_id: IdField
     order_date_time: AwareDatetime
-    order_date: str | None = Field(default=None, exclude=True)
+    order_date: date | None = Field(default=None, exclude=True)
     price: Price | None = None
     amount_total: float | None = Field(default=None, exclude=True)
     amount_net: float | None = Field(default=None, exclude=True)
