@@ -6,7 +6,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class App(ApiModelBase, CustomFieldsMixin):
+class AppBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "app"
 
     name: str

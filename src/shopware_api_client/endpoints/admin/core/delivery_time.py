@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.delivery_time import DeliveryTime as DeliveryTimeBase
+from shopware_api_client.models.delivery_time import DeliveryTimeBase
 
 
 class DeliveryTime(DeliveryTimeBase, AdminModel["DeliveryTimeEndpoint"]):

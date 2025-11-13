@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class CustomerGroup(ApiModelBase, CustomFieldsMixin):
+class CustomerGroupBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "customer_group"
 
     name: str

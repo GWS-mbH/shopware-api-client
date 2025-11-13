@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.cms_section import CmsSection as CmsSectionBase
+from shopware_api_client.models.cms_section import CmsSectionBase
 
 
 class CmsSection(CmsSectionBase, AdminModel["CmsSectionEndpoint"]):

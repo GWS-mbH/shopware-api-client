@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.structs.tax_free_config import TaxFreeConfig
 
 
-class Country(ApiModelBase, CustomFieldsMixin):
+class CountryBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "country"
 
     name: str

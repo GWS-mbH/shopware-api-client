@@ -1,5 +1,5 @@
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin
-from shopware_api_client.models.product import Product as ProductBase
+from shopware_api_client.models.product import ProductBase
 
 
 class Product(ProductBase, EndpointMixin["ProductEndpoint"]):

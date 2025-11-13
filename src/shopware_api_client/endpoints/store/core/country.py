@@ -1,5 +1,5 @@
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin
-from shopware_api_client.models.country import Country as CountryBase
+from shopware_api_client.models.country import CountryBase
 
 
 class Country(CountryBase, EndpointMixin["CountryEndpoint"]):

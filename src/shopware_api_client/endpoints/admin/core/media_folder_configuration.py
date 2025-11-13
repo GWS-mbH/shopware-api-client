@@ -1,8 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.media_folder_configuration import (
-    MediaFolderConfiguration as MediaFolderConfigurationBase,
-)
+from shopware_api_client.models.media_folder_configuration import MediaFolderConfigurationBase
 
 
 class MediaFolderConfiguration(MediaFolderConfigurationBase, AdminModel["MediaFolderConfigurationEndpoint"]):

@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.customer_wishlist import CustomerWishlist as CustomerWishlistBase
+from shopware_api_client.models.customer_wishlist import CustomerWishlistBase
 
 
 class CustomerWishlist(CustomerWishlistBase, AdminModel["CustomerWishlistEndpoint"]):

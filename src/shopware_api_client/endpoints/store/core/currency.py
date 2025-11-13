@@ -1,5 +1,5 @@
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin
-from shopware_api_client.models.currency import Currency as CurrencyBase
+from shopware_api_client.models.currency import CurrencyBase
 
 
 class Currency(CurrencyBase, EndpointMixin["CurrencyEndpoint"]):

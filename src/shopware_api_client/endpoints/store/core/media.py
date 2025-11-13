@@ -1,4 +1,4 @@
-from shopware_api_client.models.media import Media as MediaBase
+from shopware_api_client.models.media import MediaBase
 
 
 class Media(MediaBase):

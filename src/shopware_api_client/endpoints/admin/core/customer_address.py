@@ -1,5 +1,5 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.models.customer_address import CustomerAddress as CustomerAddressBase
+from shopware_api_client.models.customer_address import CustomerAddressBase
 from shopware_api_client.endpoints.relations import ForeignRelation
 
 

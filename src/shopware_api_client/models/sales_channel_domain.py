@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class SalesChannelDomain(ApiModelBase, CustomFieldsMixin):
+class SalesChannelDomainBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "sales_channel_domain"
 
     url: str

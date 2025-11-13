@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import Amount, IdField
 
 
-class OrderTransactionCapture(ApiModelBase, CustomFieldsMixin):
+class OrderTransactionCaptureBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_transaction_capture"
 
     version_id: IdField | None = None

@@ -1,4 +1,4 @@
-from shopware_api_client.models.product_stream import ProductStream as ProductStreamBase
+from shopware_api_client.models.product_stream import ProductStreamBase
 
 
 class ProductStream(ProductStreamBase):

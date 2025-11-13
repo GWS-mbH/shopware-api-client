@@ -3,7 +3,7 @@ from typing import Any
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.fieldsets import FieldSetBase
-from shopware_api_client.models.customer_address import CustomerAddress as CustomerAddressBase
+from shopware_api_client.models.customer_address import CustomerAddressBase
 
 
 class Address(CustomerAddressBase, EndpointMixin["AddressEndpoint"]):

@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class B2bEmployee(ApiModelBase, CustomFieldsMixin):
+class B2bEmployeeBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "b2b_employee"
 
     business_partner_customer_id: IdField | None = None

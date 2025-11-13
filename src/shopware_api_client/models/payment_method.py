@@ -6,7 +6,7 @@ from shopware_api_client.endpoints.base_fields import IdField
 _FILED_DESCRIPTION = "Runtime field, cannot be used as part of the criteria."
 
 
-class PaymentMethod(ApiModelBase, CustomFieldsMixin):
+class PaymentMethodBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "payment_method"
 
     plugin_id: IdField | None = None

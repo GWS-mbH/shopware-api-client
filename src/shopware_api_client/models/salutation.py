@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class Salutation(ApiModelBase, CustomFieldsMixin):
+class SalutationBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "salutation"
 
     salutation_key: str

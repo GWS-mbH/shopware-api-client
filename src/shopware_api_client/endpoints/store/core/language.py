@@ -1,5 +1,5 @@
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin
-from shopware_api_client.models.language import Language as LanguageBase
+from shopware_api_client.models.language import LanguageBase
 
 
 class Language(LanguageBase, EndpointMixin["LanguageEndpoint"]):

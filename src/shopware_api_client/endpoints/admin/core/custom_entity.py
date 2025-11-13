@@ -1,5 +1,5 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.models.custom_entity import CustomEntity as CustomEntityBase
+from shopware_api_client.models.custom_entity import CustomEntityBase
 
 
 class CustomEntity(CustomEntityBase, AdminModel["CustomEntityEndpoint"]):

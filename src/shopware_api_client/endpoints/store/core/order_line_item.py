@@ -1,4 +1,4 @@
-from shopware_api_client.models.order_line_item import OrderLineItem as OrderLineItemBase
+from shopware_api_client.models.order_line_item import OrderLineItemBase
 
 
 class OrderLineItem(OrderLineItemBase):

@@ -1,8 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.b2b_components_shopping_list import (
-    B2bComponentsShoppingList as B2bComponentsShoppingListBase,
-)
+from shopware_api_client.models.b2b_components_shopping_list import B2bComponentsShoppingListBase
 
 
 class B2bComponentsShoppingList(B2bComponentsShoppingListBase, AdminModel["B2bComponentsShoppingListEndpoint"]):

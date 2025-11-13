@@ -1,4 +1,4 @@
-from shopware_api_client.models.tag import Tag as TagBase
+from shopware_api_client.models.tag import TagBase
 
 
 class Tag(TagBase):

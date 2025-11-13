@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class DocumentBaseConfigSalesChannel(ApiModelBase):
+class DocumentBaseConfigSalesChannelBase(ApiModelBase):
     _identifier: str = "document_base_config_sales_channel"
 
     document_base_config_id: IdField

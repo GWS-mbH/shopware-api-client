@@ -2,7 +2,7 @@ from typing import Any
 
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.media import Media as MediaBase
+from shopware_api_client.models.media import MediaBase
 
 
 class Media(MediaBase, AdminModel["MediaEndpoint"]):

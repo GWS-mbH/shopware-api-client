@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.tax_rule_type import TaxRuleType as TaxRuleTypeBase
+from shopware_api_client.models.tax_rule_type import TaxRuleTypeBase
 
 
 class TaxRuleType(TaxRuleTypeBase, AdminModel["TaxRuleTypeEndpoint"]):

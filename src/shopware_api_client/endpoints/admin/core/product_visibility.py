@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.product_visibility import ProductVisibility as ProductVisibilityBase
+from shopware_api_client.models.product_visibility import ProductVisibilityBase
 
 
 class ProductVisibility(ProductVisibilityBase, AdminModel["ProductVisibilityEndpoint"]):

@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.product_cross_selling import ProductCrossSelling as ProductCrossSellingBase
+from shopware_api_client.models.product_cross_selling import ProductCrossSellingBase
 
 
 class ProductCrossSelling(ProductCrossSellingBase, AdminModel["ProductCrossSellingEndpoint"]):

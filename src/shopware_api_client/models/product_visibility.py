@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ProductVisibility(ApiModelBase):
+class ProductVisibilityBase(ApiModelBase):
     _identifier: str = "product_visibility"
 
     product_id: IdField

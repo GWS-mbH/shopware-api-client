@@ -3,7 +3,7 @@ from pydantic import AwareDatetime
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class Integration(ApiModelBase, CustomFieldsMixin):
+class IntegrationBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "integration"
 
     label: str

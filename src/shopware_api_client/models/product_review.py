@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ProductReview(ApiModelBase, CustomFieldsMixin):
+class ProductReviewBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "product_review"
 
     product_id: IdField

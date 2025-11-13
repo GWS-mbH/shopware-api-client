@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.customer_recovery import CustomerRecovery as CustomerRecoveryBase
+from shopware_api_client.models.customer_recovery import CustomerRecoveryBase
 
 
 class CustomerRecovery(CustomerRecoveryBase, AdminModel["CustomerRecoveryEndpoint"]):

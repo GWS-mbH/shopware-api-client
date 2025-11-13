@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase
 
 
-class Warehouse(ApiModelBase):
+class WarehouseBase(ApiModelBase):
     _identifier = "warehouse"
 
     name: str

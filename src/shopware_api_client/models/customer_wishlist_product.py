@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class CustomerWishlistProduct(ApiModelBase):
+class CustomerWishlistProductBase(ApiModelBase):
     _identifier: str = "customer_wishlist_product"
 
     product_id: IdField

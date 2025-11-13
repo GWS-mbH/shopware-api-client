@@ -6,7 +6,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class SalesChannel(ApiModelBase, CustomFieldsMixin):
+class SalesChannelBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "sales_channel"
 
     language_id: IdField

@@ -3,7 +3,7 @@ from pydantic import Field
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.order import Order as OrderBase
+from shopware_api_client.models.order import OrderBase
 from shopware_api_client.structs.cash_rounding_config import CashRoundingConfig
 
 

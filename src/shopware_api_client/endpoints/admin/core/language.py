@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.language import Language as LanguageBase
+from shopware_api_client.models.language import LanguageBase
 
 
 class Language(LanguageBase, AdminModel["LanguageEndpoint"]):

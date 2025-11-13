@@ -1,4 +1,4 @@
-from shopware_api_client.models.tax import Tax as TaxBase
+from shopware_api_client.models.tax import TaxBase
 
 
 class Tax(TaxBase):

@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ProductExport(ApiModelBase):
+class ProductExportBase(ApiModelBase):
     _identifier: str = "product_export"
 
     product_stream_id: IdField

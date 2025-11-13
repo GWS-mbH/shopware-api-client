@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.product_export import ProductExport as ProductExportBase
+from shopware_api_client.models.product_export import ProductExportBase
 
 
 class ProductExport(ProductExportBase, AdminModel["ProductExportEndpoint"]):

@@ -5,7 +5,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class Media(ApiModelBase, CustomFieldsMixin):
+class MediaBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "media"
 
     user_id: IdField | None = None

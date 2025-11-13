@@ -5,7 +5,7 @@ from pydantic import Field
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class ProductStream(ApiModelBase, CustomFieldsMixin):
+class ProductStreamBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "product_stream"
 
     api_filter: dict[str, Any] | None = Field(default=None, exclude=True)

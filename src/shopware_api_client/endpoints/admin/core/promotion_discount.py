@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.promotion_discount import PromotionDiscount as PromotionDiscountBase
+from shopware_api_client.models.promotion_discount import PromotionDiscountBase
 
 
 class PromotionDiscount(PromotionDiscountBase, AdminModel["PromotionDiscountEndpoint"]):

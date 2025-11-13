@@ -1,4 +1,4 @@
-from shopware_api_client.models.cms_page import CmsPage as CmsPageBase
+from shopware_api_client.models.cms_page import CmsPageBase
 
 
 class CmsPage(CmsPageBase):

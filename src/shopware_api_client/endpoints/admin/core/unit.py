@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.unit import Unit as UnitBase
+from shopware_api_client.models.unit import UnitBase
 
 
 class Unit(UnitBase, AdminModel["UnitEndpoint"]):

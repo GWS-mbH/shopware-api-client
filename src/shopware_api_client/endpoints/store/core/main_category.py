@@ -1,4 +1,4 @@
-from shopware_api_client.models.main_category import MainCategory as MainCategoryBase
+from shopware_api_client.models.main_category import MainCategoryBase
 
 
 class MainCategory(MainCategoryBase):

@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.sales_channel_domain import SalesChannelDomain as SalesChannelDomainBase
+from shopware_api_client.models.sales_channel_domain import SalesChannelDomainBase
 
 
 class SalesChannelDomain(SalesChannelDomainBase, AdminModel["SalesChannelDomainEndpoint"]):

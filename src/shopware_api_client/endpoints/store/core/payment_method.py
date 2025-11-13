@@ -1,4 +1,4 @@
-from shopware_api_client.models.payment_method import PaymentMethod as PaymentMethodBase
+from shopware_api_client.models.payment_method import PaymentMethodBase
 
 
 class PaymentMethod(PaymentMethodBase):

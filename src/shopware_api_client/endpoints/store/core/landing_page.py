@@ -1,4 +1,4 @@
-from shopware_api_client.models.landing_page import LandingPage as LandingPageBase
+from shopware_api_client.models.landing_page import LandingPageBase
 
 
 class LandingPage(LandingPageBase):

@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class OrderAddress(ApiModelBase, CustomFieldsMixin):
+class OrderAddressBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_address"
 
     country_id: IdField

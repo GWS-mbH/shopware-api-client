@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.rule_condition import RuleCondition as RuleConditionBase
+from shopware_api_client.models.rule_condition import RuleConditionBase
 
 
 class RuleCondition(RuleConditionBase, AdminModel["RuleConditionEndpoint"]):

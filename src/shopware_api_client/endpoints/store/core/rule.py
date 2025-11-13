@@ -1,4 +1,4 @@
-from shopware_api_client.models.rule import Rule as RuleBase
+from shopware_api_client.models.rule import RuleBase
 
 
 class Rule(RuleBase):

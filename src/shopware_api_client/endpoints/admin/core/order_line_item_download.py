@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.order_line_item_download import OrderLineItemDownload as OrderLineItemDownloadBase
+from shopware_api_client.models.order_line_item_download import OrderLineItemDownloadBase
 
 
 class OrderLineItemDownload(OrderLineItemDownloadBase, AdminModel["OrderLineItemDownloadEndpoint"]):

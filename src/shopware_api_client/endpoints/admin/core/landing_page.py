@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.landing_page import LandingPage as LandingPageBase
+from shopware_api_client.models.landing_page import LandingPageBase
 
 
 class LandingPage(LandingPageBase, AdminModel["LandingPageEndpoint"]):

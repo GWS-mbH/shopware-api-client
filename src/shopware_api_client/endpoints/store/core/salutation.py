@@ -1,5 +1,5 @@
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin
-from shopware_api_client.models.salutation import Salutation as SalutationBase
+from shopware_api_client.models.salutation import SalutationBase
 
 
 class Salutation(SalutationBase, EndpointMixin["SalutationEndpoint"]):

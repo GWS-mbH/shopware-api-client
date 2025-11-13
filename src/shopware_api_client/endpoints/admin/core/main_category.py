@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.main_category import MainCategory as MainCategoryBase
+from shopware_api_client.models.main_category import MainCategoryBase
 
 
 class MainCategory(MainCategoryBase, AdminModel["MainCategoryEndpoint"]):

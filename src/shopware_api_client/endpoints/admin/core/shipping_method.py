@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.shipping_method import ShippingMethod as ShippingMethodBase
+from shopware_api_client.models.shipping_method import ShippingMethodBase
 
 
 class ShippingMethod(ShippingMethodBase, AdminModel["ShippingMethodEndpoint"]):

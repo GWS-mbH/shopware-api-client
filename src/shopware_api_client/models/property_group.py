@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class PropertyGroup(ApiModelBase, CustomFieldsMixin):
+class PropertyGroupBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "property_group"
 
     name: str

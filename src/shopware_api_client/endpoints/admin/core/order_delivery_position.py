@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.order_delivery_position import OrderDeliveryPosition as OrderDeliveryPositionBase
+from shopware_api_client.models.order_delivery_position import OrderDeliveryPositionBase
 
 
 class OrderDeliveryPosition(OrderDeliveryPositionBase, AdminModel["OrderDeliveryPositionEndpoint"]):

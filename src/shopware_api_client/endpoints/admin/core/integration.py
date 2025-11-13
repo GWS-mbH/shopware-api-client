@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.integration import Integration as IntegrationBase
+from shopware_api_client.models.integration import IntegrationBase
 
 
 class Integration(IntegrationBase, AdminModel["IntegrationEndpoint"]):

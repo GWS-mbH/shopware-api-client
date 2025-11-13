@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.app_script_condition import AppScriptCondition as AppScriptConditionBase
+from shopware_api_client.models.app_script_condition import AppScriptConditionBase
 
 
 class AppScriptCondition(AppScriptConditionBase, AdminModel["AppScriptConditionEndpoint"]):

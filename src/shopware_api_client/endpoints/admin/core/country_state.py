@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.country_state import CountryState as CountryStateBase
+from shopware_api_client.models.country_state import CountryStateBase
 
 
 class CountryState(CountryStateBase, AdminModel["CountryStateEndpoint"]):

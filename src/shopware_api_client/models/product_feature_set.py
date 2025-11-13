@@ -3,7 +3,7 @@ from typing import Any
 from shopware_api_client.base import ApiModelBase
 
 
-class ProductFeatureSet(ApiModelBase):
+class ProductFeatureSetBase(ApiModelBase):
     _identifier: str = "product_feature_set"
 
     name: str

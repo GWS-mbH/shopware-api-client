@@ -1,4 +1,4 @@
-from shopware_api_client.models.order_address import OrderAddress as OrderAddressBase
+from shopware_api_client.models.order_address import OrderAddressBase
 
 
 class OrderAddress(OrderAddressBase):

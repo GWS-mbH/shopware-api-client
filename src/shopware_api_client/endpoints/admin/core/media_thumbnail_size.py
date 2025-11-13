@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.media_thumbnail_size import MediaThumbnailSize as MediaThumbnailSizeBase
+from shopware_api_client.models.media_thumbnail_size import MediaThumbnailSizeBase
 
 
 class MediaThumbnailSize(MediaThumbnailSizeBase, AdminModel["MediaThumbnailSizeEndpoint"]):

@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.b2b_employee import B2bEmployee as B2bEmployeeBase
+from shopware_api_client.models.b2b_employee import B2bEmployeeBase
 
 
 class B2bEmployee(B2bEmployeeBase, AdminModel["B2bEmployeeEndpoint"]):

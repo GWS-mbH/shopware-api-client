@@ -1,6 +1,4 @@
-from shopware_api_client.models.product_configurator_setting import (
-    ProductConfiguratorSetting as ProductConfiguratorSettingBase,
-)
+from shopware_api_client.models.product_configurator_setting import ProductConfiguratorSettingBase
 
 
 class ProductConfiguratorSetting(ProductConfiguratorSettingBase):

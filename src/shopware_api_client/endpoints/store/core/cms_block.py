@@ -1,4 +1,4 @@
-from shopware_api_client.models.cms_block import CmsBlock as CmsBlockBase
+from shopware_api_client.models.cms_block import CmsBlockBase
 
 
 class CmsBlock(CmsBlockBase):

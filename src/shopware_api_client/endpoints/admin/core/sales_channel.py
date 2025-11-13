@@ -1,7 +1,7 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.sales_channel import SalesChannel as SalesChannelBase
+from shopware_api_client.models.sales_channel import SalesChannelBase
 
 
 class SalesChannel(SalesChannelBase, AdminModel["SalesChannelEndpoint"]):

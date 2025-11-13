@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.acl_role import AclRole as AclRoleBase
+from shopware_api_client.models.acl_role import AclRoleBase
 
 
 class AclRole(AclRoleBase, AdminModel["AclRoleEndpoint"]):

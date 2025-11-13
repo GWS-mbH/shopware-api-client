@@ -6,7 +6,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import Amount, Price, IdField
 
 
-class Order(ApiModelBase, CustomFieldsMixin):
+class OrderBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order"
 
     auto_increment: int | None = Field(default=None, exclude=True)

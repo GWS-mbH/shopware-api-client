@@ -1,4 +1,4 @@
-from shopware_api_client.models.locale import Locale as LocaleBase
+from shopware_api_client.models.locale import LocaleBase
 
 
 class Locale(LocaleBase):

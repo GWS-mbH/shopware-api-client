@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import Data, IdField
 
 
-class TaxRule(ApiModelBase):
+class TaxRuleBase(ApiModelBase):
     _identifier: str = "tax_rule"
 
     tax_rule_type_id: IdField

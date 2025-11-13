@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.payment_method import PaymentMethod as PaymentMethodBase
+from shopware_api_client.models.payment_method import PaymentMethodBase
 
 
 class PaymentMethod(PaymentMethodBase, AdminModel["PaymentMethodEndpoint"]):

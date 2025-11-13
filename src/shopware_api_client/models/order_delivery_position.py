@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField, Price
 
 
-class OrderDeliveryPosition(ApiModelBase, CustomFieldsMixin):
+class OrderDeliveryPositionBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_delivery_position"
 
     order_delivery_id: IdField

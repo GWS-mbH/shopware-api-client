@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.cms_block import CmsBlock as CmsBlockBase
+from shopware_api_client.models.cms_block import CmsBlockBase
 
 
 class CmsBlock(CmsBlockBase, AdminModel["CmsBlockEndpoint"]):

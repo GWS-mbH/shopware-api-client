@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.media_thumbnail import MediaThumbnail as MediaThumbnailBase
+from shopware_api_client.models.media_thumbnail import MediaThumbnailBase
 
 
 class MediaThumbnail(MediaThumbnailBase, AdminModel["MediaThumbnailEndpoint"]):

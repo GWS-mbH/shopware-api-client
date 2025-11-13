@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.category import Category as CategoryBase
+from shopware_api_client.models.category import CategoryBase
 
 
 class Category(CategoryBase, AdminModel["CategoryEndpoint"]):

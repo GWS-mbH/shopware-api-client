@@ -1,4 +1,4 @@
-from shopware_api_client.models.order_delivery import OrderDelivery as OrderDeliveryBase
+from shopware_api_client.models.order_delivery import OrderDeliveryBase
 
 
 class OrderDelivery(OrderDeliveryBase):

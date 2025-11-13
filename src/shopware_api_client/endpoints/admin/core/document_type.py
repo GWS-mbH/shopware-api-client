@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.document_type import DocumentType as DocumentTypeBase
+from shopware_api_client.models.document_type import DocumentTypeBase
 
 
 class DocumentType(DocumentTypeBase, AdminModel["DocumentTypeEndpoint"]):

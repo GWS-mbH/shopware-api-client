@@ -1,4 +1,4 @@
-from shopware_api_client.models.sales_channel import SalesChannel as SalesChannelBase
+from shopware_api_client.models.sales_channel import SalesChannelBase
 
 
 class SalesChannel(SalesChannelBase):

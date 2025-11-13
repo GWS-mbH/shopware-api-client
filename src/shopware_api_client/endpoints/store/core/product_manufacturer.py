@@ -1,4 +1,4 @@
-from shopware_api_client.models.product_manufacturer import ProductManufacturer as ProductManufacturerBase
+from shopware_api_client.models.product_manufacturer import ProductManufacturerBase
 
 
 class ProductManufacturer(ProductManufacturerBase):

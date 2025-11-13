@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.property_group import PropertyGroup as PropertyGroupBase
+from shopware_api_client.models.property_group import PropertyGroupBase
 
 
 class PropertyGroup(PropertyGroupBase, AdminModel["PropertyGroupEndpoint"]):

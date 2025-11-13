@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase
 
 
-class Tag(ApiModelBase):
+class TagBase(ApiModelBase):
     _identifier: str = "tag"
 
     name: str

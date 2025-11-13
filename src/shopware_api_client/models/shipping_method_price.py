@@ -3,7 +3,7 @@ from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.structs.price import Price
 
 
-class ShippingMethodPrice(ApiModelBase, CustomFieldsMixin):
+class ShippingMethodPriceBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "shipping_method_price"
 
     shipping_method_id: IdField

@@ -1,8 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.document_base_config_sales_channel import (
-    DocumentBaseConfigSalesChannel as DocumentBaseConfigSalesChannelBase,
-)
+from shopware_api_client.models.document_base_config_sales_channel import DocumentBaseConfigSalesChannelBase
 
 
 class DocumentBaseConfigSalesChannel(

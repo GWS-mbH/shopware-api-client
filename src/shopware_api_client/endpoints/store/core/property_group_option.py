@@ -1,4 +1,4 @@
-from shopware_api_client.models.property_group_option import PropertyGroupOption as PropertyGroupOptionBase
+from shopware_api_client.models.property_group_option import PropertyGroupOptionBase
 
 
 class PropertyGroupOption(PropertyGroupOptionBase):

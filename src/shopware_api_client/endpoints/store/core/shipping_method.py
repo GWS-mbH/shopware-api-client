@@ -1,4 +1,4 @@
-from shopware_api_client.models.shipping_method import ShippingMethod as ShippingMethodBase
+from shopware_api_client.models.shipping_method import ShippingMethodBase
 
 
 class ShippingMethod(ShippingMethodBase):

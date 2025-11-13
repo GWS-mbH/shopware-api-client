@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class StateMachineTransition(ApiModelBase, CustomFieldsMixin):
+class StateMachineTransitionBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "state_machine_transition"
 
     action_name: str

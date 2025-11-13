@@ -1,4 +1,4 @@
-from shopware_api_client.models.category import Category as CategoryBase
+from shopware_api_client.models.category import CategoryBase
 
 
 class Category(CategoryBase):

@@ -5,7 +5,7 @@ from pydantic import Field
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class Rule(ApiModelBase, CustomFieldsMixin):
+class RuleBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "rule"
 
     name: str

@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class CountryState(ApiModelBase, CustomFieldsMixin):
+class CountryStateBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "country_state"
 
     country_id: IdField

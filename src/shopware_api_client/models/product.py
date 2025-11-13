@@ -6,7 +6,7 @@ from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.structs.variant_listing_config import VariantListingConfig
 
 
-class Product(ApiModelBase, CustomFieldsMixin):
+class ProductBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "product"
 
     parent_id: IdField | None = None

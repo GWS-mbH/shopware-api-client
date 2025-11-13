@@ -1,4 +1,4 @@
-from shopware_api_client.models.property_group import PropertyGroup as PropertyGroupBase
+from shopware_api_client.models.property_group import PropertyGroupBase
 
 
 class PropertyGroup(PropertyGroupBase):

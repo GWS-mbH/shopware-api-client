@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class PromotionDiscountPrices(ApiModelBase):
+class PromotionDiscountPricesBase(ApiModelBase):
     _identifier: str = "promotion_discount_prices"
 
     discount_id: IdField

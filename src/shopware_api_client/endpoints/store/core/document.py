@@ -1,4 +1,4 @@
-from shopware_api_client.models.document import Document as DocumentBase
+from shopware_api_client.models.document import DocumentBase
 
 
 class Document(DocumentBase):

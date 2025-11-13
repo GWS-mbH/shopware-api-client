@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField, Visibility
 
 
-class CmsBlock(ApiModelBase, CustomFieldsMixin):
+class CmsBlockBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "cms_block"
 
     position: int

@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import Amount, IdField
 
 
-class OrderTransactionCaptureRefund(ApiModelBase, CustomFieldsMixin):
+class OrderTransactionCaptureRefundBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_transaction_capture_refund"
 
     version_id: IdField | None = None

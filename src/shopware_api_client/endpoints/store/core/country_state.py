@@ -2,7 +2,7 @@ from typing import Any
 
 from shopware_api_client.base import ClientBase, StoreSearchEndpoint, EndpointMixin
 from shopware_api_client.endpoints.base_fields import IdField
-from shopware_api_client.models.country_state import CountryState as CountryStateBase
+from shopware_api_client.models.country_state import CountryStateBase
 
 
 class CountryState(CountryStateBase, EndpointMixin["CountryStateEndpoint"]):

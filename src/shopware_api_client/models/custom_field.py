@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase
 
 
-class CustomField(ApiModelBase):
+class CustomFieldBase(ApiModelBase):
     _identifier: str = "custom_field"
 
     name: str

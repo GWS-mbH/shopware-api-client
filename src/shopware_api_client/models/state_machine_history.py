@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class StateMachineHistory(ApiModelBase):
+class StateMachineHistoryBase(ApiModelBase):
     _identifier: str = "state_machine_history"
 
     state_machine_id: IdField

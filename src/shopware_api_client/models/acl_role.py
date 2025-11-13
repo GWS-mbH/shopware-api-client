@@ -2,7 +2,7 @@ from pydantic import AwareDatetime
 from shopware_api_client.base import ApiModelBase
 
 
-class AclRole(ApiModelBase):
+class AclRoleBase(ApiModelBase):
     _identifier = "acl_role"
 
     name: str

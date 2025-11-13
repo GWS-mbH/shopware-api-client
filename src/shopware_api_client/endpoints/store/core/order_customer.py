@@ -1,4 +1,4 @@
-from shopware_api_client.models.order_customer import OrderCustomer as OrderCustomerBase
+from shopware_api_client.models.order_customer import OrderCustomerBase
 
 
 class OrderCustomer(OrderCustomerBase):

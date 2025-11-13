@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class RuleCondition(ApiModelBase, CustomFieldsMixin):
+class RuleConditionBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "rule_condition"
 
     type: str

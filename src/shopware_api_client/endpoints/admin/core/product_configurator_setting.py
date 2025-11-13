@@ -1,8 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.product_configurator_setting import (
-    ProductConfiguratorSetting as ProductConfiguratorSettingBase,
-)
+from shopware_api_client.models.product_configurator_setting import ProductConfiguratorSettingBase
 
 
 class ProductConfiguratorSetting(ProductConfiguratorSettingBase, AdminModel["ProductConfiguratorSettingEndpoint"]):

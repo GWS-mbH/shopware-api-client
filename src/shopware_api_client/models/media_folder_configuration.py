@@ -1,7 +1,7 @@
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class MediaFolderConfiguration(ApiModelBase, CustomFieldsMixin):
+class MediaFolderConfigurationBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "media_folder_configuration"
 
     create_thumbnails: bool | None = None

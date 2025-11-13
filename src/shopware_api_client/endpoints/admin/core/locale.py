@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.locale import Locale as LocaleBase
+from shopware_api_client.models.locale import LocaleBase
 
 
 class Locale(LocaleBase, AdminModel["LocaleEndpoint"]):

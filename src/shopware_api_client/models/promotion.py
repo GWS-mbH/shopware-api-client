@@ -6,7 +6,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class Promotion(ApiModelBase, CustomFieldsMixin):
+class PromotionBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "promotion"
 
     name: str

@@ -3,7 +3,7 @@ from typing import Literal
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class DeliveryTime(ApiModelBase, CustomFieldsMixin):
+class DeliveryTimeBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "delivery_time"
 
     name: str

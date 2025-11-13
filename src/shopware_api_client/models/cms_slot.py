@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class CmsSlot(ApiModelBase, CustomFieldsMixin):
+class CmsSlotBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "cms_slot"
 
     type: str

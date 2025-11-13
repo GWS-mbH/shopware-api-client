@@ -3,7 +3,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class LandingPage(ApiModelBase, CustomFieldsMixin):
+class LandingPageBase(ApiModelBase, CustomFieldsMixin):
     active: bool | None = None
     name: str
     slot_config: dict[str, Any] | None = None

@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class WarehouseGroup(ApiModelBase):
+class WarehouseGroupBase(ApiModelBase):
     _identifier = "warehouse_group"
 
     name: str

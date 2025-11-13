@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.tax_rule import TaxRule as TaxRuleBase
+from shopware_api_client.models.tax_rule import TaxRuleBase
 
 
 class TaxRule(TaxRuleBase, AdminModel["TaxRuleEndpoint"]):

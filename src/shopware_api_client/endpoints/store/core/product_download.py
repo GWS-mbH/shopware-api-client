@@ -1,4 +1,4 @@
-from shopware_api_client.models.product_download import ProductDownload as ProductDownloadBase
+from shopware_api_client.models.product_download import ProductDownloadBase
 
 
 class ProductDownload(ProductDownloadBase):

@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class OrderCustomer(ApiModelBase, CustomFieldsMixin):
+class OrderCustomerBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_customer"
 
     customer_id: IdField | None = None

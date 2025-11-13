@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ProductWarehouse(ApiModelBase):
+class ProductWarehouseBase(ApiModelBase):
     _identifier = "product_warehouse"
 
     stock: int

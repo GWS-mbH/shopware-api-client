@@ -1,6 +1,4 @@
-from shopware_api_client.models.order_transaction_capture_refund import (
-    OrderTransactionCaptureRefund as OrderTransactionCaptureRefundBase,
-)
+from shopware_api_client.models.order_transaction_capture_refund import OrderTransactionCaptureRefundBase
 
 
 class OrderTransactionCaptureRefund(OrderTransactionCaptureRefundBase):

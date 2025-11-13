@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.property_group_option import PropertyGroupOption as PropertyGroupOptionBase
+from shopware_api_client.models.property_group_option import PropertyGroupOptionBase
 
 
 class PropertyGroupOption(PropertyGroupOptionBase, AdminModel["PropertyGroupOptionEndpoint"]):

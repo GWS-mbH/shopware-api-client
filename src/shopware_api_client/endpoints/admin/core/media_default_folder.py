@@ -1,5 +1,5 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.models.media_default_folder import MediaDefaultFolder as MediaDefaultFolderBase
+from shopware_api_client.models.media_default_folder import MediaDefaultFolderBase
 
 
 class MediaDefaultFolder(MediaDefaultFolderBase, AdminModel["MediaDefaultFolderEndpoint"]):

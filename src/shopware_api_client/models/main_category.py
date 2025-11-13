@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class MainCategory(ApiModelBase):
+class MainCategoryBase(ApiModelBase):
     _identifier: str = "main_category"
 
     product_id: IdField

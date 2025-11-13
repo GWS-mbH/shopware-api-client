@@ -1,4 +1,4 @@
-from shopware_api_client.models.sales_channel_domain import SalesChannelDomain as SalesChannelDomainBase
+from shopware_api_client.models.sales_channel_domain import SalesChannelDomainBase
 
 
 class SalesChannelDomain(SalesChannelDomainBase):

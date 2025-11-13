@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ProductCrossSellingAssignedProducts(ApiModelBase):
+class ProductCrossSellingAssignedProductsBase(ApiModelBase):
     _identifier: str = "product_cross_selling_assigned_products"
 
     cross_selling_id: IdField

@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField, Price
 
 
-class B2bComponentsShoppingList(ApiModelBase, CustomFieldsMixin):
+class B2bComponentsShoppingListBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "b2b_components_shopping_list"
 
     name: str | None = None

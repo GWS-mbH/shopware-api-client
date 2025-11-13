@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.product_stream import ProductStream as ProductStreamBase
+from shopware_api_client.models.product_stream import ProductStreamBase
 
 
 class ProductStream(ProductStreamBase, AdminModel["ProductStreamEndpoint"]):

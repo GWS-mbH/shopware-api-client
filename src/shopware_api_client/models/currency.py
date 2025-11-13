@@ -3,7 +3,7 @@ from pydantic import Field
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 
 
-class Currency(ApiModelBase, CustomFieldsMixin):
+class CurrencyBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "currency"
 
     factor: float
@@ -18,9 +18,3 @@ class Currency(ApiModelBase, CustomFieldsMixin):
     )
     tax_free_from: float | None = None
 
-
-#    item_rounding: "Rounding"
-#    total_rounding: "Rounding"
-
-
-# from shopware_api_client.endpoints.base_fields import Rounding  # noqa: E402

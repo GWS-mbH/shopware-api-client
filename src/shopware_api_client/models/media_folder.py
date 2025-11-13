@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class MediaFolder(ApiModelBase, CustomFieldsMixin):
+class MediaFolderBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "media_folder"
 
     use_parent_configuration: bool | None = None

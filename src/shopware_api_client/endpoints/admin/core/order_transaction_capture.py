@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.order_transaction_capture import OrderTransactionCapture as OrderTransactionCaptureBase
+from shopware_api_client.models.order_transaction_capture import OrderTransactionCaptureBase
 
 
 class OrderTransactionCapture(OrderTransactionCaptureBase, AdminModel["OrderTransactionCaptureEndpoint"]):

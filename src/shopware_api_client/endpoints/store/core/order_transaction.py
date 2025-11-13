@@ -1,4 +1,4 @@
-from shopware_api_client.models.order_transaction import OrderTransaction as OrderTransactionBase
+from shopware_api_client.models.order_transaction import OrderTransactionBase
 
 
 class OrderTransaction(OrderTransactionBase):

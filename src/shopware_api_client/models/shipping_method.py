@@ -2,7 +2,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ShippingMethod(ApiModelBase, CustomFieldsMixin):
+class ShippingMethodBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "shipping_method"
 
     name: str

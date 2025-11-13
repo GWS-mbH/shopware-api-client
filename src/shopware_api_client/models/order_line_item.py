@@ -6,7 +6,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class OrderLineItem(ApiModelBase, CustomFieldsMixin):
+class OrderLineItemBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "order_line_item"
 
     order_id: IdField

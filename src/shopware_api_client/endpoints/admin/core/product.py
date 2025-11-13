@@ -6,7 +6,7 @@ from pydantic_core.core_schema import FieldValidationInfo
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from ...base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.product import Product as ProductBase
+from shopware_api_client.models.product import ProductBase
 
 
 class ProductValidators:

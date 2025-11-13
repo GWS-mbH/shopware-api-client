@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.cms_page import CmsPage as CmsPageBase
+from shopware_api_client.models.cms_page import CmsPageBase
 
 
 class CmsPage(CmsPageBase, AdminModel["CmsPageEndpoint"]):

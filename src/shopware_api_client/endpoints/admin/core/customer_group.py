@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.customer_group import CustomerGroup as CustomerGroupBase
+from shopware_api_client.models.customer_group import CustomerGroupBase
 
 
 class CustomerGroup(CustomerGroupBase, AdminModel["CustomerGroupEndpoint"]):

@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
-from shopware_api_client.models.tag import Tag as TagBase
+from shopware_api_client.models.tag import TagBase
 
 
 class Tag(TagBase, AdminModel["TagEndpoint"]):

@@ -3,7 +3,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class ProductConfiguratorSetting(ApiModelBase, CustomFieldsMixin):
+class ProductConfiguratorSettingBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "product_configurator_setting"
 
     product_id: IdField

@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class CustomEntity(ApiModelBase):
+class CustomEntityBase(ApiModelBase):
     _identifier: str = "custom_entity"
 
     name: str

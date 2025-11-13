@@ -1,8 +1,7 @@
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.order_transaction_capture_refund_position import (
-    OrderTransactionCaptureRefundPosition as OrderTransactionCaptureRefundPositionBase,
-)
+from shopware_api_client.models.order_transaction_capture_refund_position import \
+    OrderTransactionCaptureRefundPositionBase
 
 
 class OrderTransactionCaptureRefundPosition(

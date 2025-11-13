@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class Customer(ApiModelBase, CustomFieldsMixin):
+class CustomerBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "customer"
 
     group_id: IdField

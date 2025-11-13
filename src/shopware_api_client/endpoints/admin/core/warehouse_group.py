@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.warehouse_group import WarehouseGroup as WarehouseGroupBase
+from shopware_api_client.models.warehouse_group import WarehouseGroupBase
 
 
 class WarehouseGroup(WarehouseGroupBase, AdminModel["WarehouseGroupEndpoint"]):

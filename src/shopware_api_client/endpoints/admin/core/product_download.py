@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.product_download import ProductDownload as ProductDownloadBase
+from shopware_api_client.models.product_download import ProductDownloadBase
 
 
 class ProductDownload(ProductDownloadBase, AdminModel["ProductDownloadEndpoint"]):

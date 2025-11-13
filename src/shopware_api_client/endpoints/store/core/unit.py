@@ -1,4 +1,4 @@
-from shopware_api_client.models.unit import Unit as UnitBase
+from shopware_api_client.models.unit import UnitBase
 
 
 class Unit(UnitBase):

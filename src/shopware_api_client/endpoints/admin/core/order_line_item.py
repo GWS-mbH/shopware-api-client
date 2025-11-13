@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
-from shopware_api_client.models.order_line_item import OrderLineItem as OrderLineItemBase
+from shopware_api_client.models.order_line_item import OrderLineItemBase
 from shopware_api_client.structs.calculated_price import CalculatedPrice
 
 

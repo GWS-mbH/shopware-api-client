@@ -6,7 +6,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class DocumentBaseConfig(ApiModelBase, CustomFieldsMixin):
+class DocumentBaseConfigBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "document_base_config"
 
     document_type_id: IdField

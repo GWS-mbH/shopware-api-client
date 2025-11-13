@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class MediaThumbnail(ApiModelBase, CustomFieldsMixin):
+class MediaThumbnailBase(ApiModelBase, CustomFieldsMixin):
     _identifier = "media_thumbnail"
 
     media_id: IdField

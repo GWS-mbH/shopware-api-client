@@ -4,7 +4,7 @@ from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
 
-class AppScriptCondition(ApiModelBase):
+class AppScriptConditionBase(ApiModelBase):
     _identifier = "app_script_condition"
 
     identifier: str

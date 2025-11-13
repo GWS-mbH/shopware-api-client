@@ -1,6 +1,6 @@
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
-from shopware_api_client.models.cms_slot import CmsSlot as CmsSlotBase
+from shopware_api_client.models.cms_slot import CmsSlotBase
 
 
 class CmsSlot(CmsSlotBase, AdminModel["CmsSlotEndpoint"]):
