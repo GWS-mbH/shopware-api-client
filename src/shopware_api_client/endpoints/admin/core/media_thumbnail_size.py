@@ -5,7 +5,7 @@ from shopware_api_client.models.media_thumbnail_size import MediaThumbnailSize a
 
 class MediaThumbnailSize(MediaThumbnailSizeBase, AdminModel["MediaThumbnailSizeEndpoint"]):
     media_folder_configurations: ManyRelation["MediaFolderConfiguration"]
-    media_thumbnails: ManyRelation["MediaThumbnailSizeBase"]
+    media_thumbnails: ManyRelation["MediaThumbnail"]
 
 
 class MediaThumbnailSizeEndpoint(AdminEndpoint[MediaThumbnailSize]):
@@ -15,3 +15,4 @@ class MediaThumbnailSizeEndpoint(AdminEndpoint[MediaThumbnailSize]):
 
 
 from .media_folder_configuration import MediaFolderConfiguration  # noqa: E402
+from .media_thumbnail import MediaThumbnail  # noqa: E402

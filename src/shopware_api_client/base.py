@@ -57,9 +57,9 @@ if TYPE_CHECKING:
 APPLICATION_JSON = "application/json"
 
 EndpointClass = TypeVar("EndpointClass", bound="EndpointBase")
-AdminEndpointClass = TypeVar("AdminEndpointClass", bound="AdminEndpoint[AdminModel]")
+AdminEndpointClass = TypeVar("AdminEndpointClass", bound="AdminEndpoint")
 ModelClass = TypeVar("ModelClass", bound="ApiModelBase")
-AdminModelClass = TypeVar("AdminModelClass", bound="AdminModel[AdminEndpoint]")
+AdminModelClass = TypeVar("AdminModelClass", bound="AdminModel")
 FieldSet = TypeVar("FieldSet", bound="FieldSetBase")
 
 RETRY_CACHE_KEY = "shopware-api-client:retry:{url}:{method}"
@@ -70,11 +70,11 @@ HEADER_X_RATE_LIMIT_RESET = "X-Rate-Limit-Reset"
 
 class ConfigBase:
     def __init__(
-        self,
-        url: str,
-        retry_after_threshold: int = 60,
-        redis_client: "Redis | None" = None,
-        local_cache_cleanup_cycle_seconds: int = 10,
+            self,
+            url: str,
+            retry_after_threshold: int = 60,
+            redis_client: "Redis | None" = None,
+            local_cache_cleanup_cycle_seconds: int = 10,
     ) -> None:
         self.url = url.rstrip("/")
         self.retry_after_threshold = retry_after_threshold
@@ -146,7 +146,7 @@ class ClientBase:
 
     async def sleep_and_increment(self, retry_wait_base: int, retry_count: int) -> int:
         retry_count += 1
-        sleep_and_increment = retry_wait_base**retry_count
+        sleep_and_increment = retry_wait_base ** retry_count
         logger.debug(f"Try failed, retrying in {sleep_and_increment} seconds.")
         await asyncio.sleep(sleep_and_increment)
         return retry_count
@@ -316,7 +316,7 @@ class ClientBase:
                         exception = SWAPIError.from_response(response)
                         # prefix details with x-trace-header to
                         exception.detail = (
-                            f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
+                                f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
                         )
                         raise exception
 
@@ -349,20 +349,20 @@ class ClientBase:
         await self.http_client.aclose()
 
     async def bulk_upsert(
-        self,
-        name: str,
-        objs: list[ModelClass] | list[dict[str, Any]],
-        fail_silently: bool = False,
-        **request_kwargs: Any,
+            self,
+            name: str,
+            objs: list[ModelClass] | list[dict[str, Any]],
+            fail_silently: bool = False,
+            **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
-        self,
-        name: str,
-        objs: list[ModelClass] | list[dict[str, Any]],
-        fail_silently: bool = False,
-        **request_kwargs: Any,
+            self,
+            name: str,
+            objs: list[ModelClass] | list[dict[str, Any]],
+            fail_silently: bool = False,
+            **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
 
@@ -372,7 +372,7 @@ class ClientBase:
 
 class EndpointMixin(Generic[EndpointClass]):
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
-        self._client = client
+        self._client: ClientBase | None = client
         super().__init__(**kwargs)
 
     @classmethod
@@ -420,7 +420,7 @@ class ApiModelBase(BaseModel):
 
         # Pydantic doesn't do a good job at calling the parents, so we have to help
         if isinstance(self, EndpointMixin):
-            self._client = client
+            EndpointMixin.__init__(self, client=client)
 
     def __setattr__(self, name: str, value: Any) -> Any:
         from .endpoints.relations import ForeignRelation, ManyRelation
@@ -472,7 +472,12 @@ class ApiModelBase(BaseModel):
 
 
 class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminEndpointClass]):
-    async def save(self, force_insert: bool = False, update_fields: IncEx | None = None) -> Self | dict | None:
+    def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
+        super().__init__(client, **kwargs)
+
+    async def save(
+            self, force_insert: bool = False, update_fields: IncEx | None = None
+    ) -> "AdminModel[Any] | dict | None":
         endpoint = self._get_endpoint()
 
         if force_insert or self.id is None:
@@ -771,7 +776,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return self._parse_response(result_data)
 
     async def update(
-        self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None
+            self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None
     ) -> AdminModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True, include=update_fields)
@@ -839,12 +844,12 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return self._parse_response(result_data)
 
     async def bulk_upsert(
-        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+            self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
     async def bulk_delete(
-        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+            self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
@@ -892,7 +897,7 @@ class StoreEndpoint(EndpointBase):
 
     @staticmethod
     def _parse_response(
-        data: list[dict[str, Any]] | dict[str, Any], cls: Type[ModelClass | FieldSet]
+            data: list[dict[str, Any]] | dict[str, Any], cls: Type[ModelClass | FieldSet]
     ) -> list[ModelClass | FieldSet] | ModelClass | FieldSet:
         single = False
 
