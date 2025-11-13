@@ -1,5 +1,7 @@
+from typing import Any
+
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField, Price
+from shopware_api_client.endpoints.base_fields import IdField
 
 
 class B2bComponentsShoppingListLineItem(ApiModelBase, CustomFieldsMixin):
@@ -8,5 +10,5 @@ class B2bComponentsShoppingListLineItem(ApiModelBase, CustomFieldsMixin):
     product_id: IdField
     product_version_id: IdField | None = None
     quantity: int
-    price: Price | None = None
+    price: dict[str, Any] | None = None
     shopping_list_id: IdField
