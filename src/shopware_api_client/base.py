@@ -88,7 +88,7 @@ class ConfigBase:
 class ClientBase:
     api_url: str
     raw: bool
-    language_id: "IdField | None" = None
+    language_id: IdField | None = None
 
     def __init__(self, config: ConfigBase, raw: bool = False) -> None:
         self.api_url = config.url
