@@ -409,8 +409,10 @@ class ApiModelBase(BaseModel):
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
 
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
-        if translations := kwargs.get("translated"):
-            kwargs.update(translations)
+        self._insert_translations(
+            data=kwargs,
+            translations=kwargs.get("translated")
+        )
 
         try:
             super().__init__(**kwargs)
@@ -450,6 +452,17 @@ class ApiModelBase(BaseModel):
             return field.__get__(self, type(self))
 
         return super().__getattribute__(name)
+
+    @staticmethod
+    def _insert_translations(data: dict[str, Any], translations: dict[str, Any] | list[Any] | None) -> dict[str, Any]:
+        if not isinstance(translations, dict):
+            return data
+
+        for key, value in translations.items():
+            if value and data.get(key) is None:
+                data[key] = value
+
+        return data
 
     @model_serializer(mode="wrap")
     def ser_model(self, serializer: Callable[..., dict[str, Any]]) -> dict[str, Any]:
