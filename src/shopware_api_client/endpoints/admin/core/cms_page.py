@@ -1,26 +1,9 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.cms_page import CmsPageBase
 
 
-class CmsPageBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "cms_page"
-
-    version_id: IdField | None = None
-    name: str | None = None
-    type: str
-    entity: str | None = None
-    css_class: str | None = None
-    config: dict[str, Any] | None = None
-    preview_media_id: IdField | None = None
-    custom_fields: dict[str, Any] | None = None
-    locked: bool | None = None
-    translated: dict[str, Any] | None = None
-
-
-class CmsPageRelations:
+class CmsPage(CmsPageBase, AdminModel["CmsPageEndpoint"]):
     sections: ManyRelation["CmsSection"]
     preview_media: ForeignRelation["Media"]
     categories: ManyRelation["Category"]
@@ -29,11 +12,7 @@ class CmsPageRelations:
     products: ManyRelation["Product"]
 
 
-class CmsPage(CmsPageBase["CmsPageEndpoint"], CmsPageRelations):
-    pass
-
-
-class CmsPageEndpoint(EndpointBase[CmsPage]):
+class CmsPageEndpoint(AdminEndpoint[CmsPage]):
     name = "cms_page"
     path = "/cms-page"
     model_class = CmsPage

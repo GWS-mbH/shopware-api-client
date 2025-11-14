@@ -1,32 +1,13 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
-
-
-class PropertyGroupBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "property_group"
-
-    name: str
-    description: str | None = None
-    display_type: str
-    sorting_type: str
-    filterable: bool | None = None
-    visible_on_product_detail_page: bool | None = None
-    position: int | None = None
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.property_group import PropertyGroupBase
 
 
-class PropertyGroupRelations:
+class PropertyGroup(PropertyGroupBase, AdminModel["PropertyGroupEndpoint"]):
     options: ManyRelation["PropertyGroupOption"]
 
 
-class PropertyGroup(PropertyGroupBase["PropertyGroupEndpoint"], PropertyGroupRelations):
-    pass
-
-
-class PropertyGroupEndpoint(EndpointBase[PropertyGroup]):
+class PropertyGroupEndpoint(AdminEndpoint[PropertyGroup]):
     name = "property_group"
     path = "/property-group"
     model_class = PropertyGroup

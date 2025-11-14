@@ -1,33 +1,14 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminEndpoint, AdminModel
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.app_script_condition import AppScriptConditionBase
 
 
-class AppScriptConditionBase(ApiModelBase[EndpointClass]):
-    _identifier = "app_script_condition"
-
-    identifier: str
-    name: str
-    active: bool
-    group: str | None = None
-    script: str | None = None
-    config: list[dict[str, Any]] | None = None
-    app_id: IdField
-    translated: dict[str, Any] | None = None
-
-
-class AppScriptConditionRelations:
+class AppScriptCondition(AppScriptConditionBase, AdminModel["AppScriptConditionEndpoint"]):
     app: ForeignRelation["App"]
     rule_conditions: ManyRelation["RuleCondition"]
 
 
-class AppScriptCondition(AppScriptConditionBase["AppScriptConditionEndpoint"], AppScriptConditionRelations):
-    pass
-
-
-class AppScriptConditionEndpoint(EndpointBase[AppScriptCondition]):
+class AppScriptConditionEndpoint(AdminEndpoint[AppScriptCondition]):
     name = "app_script_condition"
     path = "/app-script-condition"
     model_class = AppScriptCondition

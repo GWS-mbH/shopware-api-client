@@ -1,24 +1,13 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.customer_recovery import CustomerRecoveryBase
 
 
-class CustomerRecoveryBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "customer_recovery"
-
-    hash: str
-    customer_id: IdField
-
-
-class CustomerRecoveryRelations:
+class CustomerRecovery(CustomerRecoveryBase, AdminModel["CustomerRecoveryEndpoint"]):
     customer: ForeignRelation["Customer"]
 
 
-class CustomerRecovery(CustomerRecoveryBase["CustomerRecoveryEndpoint"], CustomerRecoveryRelations):
-    pass
-
-
-class CustomerRecoveryEndpoint(EndpointBase[CustomerRecovery]):
+class CustomerRecoveryEndpoint(AdminEndpoint[CustomerRecovery]):
     name = "customer_recovery"
     path = "/customer-recovery"
     model_class = CustomerRecovery

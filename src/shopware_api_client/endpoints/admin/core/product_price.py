@@ -1,33 +1,14 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_price import ProductPriceBase
 
 
-class ProductPriceBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_price"
-
-    version_id: IdField | None = None
-    product_id: IdField
-    product_version_id: IdField | None = None
-    rule_id: IdField
-    price: dict[str, Any]
-    quantity_start: int
-    quantity_end: int | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class ProductPriceRelations:
+class ProductPrice(ProductPriceBase, AdminModel["ProductPriceEndpoint"]):
     product: ForeignRelation["Product"]
     rule: ForeignRelation["Rule"]
 
 
-class ProductPrice(ProductPriceBase["ProductPriceEndpoint"], ProductPriceRelations):
-    pass
-
-
-class ProductPriceEndpoint(EndpointBase[ProductPrice]):
+class ProductPriceEndpoint(AdminEndpoint[ProductPrice]):
     name = "product_price"
     path = "/product-price"
     model_class = ProductPrice

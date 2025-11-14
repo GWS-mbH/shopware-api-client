@@ -1,34 +1,14 @@
-from typing import Any
-
-from pydantic import AwareDatetime
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.integration import IntegrationBase
 
 
-class IntegrationBase(ApiModelBase[EndpointClass]):
-    _identifier = "integration"
-
-    label: str
-    access_key: str
-    secret_access_key: str
-    last_usage_at: AwareDatetime | None = None
-    admin: bool | None = None
-    custom_fields: dict[str, Any] | None = None
-    deleted_at: AwareDatetime | None = None
-    write_access: bool | None = None
-
-
-class IntegrationRelations:
+class Integration(IntegrationBase, AdminModel["IntegrationEndpoint"]):
     app: ForeignRelation["App"]
     acl_roles: ManyRelation["AclRole"]
 
 
-class Integration(IntegrationBase["IntegrationEndpoint"], IntegrationRelations):
-    pass
-
-
-class IntegrationEndpoint(EndpointBase[Integration]):
+class IntegrationEndpoint(AdminEndpoint[Integration]):
     name = "integration"
     path = "/integration"
     model_class = Integration

@@ -1,21 +1,9 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.language import LanguageBase
 
 
-class LanguageBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "language"
-
-    parent_id: IdField | None = None
-    locale_id: IdField
-    translation_code_id: IdField | None = None
-    name: str
-    custom_fields: dict[str, Any] | None = None
-
-
-class LanguageRelations:
+class Language(LanguageBase, AdminModel["LanguageEndpoint"]):
     parent: ForeignRelation["Language"]
     locale: ForeignRelation["Locale"]
     translation_code: ForeignRelation["Locale"]
@@ -35,11 +23,7 @@ class LanguageRelations:
     """
 
 
-class Language(LanguageBase["LanguageEndpoint"], LanguageRelations):
-    pass
-
-
-class LanguageEndpoint(EndpointBase[Language]):
+class LanguageEndpoint(AdminEndpoint[Language]):
     name = "language"
     path = "/language"
     model_class = Language

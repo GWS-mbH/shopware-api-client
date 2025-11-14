@@ -1,28 +1,14 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.promotion_discount_prices import PromotionDiscountPricesBase
 
 
-class PromotionDiscountPricesBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "promotion_discount_prices"
-
-    discount_id: IdField
-    currency_id: IdField
-    price: float
-
-
-class PromotionDiscountPricesRelations:
+class PromotionDiscountPrices(PromotionDiscountPricesBase, AdminModel["PromotionDiscountPricesEndpoint"]):
     discount: ForeignRelation["PromotionDiscount"]
     currency: ForeignRelation["Currency"]
 
 
-class PromotionDiscountPrices(
-    PromotionDiscountPricesBase["PromotionDiscountPricesEndpoint"], PromotionDiscountPricesRelations
-):
-    pass
-
-
-class PromotionDiscountPricesEndpoint(EndpointBase[PromotionDiscountPrices]):
+class PromotionDiscountPricesEndpoint(AdminEndpoint[PromotionDiscountPrices]):
     name = "promotion_discount_prices"
     path = "/promotion-discount-prices"
     model_class = PromotionDiscountPrices

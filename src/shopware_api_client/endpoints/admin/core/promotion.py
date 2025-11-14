@@ -1,38 +1,9 @@
-from typing import Any
-
-from pydantic import AwareDatetime, Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.promotion import PromotionBase
 
 
-class PromotionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "promotion"
-
-    name: str
-    active: bool
-    valid_from: AwareDatetime | None = None
-    valid_until: AwareDatetime | None = None
-    max_redemptions_global: int | None = None
-    max_redemptions_per_customer: int | None = None
-    priority: int
-    exclusive: bool
-    code: str | None = None
-    use_codes: bool
-    use_individual_codes: bool
-    individual_code_pattern: str | None = None
-    use_set_groups: bool
-    customer_restriction: bool | None = None
-    prevent_combination: bool
-    order_count: int | None = Field(default=None, exclude=True)
-    orders_per_customer_count: dict[str, Any] | None = Field(default=None, exclude=True)
-    exclusion_ids: list[IdField] | None = None
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
-
-
-class PromotionRelations:
+class Promotion(PromotionBase, AdminModel["PromotionEndpoint"]):
     sales_channels: ManyRelation["SalesChannel"]
     discounts: ManyRelation["PromotionDiscount"]
     persona_rules: ManyRelation["Rule"]
@@ -47,11 +18,7 @@ class PromotionRelations:
     """
 
 
-class Promotion(PromotionBase["PromotionEndpoint"], PromotionRelations):
-    pass
-
-
-class PromotionEndpoint(EndpointBase[Promotion]):
+class PromotionEndpoint(AdminEndpoint[Promotion]):
     name = "promotion"
     path = "/promotion"
     model_class = Promotion

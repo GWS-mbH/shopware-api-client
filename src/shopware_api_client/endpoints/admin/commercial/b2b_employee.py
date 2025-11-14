@@ -1,37 +1,15 @@
-from typing import Any
-
-from pydantic import AwareDatetime
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminEndpoint, AdminModel
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.b2b_employee import B2bEmployeeBase
 
 
-class B2bEmployeeBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "b2b_employee"
-
-    business_partner_customer_id: IdField | None = None
-    role_id: IdField | None = None
-    language_id: IdField
-    active: bool | None = None
-    first_name: str
-    last_name: str
-    email: str
-    recovery_time: AwareDatetime | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class B2bEmployeeRelations:
+class B2bEmployee(B2bEmployeeBase, AdminModel["B2bEmployeeEndpoint"]):
     business_partner_customer: ForeignRelation["Customer"]
     role: ForeignRelation["B2bComponentsRole"]
     language: ForeignRelation["Language"]
 
 
-class B2bEmployee(B2bEmployeeBase["B2bEmployeeEndpoint"], B2bEmployeeRelations):
-    pass
-
-
-class B2bEmployeeEndpoint(EndpointBase[B2bEmployee]):
+class B2bEmployeeEndpoint(AdminEndpoint[B2bEmployee]):
     name = "b2b_employee"
     path = "/b2b-employee"
     model_class = B2bEmployee

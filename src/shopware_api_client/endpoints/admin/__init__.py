@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from ...base import AdminModel
+
 if TYPE_CHECKING:
     from ...client import AdminClient
 
@@ -96,6 +98,7 @@ from .core.sales_channel_domain import SalesChannelDomain, SalesChannelDomainEnd
 from .core.salutation import Salutation, SalutationEndpoint
 from .core.seo_url import SeoUrl, SeoUrlEndpoint
 from .core.shipping_method import ShippingMethod, ShippingMethodEndpoint
+from .core.shipping_method_price import ShippingMethodPrice, ShippingMethodPriceEndpoint
 from .core.state_machine import StateMachine, StateMachineEndpoint
 from .core.state_machine_history import StateMachineHistory, StateMachineHistoryEndpoint
 from .core.state_machine_state import StateMachineState, StateMachineStateEndpoint
@@ -194,6 +197,7 @@ __all__ = [
     "Salutation",
     "SeoUrl",
     "ShippingMethod",
+    "ShippingMethodPrice",
     "StateMachine",
     "StateMachineHistory",
     "StateMachineState",
@@ -218,11 +222,11 @@ class AdminEndpoints:
 
         from pydantic import AwareDatetime, create_model
 
-        from ...base import ApiModelBase, EndpointBase
+        from ...base import AdminEndpoint
         from ..base_fields import IdField
 
         async for custom_entity in self.custom_entity.iter():
-            assert(isinstance(custom_entity, CustomEntity))
+            assert isinstance(custom_entity, CustomEntity)
             fields: dict[str, Any] = {}
 
             for field in custom_entity.fields:
@@ -262,9 +266,11 @@ class AdminEndpoints:
 
             fields["_identifier"] = (str, custom_entity.name)
 
-            ce_model: type[ApiModelBase[Any]] = create_model(custom_entity.name, **fields, __base__=ApiModelBase[EndpointBase])
+            ce_model: type[AdminModel[Any]] = create_model(
+                custom_entity.name, **fields, __base__=AdminModel[AdminEndpoint]
+            )
 
-            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (EndpointBase[ApiModelBase],))
+            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (AdminEndpoint[AdminModel],))
             ce_endpoint.name = custom_entity.name  # type: ignore
             ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"  # type: ignore
             ce_endpoint.model_class = ce_model  # type: ignore
@@ -356,6 +362,7 @@ class AdminEndpoints:
         self.salutation = SalutationEndpoint(client)
         self.seo_url = SeoUrlEndpoint(client)
         self.shipping_method = ShippingMethodEndpoint(client)
+        self.shipping_method_price = ShippingMethodPriceEndpoint(client)
         self.state_machine = StateMachineEndpoint(client)
         self.state_machine_history = StateMachineHistoryEndpoint(client)
         self.state_machine_state = StateMachineStateEndpoint(client)
