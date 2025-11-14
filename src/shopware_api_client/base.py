@@ -878,7 +878,10 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         while True:
             data["page"] = page
-            result = await self.client.get(url, params=data)
+            if self._is_search_query():
+                result = await self.client.post(url, json=data)
+            else:
+                result = await self.client.get(url, params=data)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
