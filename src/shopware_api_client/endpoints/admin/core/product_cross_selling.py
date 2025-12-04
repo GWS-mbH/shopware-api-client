@@ -1,37 +1,15 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.product_cross_selling import ProductCrossSellingBase
 
 
-class ProductCrossSellingBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_cross_selling"
-
-    name: str
-    position: int
-    sort_by: str | None = None
-    sort_direction: str | None = None
-    type: str
-    active: bool | None = None
-    limit: int | None = None
-    product_id: IdField
-    product_version_id: IdField | None = None
-    product_stream_id: IdField | None = None
-    translated: dict[str, Any] | None = None
-
-
-class ProductCrossSellingRelations:
+class ProductCrossSelling(ProductCrossSellingBase, AdminModel["ProductCrossSellingEndpoint"]):
     product: ForeignRelation["Product"]
     product_stream: ForeignRelation["ProductStream"]
     assigned_products: ManyRelation["ProductCrossSellingAssignedProducts"]
 
 
-class ProductCrossSelling(ProductCrossSellingBase["ProductCrossSellingEndpoint"], ProductCrossSellingRelations):
-    pass
-
-
-class ProductCrossSellingEndpoint(EndpointBase[ProductCrossSelling]):
+class ProductCrossSellingEndpoint(AdminEndpoint[ProductCrossSelling]):
     name = "product_cross_selling"
     path = "/product-cross-selling"
     model_class = ProductCrossSelling

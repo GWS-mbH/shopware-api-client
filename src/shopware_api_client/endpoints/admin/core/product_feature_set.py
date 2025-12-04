@@ -1,27 +1,13 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
-
-
-class ProductFeatureSetBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_feature_set"
-
-    name: str
-    description: str | None = None
-    features: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.product_feature_set import ProductFeatureSetBase
 
 
-class ProductFeatureSetRelations:
+class ProductFeatureSet(ProductFeatureSetBase, AdminModel["ProductFeatureSetEndpoint"]):
     products: ManyRelation["Product"]
 
 
-class ProductFeatureSet(ProductFeatureSetBase["ProductFeatureSetEndpoint"], ProductFeatureSetRelations):
-    pass
-
-
-class ProductFeatureSetEndpoint(EndpointBase[ProductFeatureSet]):
+class ProductFeatureSetEndpoint(AdminEndpoint[ProductFeatureSet]):
     name = "product_feature_set"
     path = "/product-feature-set"
     model_class = ProductFeatureSet

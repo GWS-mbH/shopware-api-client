@@ -1,26 +1,14 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_warehouse import ProductWarehouseBase
 
 
-class ProductWarehouseBase(ApiModelBase[EndpointClass]):
-    _identifier = "product_warehouse"
-
-    stock: int
-    product_id: IdField
-    warehouse_id: IdField
-
-
-class ProductWarehouseRelations:
+class ProductWarehouse(ProductWarehouseBase, AdminModel["ProductWarehouseEndpoint"]):
     product: ForeignRelation["Product"]
     warehouse: ForeignRelation["Warehouse"]
 
 
-class ProductWarehouse(ProductWarehouseBase["ProductWarehouseEndpoint"], ProductWarehouseRelations):
-    pass
-
-
-class ProductWarehouseEndpoint(EndpointBase[ProductWarehouse]):
+class ProductWarehouseEndpoint(AdminEndpoint[ProductWarehouse]):
     name = "product_warehouse"
     path = "/product-warehouse"
     model_class = ProductWarehouse

@@ -1,29 +1,15 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.main_category import MainCategoryBase
 
 
-class MainCategoryBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "main_category"
-
-    product_id: IdField
-    product_version_id: IdField | None = None
-    category_id: IdField
-    category_version_id: IdField | None = None
-    sales_channel_id: IdField
-
-
-class MainCategoryRelations:
+class MainCategory(MainCategoryBase, AdminModel["MainCategoryEndpoint"]):
     product: ForeignRelation["Product"]
     category: ForeignRelation["Category"]
     sales_channel: ForeignRelation["SalesChannel"]
 
 
-class MainCategory(MainCategoryBase["MainCategoryEndpoint"], MainCategoryRelations):
-    pass
-
-
-class MainCategoryEndpoint(EndpointBase[MainCategory]):
+class MainCategoryEndpoint(AdminEndpoint[MainCategory]):
     name = "main_category"
     path = "/main-category"
     model_class = MainCategory

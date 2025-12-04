@@ -1,36 +1,16 @@
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.b2b_components_shopping_list import B2bComponentsShoppingListBase
 
 
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Price
-from ...relations import ForeignRelation, ManyRelation
-
-
-class B2bComponentsShoppingListBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "b2b_components_shopping_list"
-
-    name: str | None = None
-    active: bool | None = None
-    custom_fields: dict[str, Any] | None = None
-    price: Price | None = None
-    sales_channel_id: str | None = None
-    customer_id: str | None = None
-    employee_id: str | None = None
-
-
-class B2bComponentsShoppingListRelations:
+class B2bComponentsShoppingList(B2bComponentsShoppingListBase, AdminModel["B2bComponentsShoppingListEndpoint"]):
     sales_channel: ForeignRelation["SalesChannel"]
     line_items: ManyRelation["B2bComponentsShoppingListLineItem"]
     customer: ForeignRelation["Customer"]
     employee: ForeignRelation["B2bEmployee"]
 
 
-class B2bComponentsShoppingList(B2bComponentsShoppingListBase["B2bComponentsShoppingListEndpoint"], B2bComponentsShoppingListRelations):
-    pass
-
-
-class B2bComponentsShoppingListEndpoint(EndpointBase[B2bComponentsShoppingList]):
+class B2bComponentsShoppingListEndpoint(AdminEndpoint[B2bComponentsShoppingList]):
     name = "b2b_components_shopping_list"
     path = "/b2b-components-shopping-list"
     model_class = B2bComponentsShoppingList

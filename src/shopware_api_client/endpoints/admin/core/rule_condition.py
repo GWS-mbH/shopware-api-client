@@ -1,34 +1,16 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.rule_condition import RuleConditionBase
 
 
-class RuleConditionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "rule_condition"
-
-    type: str
-    rule_id: IdField
-    script_id: IdField | None = None
-    parent_id: IdField | None = None
-    value: Any | None = None
-    position: int | None = None
-    custom_fields: dict[str, Any] | None = None
-
-
-class RuleConditionRelations:
+class RuleCondition(RuleConditionBase, AdminModel["RuleConditionEndpoint"]):
     rule: ForeignRelation["Rule"]
     app_script_condition: ForeignRelation["AppScriptCondition"]
     parent: ForeignRelation["RuleCondition"]
     children: ManyRelation["RuleCondition"]
 
 
-class RuleCondition(RuleConditionBase["RuleConditionEndpoint"], RuleConditionRelations):
-    pass
-
-
-class RuleConditionEndpoint(EndpointBase[RuleCondition]):
+class RuleConditionEndpoint(AdminEndpoint[RuleCondition]):
     name = "rule_condition"
     path = "/rule-condition"
     model_class = RuleCondition

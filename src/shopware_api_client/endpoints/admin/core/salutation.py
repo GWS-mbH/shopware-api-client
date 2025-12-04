@@ -1,20 +1,9 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
-
-
-class SalutationBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "salutation"
-
-    salutation_key: str
-    display_name: str
-    letter_name: str
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.salutation import SalutationBase
 
 
-class SalutationRelations:
+class Salutation(SalutationBase, AdminModel["SalutationEndpoint"]):
     customers: ManyRelation["Customer"]
     customer_addresses: ManyRelation["CustomerAddress"]
     order_customers: ManyRelation["OrderCustomer"]
@@ -26,11 +15,7 @@ class SalutationRelations:
     """
 
 
-class Salutation(SalutationBase["SalutationEndpoint"], SalutationRelations):
-    pass
-
-
-class SalutationEndpoint(EndpointBase[Salutation]):
+class SalutationEndpoint(AdminEndpoint[Salutation]):
     name = "salutation"
     path = "/salutation"
     model_class = Salutation

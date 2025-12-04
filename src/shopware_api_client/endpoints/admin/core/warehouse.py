@@ -1,25 +1,15 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.warehouse import WarehouseBase
 
 
-class WarehouseBase(ApiModelBase[EndpointClass]):
-    _identifier = "warehouse"
-
-    name: str
-    description: str | None = None
-
-
-class WarehouseRelations:
+class Warehouse(WarehouseBase, AdminModel["WarehouseEndpoint"]):
     product_warehouses: ManyRelation["ProductWarehouse"]
     groups: ManyRelation["WarehouseGroup"]
     # order_products: ManyRelation["???"]
 
 
-class Warehouse(WarehouseBase["WarehouseEndpoint"], WarehouseRelations):
-    pass
-
-
-class WarehouseEndpoint(EndpointBase[Warehouse]):
+class WarehouseEndpoint(AdminEndpoint[Warehouse]):
     name = "warehouse"
     path = "/warehouse"
     model_class = Warehouse

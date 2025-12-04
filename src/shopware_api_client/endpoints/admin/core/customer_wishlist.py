@@ -1,29 +1,15 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.customer_wishlist import CustomerWishlistBase
 
 
-class CustomerWishlistBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "customer_wishlist"
-
-    customer_id: IdField
-    sales_channel_id: IdField
-    custom_fields: dict[str, Any] | None = None
-
-
-class CustomerWishlistRelations:
+class CustomerWishlist(CustomerWishlistBase, AdminModel["CustomerWishlistEndpoint"]):
     products: ManyRelation["CustomerWishlistProduct"]
     customer: ForeignRelation["Customer"]
     sales_channel: ForeignRelation["SalesChannel"]
 
 
-class CustomerWishlist(CustomerWishlistBase["CustomerWishlistEndpoint"], CustomerWishlistRelations):
-    pass
-
-
-class CustomerWishlistEndpoint(EndpointBase[CustomerWishlist]):
+class CustomerWishlistEndpoint(AdminEndpoint[CustomerWishlist]):
     name = "customer_wishlist"
     path = "/customer-wishlist"
     model_class = CustomerWishlist

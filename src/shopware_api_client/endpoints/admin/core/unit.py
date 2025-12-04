@@ -1,27 +1,13 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
-
-
-class UnitBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "unit"
-
-    short_code: str
-    name: str
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.unit import UnitBase
 
 
-class UnitRelations:
+class Unit(UnitBase, AdminModel["UnitEndpoint"]):
     products: ManyRelation["Product"]
 
 
-class Unit(UnitBase["UnitEndpoint"], UnitRelations):
-    pass
-
-
-class UnitEndpoint(EndpointBase[Unit]):
+class UnitEndpoint(AdminEndpoint[Unit]):
     name = "unit"
     path = "/unit"
     model_class = Unit

@@ -1,39 +1,13 @@
-from typing import Any
-
-from pydantic import AliasChoices, Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.cms_slot import CmsSlotBase
 
 
-class CmsSlotBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "cms_slot"
-
-    version_id: IdField | None = Field(
-        default=None, serialization_alias="versionId", validation_alias=AliasChoices("version_id", "versionId")
-    )
-    type: str
-    slot: str
-    locked: bool | None = None
-    config: dict[str, Any] | None = None
-    custom_fields: dict[str, Any] | None = None
-    data: dict[str, Any] | None = Field(default=None, exclude=True)
-    block_id: IdField
-    field_config: dict[str, Any] | None = None
-    cms_block_version_id: IdField | None = None
-    translated: dict[str, Any] | None = None
-
-
-class CmsSlotRelations:
+class CmsSlot(CmsSlotBase, AdminModel["CmsSlotEndpoint"]):
     block: ForeignRelation["CmsBlock"]
 
 
-class CmsSlot(CmsSlotBase["CmsSlotEndpoint"], CmsSlotRelations):
-    pass
-
-
-class CmsSlotEndpoint(EndpointBase[CmsSlot]):
+class CmsSlotEndpoint(AdminEndpoint[CmsSlot]):
     name = "cms_slot"
     path = "/cms-slot"
     model_class = CmsSlot

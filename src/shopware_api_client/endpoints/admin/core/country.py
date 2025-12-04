@@ -1,37 +1,9 @@
-from typing import Any
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import CompanyTax, CustomerTax
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.country import CountryBase
 
 
-class CountryBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "country"
-
-    name: str
-    iso: str | None = None
-    position: int | None = None
-    active: bool | None = None
-    shipping_available: bool | None = None
-    iso3: str | None = None
-    display_state_in_registration: bool | None = None
-    force_state_in_registration: bool | None = None
-    check_vat_id_pattern: bool | None = None
-    vat_id_required: bool | None = None
-    vat_id_pattern: str | None = None
-    custom_fields: dict[str, Any] | None = None
-    customer_tax: CustomerTax | None = None
-    company_tax: CompanyTax | None = None
-    postal_code_required: bool | None = None
-    check_postal_code_pattern: bool | None = None
-    check_advanced_postal_code_pattern: bool | None = None
-    advanced_postal_code_pattern: str | None = None
-    address_format: dict[str, Any] | list[Any]
-    default_postal_code_pattern: str | None = None
-    translated: dict[str, Any] | None = None
-
-
-class CountryRelations:
+class Country(CountryBase, AdminModel["CountryEndpoint"]):
     states: ManyRelation["CountryState"]
     customer_addresses: ManyRelation["CustomerAddress"]
     order_addresses: ManyRelation["OrderAddress"]
@@ -41,11 +13,7 @@ class CountryRelations:
     currency_country_roundings: ManyRelation["CurrencyCountryRounding"]
 
 
-class Country(CountryBase["CountryEndpoint"], CountryRelations):
-    pass
-
-
-class CountryEndpoint(EndpointBase[Country]):
+class CountryEndpoint(AdminEndpoint[Country]):
     name = "country"
     path = "/country"
     model_class = Country
