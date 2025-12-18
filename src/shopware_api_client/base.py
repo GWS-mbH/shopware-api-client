@@ -393,7 +393,15 @@ class EndpointMixin(Generic[EndpointClass]):
         return endpoint
 
 
-class ApiModelBase(BaseModel):
+class ApiModelBaseFields(BaseModel):
+    id: "IdField | None" = None
+    version_id: IdField | None = None
+    translated: dict[str, Any] | list[Any] | None = None
+    created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
+    updated_at: AwareDatetime | None = Field(default=None, exclude=True)
+
+
+class ApiModelBase(ApiModelBaseFields):
     model_config = ConfigDict(
         alias_generator=AliasGenerator(
             validation_alias=lambda field_name: AliasChoices(field_name, to_camel(field_name)),
@@ -402,12 +410,6 @@ class ApiModelBase(BaseModel):
         validate_assignment=True,
     )
 
-    id: "IdField | None" = None
-    version_id: IdField | None = None
-    translated: dict[str, Any] | list[Any] | None = None
-    created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
-    updated_at: AwareDatetime | None = Field(default=None, exclude=True)
-
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
         self._insert_translations(
             data=kwargs,
@@ -415,10 +417,10 @@ class ApiModelBase(BaseModel):
         )
 
         try:
-            super().__init__(**kwargs)
+            BaseModel.__init__(self, **kwargs)
         except PydanticUserError:
             self.model_rebuild()
-            super().__init__(**kwargs)
+            BaseModel.__init__(self, **kwargs)
 
         # Pydantic doesn't do a good job at calling the parents, so we have to help
         if isinstance(self, EndpointMixin):
@@ -846,7 +848,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         return False
 
-    async def get_related(self, parent: AdminModelClass, relation: str) -> list[AdminModelClass] | list[dict[str, Any]]:
+    async def get_related(self, parent: AdminModel[Any], relation: str) -> list[AdminModelClass] | list[dict[str, Any]]:
         parent_endpoint = parent._get_endpoint()
         result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
         result_data: list[dict[str, Any]] = self._parse_data(result.json())

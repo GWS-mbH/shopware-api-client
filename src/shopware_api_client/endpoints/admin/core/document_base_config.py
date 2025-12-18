@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.document_base_config import DocumentBaseConfigBase
 
 
 class DocumentBaseConfig(DocumentBaseConfigBase, AdminModel["DocumentBaseConfigEndpoint"]):
-    document_type: ForeignRelation["DocumentType"]
-    logo: ForeignRelation["Media"]
-    sales_channels: ManyRelation["DocumentBaseConfigSalesChannel"]
+    document_type: ForeignRelation["DocumentType"] = Field(default=...)
+    logo: ForeignRelation["Media"] = Field(default=...)
+    sales_channels: ManyRelation["DocumentBaseConfigSalesChannel"] = Field(default=...)
 
 
 class DocumentBaseConfigEndpoint(AdminEndpoint[DocumentBaseConfig]):

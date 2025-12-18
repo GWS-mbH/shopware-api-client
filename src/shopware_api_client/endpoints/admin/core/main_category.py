@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.main_category import MainCategoryBase
 
 
 class MainCategory(MainCategoryBase, AdminModel["MainCategoryEndpoint"]):
-    product: ForeignRelation["Product"]
-    category: ForeignRelation["Category"]
-    sales_channel: ForeignRelation["SalesChannel"]
+    product: ForeignRelation["Product"] = Field(default=...)
+    category: ForeignRelation["Category"] = Field(default=...)
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
 
 
 class MainCategoryEndpoint(AdminEndpoint[MainCategory]):

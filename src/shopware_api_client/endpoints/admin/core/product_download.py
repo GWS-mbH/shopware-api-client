@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.product_download import ProductDownloadBase
 
 
 class ProductDownload(ProductDownloadBase, AdminModel["ProductDownloadEndpoint"]):
-    product: ForeignRelation["Product"]
-    media: ForeignRelation["Media"]
+    product: ForeignRelation["Product"] = Field(default=...)
+    media: ForeignRelation["Media"] = Field(default=...)
 
 
 class ProductDownloadEndpoint(AdminEndpoint[ProductDownload]):

@@ -1,10 +1,12 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.system_config import SystemConfigBase
 
 
 class SystemConfig(SystemConfigBase, AdminModel["SystemConfigEndpoint"]):
-    sales_channel: ForeignRelation["SalesChannel"]
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
 
 
 class SystemConfigEndpoint(AdminEndpoint[SystemConfig]):

@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.warehouse_group import WarehouseGroupBase
 
 
 class WarehouseGroup(WarehouseGroupBase, AdminModel["WarehouseGroupEndpoint"]):
-    warehouses: ManyRelation["Warehouse"]
-    products: ManyRelation["Product"]
-    rule: ForeignRelation["Rule"]
+    warehouses: ManyRelation["Warehouse"] = Field(default=...)
+    products: ManyRelation["Product"] = Field(default=...)
+    rule: ForeignRelation["Rule"] = Field(default=...)
 
 
 class WarehouseGroupEndpoint(AdminEndpoint[WarehouseGroup]):

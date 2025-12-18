@@ -12,19 +12,19 @@ class Order(OrderBase, AdminModel["OrderEndpoint"]):
     item_rounding: CashRoundingConfig
     total_rounding: CashRoundingConfig
     order_customer: "OrderCustomer"
-    state: ForeignRelation["StateMachineState"]
-    currency: ForeignRelation["Currency"]
-    language: ForeignRelation["Language"]
-    sales_channel: ForeignRelation["SalesChannel"]
-    addresses: ManyRelation["OrderAddress"]
-    billing_address: ForeignRelation["OrderAddress"]
-    deliveries: ManyRelation["OrderDelivery"]
-    line_items: ManyRelation["OrderLineItem"]
-    transactions: ManyRelation["OrderTransaction"]
-    documents: ManyRelation["Document"]
-    tags: ManyRelation["Tag"]
-    created_by: ForeignRelation["User"]
-    updated_by: ForeignRelation["User"]
+    state: ForeignRelation["StateMachineState"] = Field(default=...)
+    currency: ForeignRelation["Currency"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    addresses: ManyRelation["OrderAddress"] = Field(default=...)
+    billing_address: ForeignRelation["OrderAddress"] = Field(default=...)
+    deliveries: ManyRelation["OrderDelivery"] = Field(default=...)
+    line_items: ManyRelation["OrderLineItem"] = Field(default=...)
+    transactions: ManyRelation["OrderTransaction"] = Field(default=...)
+    documents: ManyRelation["Document"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
+    created_by: ForeignRelation["User"] = Field(default=...)
+    updated_by: ForeignRelation["User"] = Field(default=...)
 
 
 class OrderEndpoint(AdminEndpoint[Order]):

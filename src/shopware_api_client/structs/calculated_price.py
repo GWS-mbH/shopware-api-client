@@ -9,8 +9,8 @@ from ..fieldsets import FieldSetBase
 class CalculatedPrice(FieldSetBase):
     unit_price: float
     total_price: float
-    calculated_taxes: list[CalculatedTax]
-    tax_rules: list[TaxRule]
+    calculated_taxes: list[CalculatedTax] | None = None
+    tax_rules: list[TaxRule] | None = None
     quantity: int = 1
     reference_price: ReferencePrice | None = None
     list_price: ListPrice | None = None

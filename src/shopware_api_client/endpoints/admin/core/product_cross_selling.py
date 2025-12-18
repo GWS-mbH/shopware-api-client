@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.product_cross_selling import ProductCrossSellingBase
 
 
 class ProductCrossSelling(ProductCrossSellingBase, AdminModel["ProductCrossSellingEndpoint"]):
-    product: ForeignRelation["Product"]
-    product_stream: ForeignRelation["ProductStream"]
-    assigned_products: ManyRelation["ProductCrossSellingAssignedProducts"]
+    product: ForeignRelation["Product"] = Field(default=...)
+    product_stream: ForeignRelation["ProductStream"] = Field(default=...)
+    assigned_products: ManyRelation["ProductCrossSellingAssignedProducts"] = Field(default=...)
 
 
 class ProductCrossSellingEndpoint(AdminEndpoint[ProductCrossSelling]):

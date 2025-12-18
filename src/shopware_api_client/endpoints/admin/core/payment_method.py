@@ -1,15 +1,17 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.payment_method import PaymentMethodBase
 
 
 class PaymentMethod(PaymentMethodBase, AdminModel["PaymentMethodEndpoint"]):
-    media: ForeignRelation["Media"]
-    availability_rule: ForeignRelation["Rule"]
-    sales_channel_default_assignments: ManyRelation["SalesChannel"]
-    customers: ManyRelation["Customer"]
-    order_transactions: ManyRelation["OrderTransaction"]
-    sales_channels: ManyRelation["SalesChannel"]
+    media: ForeignRelation["Media"] = Field(default=...)
+    availability_rule: ForeignRelation["Rule"] = Field(default=...)
+    sales_channel_default_assignments: ManyRelation["SalesChannel"] = Field(default=...)
+    customers: ManyRelation["Customer"] = Field(default=...)
+    order_transactions: ManyRelation["OrderTransaction"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
 
     """
     Todo:

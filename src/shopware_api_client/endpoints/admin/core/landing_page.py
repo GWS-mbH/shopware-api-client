@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.landing_page import LandingPageBase
 
 
 class LandingPage(LandingPageBase, AdminModel["LandingPageEndpoint"]):
-    tags: ManyRelation["Tag"]
-    cms_page: ForeignRelation["CmsPage"]
-    sales_channels: ManyRelation["SalesChannel"]
-    seo_urls: ManyRelation["SeoUrl"]
+    tags: ManyRelation["Tag"] = Field(default=...)
+    cms_page: ForeignRelation["CmsPage"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    seo_urls: ManyRelation["SeoUrl"] = Field(default=...)
 
 
 class LandingPageEndpoint(AdminEndpoint[LandingPage]):

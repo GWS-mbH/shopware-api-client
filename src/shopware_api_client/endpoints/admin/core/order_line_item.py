@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.order_line_item import OrderLineItemBase
@@ -6,15 +8,15 @@ from shopware_api_client.structs.calculated_price import CalculatedPrice
 
 class OrderLineItem(OrderLineItemBase, AdminModel["OrderLineItemEndpoint"]):
     price: CalculatedPrice
-    cover: ForeignRelation["Media"]
-    order: ForeignRelation["Order"]
-    product: ForeignRelation["Product"]
-    promotion: ForeignRelation["Promotion"]
-    order_delivery_positions: ManyRelation["OrderDeliveryPosition"]
-    order_transaction_capture_refund_positions: ManyRelation["OrderTransactionCaptureRefundPosition"]
-    downloads: ManyRelation["OrderLineItemDownload"]
-    parent: ForeignRelation["OrderLineItem"]
-    children: ManyRelation["OrderLineItem"]
+    cover: ForeignRelation["Media"] = Field(default=...)
+    order: ForeignRelation["Order"] = Field(default=...)
+    product: ForeignRelation["Product"] = Field(default=...)
+    promotion: ForeignRelation["Promotion"] = Field(default=...)
+    order_delivery_positions: ManyRelation["OrderDeliveryPosition"] = Field(default=...)
+    order_transaction_capture_refund_positions: ManyRelation["OrderTransactionCaptureRefundPosition"] = Field(default=...)
+    downloads: ManyRelation["OrderLineItemDownload"] = Field(default=...)
+    parent: ForeignRelation["OrderLineItem"] = Field(default=...)
+    children: ManyRelation["OrderLineItem"] = Field(default=...)
 
 
 class OrderLineItemEndpoint(AdminEndpoint[OrderLineItem]):

@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.dynamic_access import DynamicAccessBase
 
 
 class DynamicAccess(DynamicAccessBase, AdminModel["DynamicAccessEndpoint"]):
-    product: ForeignRelation["Product"]
-    rule: ForeignRelation["Rule"]
+    product: ForeignRelation["Product"] = Field(default=...)
+    rule: ForeignRelation["Rule"] = Field(default=...)
 
 
 class DynamicAccessEndpoint(AdminEndpoint[DynamicAccess]):

@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.salutation import SalutationBase
 
 
 class Salutation(SalutationBase, AdminModel["SalutationEndpoint"]):
-    customers: ManyRelation["Customer"]
-    customer_addresses: ManyRelation["CustomerAddress"]
-    order_customers: ManyRelation["OrderCustomer"]
-    order_addresses: ManyRelation["OrderAddress"]
+    customers: ManyRelation["Customer"] = Field(default=...)
+    customer_addresses: ManyRelation["CustomerAddress"] = Field(default=...)
+    order_customers: ManyRelation["OrderCustomer"] = Field(default=...)
+    order_addresses: ManyRelation["OrderAddress"] = Field(default=...)
 
     """
     Todo:

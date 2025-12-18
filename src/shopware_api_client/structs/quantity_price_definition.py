@@ -9,6 +9,6 @@ class QuantityPriceDefinition(FieldSetBase):
     reference_price_definition: ReferencePriceDefinition | None = None
     list_price: float | None = None
     regulation_price: float | None = None
-    price: float
-    tax_rules: list[TaxRule]
+    price: float | None = None
+    tax_rules: list[TaxRule] | None = None
     quantity: int = 1

@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
@@ -6,11 +8,11 @@ from shopware_api_client.models.order_address import OrderAddressBase
 
 class OrderAddress(OrderAddressBase, AdminModel["OrderAddressEndpoint"]):
     order_id: IdField
-    country: ForeignRelation["Country"]
-    country_state: ForeignRelation["CountryState"]
-    order: ForeignRelation["Order"]
-    order_deliveries: ManyRelation["OrderDelivery"]
-    salutation: ManyRelation["Salutation"]
+    country: ForeignRelation["Country"] = Field(default=...)
+    country_state: ForeignRelation["CountryState"] = Field(default=...)
+    order: ForeignRelation["Order"] = Field(default=...)
+    order_deliveries: ManyRelation["OrderDelivery"] = Field(default=...)
+    salutation: ManyRelation["Salutation"] = Field(default=...)
 
 
 class OrderAddressEndpoint(AdminEndpoint[OrderAddress]):

@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.product_review import ProductReviewBase
 
 
 class ProductReview(ProductReviewBase, AdminModel["ProductReviewEndpoint"]):
-    product: ForeignRelation["Product"]
-    customer: ForeignRelation["Customer"]
-    sales_channel: ForeignRelation["SalesChannel"]
-    language: ForeignRelation["Language"]
+    product: ForeignRelation["Product"] = Field(default=...)
+    customer: ForeignRelation["Customer"] = Field(default=...)
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
 
 
 class ProductReviewEndpoint(AdminEndpoint[ProductReview]):

@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import field_validator
+from pydantic import field_validator, Field
 from pydantic_core.core_schema import FieldValidationInfo
 
 from shopware_api_client.base import AdminModel, AdminEndpoint
@@ -35,35 +35,35 @@ class ProductValidators:
 
 
 class Product(ProductBase, AdminModel["ProductEndpoint"], ProductValidators):
-    downloads: ManyRelation["ProductDownload"]
-    parent: ForeignRelation["Product"]
-    children: ManyRelation["Product"]
-    delivery_time: ForeignRelation["DeliveryTime"]
-    tax: ForeignRelation["Tax"]
-    manufacturer: ForeignRelation["ProductManufacturer"]
-    unit: ForeignRelation["Unit"]
-    cover: ForeignRelation["ProductMedia"]
-    feature_set: ForeignRelation["ProductFeatureSet"]
-    cms_page: ForeignRelation["CmsPage"]
-    canonical_product: ForeignRelation["Product"]
-    prices: ManyRelation["ProductPrice"]
-    media: ManyRelation["ProductMedia"]
-    cross_sellings: ManyRelation["ProductCrossSelling"]
-    cross_selling_assigned_products: ManyRelation["ProductCrossSellingAssignedProducts"]
-    configurator_settings: ManyRelation["ProductConfiguratorSetting"]
-    visibilities: ManyRelation["ProductVisibility"]
-    search_keywords: ManyRelation["ProductSearchKeyword"]
-    product_reviews: ManyRelation["ProductReview"]
-    main_categories: ManyRelation["MainCategory"]
-    seo_urls: ManyRelation["SeoUrl"]
-    order_line_items: ManyRelation["OrderLineItem"]
-    wishlists: ManyRelation["CustomerWishlistProduct"]
-    options: ManyRelation["PropertyGroupOption"]
-    properties: ManyRelation["PropertyGroup"]
-    categories: ManyRelation["Category"]
-    streams: ManyRelation["ProductStream"]
-    categories_ro: ManyRelation["Category"]
-    tags: ManyRelation["Tag"]
+    downloads: ManyRelation["ProductDownload"] = Field(default=...)
+    parent: ForeignRelation["Product"] = Field(default=...)
+    children: ManyRelation["Product"] = Field(default=...)
+    delivery_time: ForeignRelation["DeliveryTime"] = Field(default=...)
+    tax: ForeignRelation["Tax"] = Field(default=...)
+    manufacturer: ForeignRelation["ProductManufacturer"] = Field(default=...)
+    unit: ForeignRelation["Unit"] = Field(default=...)
+    cover: ForeignRelation["ProductMedia"] = Field(default=...)
+    feature_set: ForeignRelation["ProductFeatureSet"] = Field(default=...)
+    cms_page: ForeignRelation["CmsPage"] = Field(default=...)
+    canonical_product: ForeignRelation["Product"] = Field(default=...)
+    prices: ManyRelation["ProductPrice"] = Field(default=...)
+    media: ManyRelation["ProductMedia"] = Field(default=...)
+    cross_sellings: ManyRelation["ProductCrossSelling"] = Field(default=...)
+    cross_selling_assigned_products: ManyRelation["ProductCrossSellingAssignedProducts"] = Field(default=...)
+    configurator_settings: ManyRelation["ProductConfiguratorSetting"] = Field(default=...)
+    visibilities: ManyRelation["ProductVisibility"] = Field(default=...)
+    search_keywords: ManyRelation["ProductSearchKeyword"] = Field(default=...)
+    product_reviews: ManyRelation["ProductReview"] = Field(default=...)
+    main_categories: ManyRelation["MainCategory"] = Field(default=...)
+    seo_urls: ManyRelation["SeoUrl"] = Field(default=...)
+    order_line_items: ManyRelation["OrderLineItem"] = Field(default=...)
+    wishlists: ManyRelation["CustomerWishlistProduct"] = Field(default=...)
+    options: ManyRelation["PropertyGroupOption"] = Field(default=...)
+    properties: ManyRelation["PropertyGroup"] = Field(default=...)
+    categories: ManyRelation["Category"] = Field(default=...)
+    streams: ManyRelation["ProductStream"] = Field(default=...)
+    categories_ro: ManyRelation["Category"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
 
     """
     Todo:

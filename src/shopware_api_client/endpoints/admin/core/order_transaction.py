@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.order_transaction import OrderTransactionBase
 
 
 class OrderTransaction(OrderTransactionBase, AdminModel["OrderTransactionEndpoint"]):
-    state: ForeignRelation["StateMachineState"]
-    order: ForeignRelation["Order"]
-    payment_method: ForeignRelation["PaymentMethod"]
-    captures: ManyRelation["OrderTransactionCapture"]
+    state: ForeignRelation["StateMachineState"] = Field(default=...)
+    order: ForeignRelation["Order"] = Field(default=...)
+    payment_method: ForeignRelation["PaymentMethod"] = Field(default=...)
+    captures: ManyRelation["OrderTransactionCapture"] = Field(default=...)
 
 
 class OrderTransactionEndpoint(AdminEndpoint[OrderTransaction]):

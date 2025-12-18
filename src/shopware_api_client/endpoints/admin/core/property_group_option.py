@@ -1,14 +1,16 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.property_group_option import PropertyGroupOptionBase
 
 
 class PropertyGroupOption(PropertyGroupOptionBase, AdminModel["PropertyGroupOptionEndpoint"]):
-    media: ForeignRelation["Media"]
-    group: ForeignRelation["PropertyGroup"]
-    product_configurator_settings: ManyRelation["ProductConfiguratorSetting"]
-    product_properties: ManyRelation["Product"]
-    product_options: ManyRelation["Product"]
+    media: ForeignRelation["Media"] = Field(default=...)
+    group: ForeignRelation["PropertyGroup"] = Field(default=...)
+    product_configurator_settings: ManyRelation["ProductConfiguratorSetting"] = Field(default=...)
+    product_properties: ManyRelation["Product"] = Field(default=...)
+    product_options: ManyRelation["Product"] = Field(default=...)
 
 
 class PropertyGroupOptionEndpoint(AdminEndpoint[PropertyGroupOption]):

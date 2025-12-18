@@ -1,18 +1,20 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.shipping_method import ShippingMethodBase
 
 
 class ShippingMethod(ShippingMethodBase, AdminModel["ShippingMethodEndpoint"]):
-    delivery_time: ForeignRelation["DeliveryTime"]
-    availability_rule: ForeignRelation["Rule"]
-    prices: ManyRelation["ShippingMethodPrice"]
-    media: ForeignRelation["Media"]
-    tags: ManyRelation["Tag"]
-    order_deliveries: ManyRelation["OrderDelivery"]
-    sales_channels: ManyRelation["SalesChannel"]
-    sales_channel_default_assignments: ManyRelation["SalesChannel"]
-    tax: ForeignRelation["Tax"]
+    delivery_time: ForeignRelation["DeliveryTime"] = Field(default=...)
+    availability_rule: ForeignRelation["Rule"] = Field(default=...)
+    prices: ManyRelation["ShippingMethodPrice"] = Field(default=...)
+    media: ForeignRelation["Media"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
+    order_deliveries: ManyRelation["OrderDelivery"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_default_assignments: ManyRelation["SalesChannel"] = Field(default=...)
+    tax: ForeignRelation["Tax"] = Field(default=...)
 
     """
     Todo:

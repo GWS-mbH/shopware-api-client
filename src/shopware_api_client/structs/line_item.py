@@ -23,12 +23,12 @@ class LineItem(FieldSetBase):
     label: str | None = None
     modified: bool | None = False
     modified_by_app: bool | None = False
-    payload: dict[str, Any] | None = Field(default=None)
+    payload: dict[str, Any] = Field(default_factory=dict)
     price: CalculatedPrice | None = None
     price_definition: AbsolutPriceDefinition | QuantityPriceDefinition | ReferencePriceDefinition | None = None
     quantity: int | None = 1
     quantity_information: QuantityInformation | None = None
-    reference_id: str | None = None
+    referenced_id: str | None = None
     removable: bool | None = False
     stackable: bool | None = False
     states: list[Literal["is-physical", "is-download"]] | None = None

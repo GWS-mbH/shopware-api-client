@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.state_machine_transition import StateMachineTransitionBase
 
 
 class StateMachineTransition(StateMachineTransitionBase, AdminModel["StateMachineTransitionEndpoint"]):
-    state_machine: ForeignRelation["StateMachine"]
-    from_state: ForeignRelation["StateMachineState"]
-    to_state: ForeignRelation["StateMachineState"]
+    state_machine: ForeignRelation["StateMachine"] = Field(default=...)
+    from_state: ForeignRelation["StateMachineState"] = Field(default=...)
+    to_state: ForeignRelation["StateMachineState"] = Field(default=...)
 
 
 class StateMachineTransitionEndpoint(AdminEndpoint[StateMachineTransition]):

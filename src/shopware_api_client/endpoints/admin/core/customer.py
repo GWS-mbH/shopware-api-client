@@ -1,28 +1,30 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.customer import CustomerBase
 
 
 class Customer(CustomerBase, AdminModel["CustomerEndpoint"]):
-    group: ForeignRelation["CustomerGroup"]
-    default_payment_method: ForeignRelation["PaymentMethod"]
-    sales_channel: ForeignRelation["SalesChannel"]
-    language: ForeignRelation["Language"]
-    last_payment_method: ForeignRelation["PaymentMethod"]
-    default_billing_address: ForeignRelation["CustomerAddress"]
-    default_shipping_address: ForeignRelation["CustomerAddress"]
-    salutation: ForeignRelation["Salutation"]
-    addresses: ManyRelation["CustomerAddress"]
-    order_customers: ManyRelation["OrderCustomer"]
-    tags: ManyRelation["Tag"]
-    promotions: ManyRelation["Promotion"]
-    product_reviews: ManyRelation["ProductReview"]
-    recovery_customer: ManyRelation["CustomerRecovery"]
-    requested_group: ForeignRelation["CustomerGroup"]
-    bound_sales_channel: ForeignRelation["SalesChannel"]
-    wishlists: ManyRelation["CustomerWishlist"]
-    created_by: ForeignRelation["User"]
-    updated_by: ForeignRelation["User"]
+    group: ForeignRelation["CustomerGroup"] = Field(default=...)
+    default_payment_method: ForeignRelation["PaymentMethod"] = Field(default=...)
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
+    last_payment_method: ForeignRelation["PaymentMethod"] = Field(default=...)
+    default_billing_address: ForeignRelation["CustomerAddress"] = Field(default=...)
+    default_shipping_address: ForeignRelation["CustomerAddress"] = Field(default=...)
+    salutation: ForeignRelation["Salutation"] = Field(default=...)
+    addresses: ManyRelation["CustomerAddress"] = Field(default=...)
+    order_customers: ManyRelation["OrderCustomer"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
+    promotions: ManyRelation["Promotion"] = Field(default=...)
+    product_reviews: ManyRelation["ProductReview"] = Field(default=...)
+    recovery_customer: ManyRelation["CustomerRecovery"] = Field(default=...)
+    requested_group: ForeignRelation["CustomerGroup"] = Field(default=...)
+    bound_sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    wishlists: ManyRelation["CustomerWishlist"] = Field(default=...)
+    created_by: ForeignRelation["User"] = Field(default=...)
+    updated_by: ForeignRelation["User"] = Field(default=...)
 
 
 class CustomerEndpoint(AdminEndpoint[Customer]):

@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.media_thumbnail_size import MediaThumbnailSizeBase
 
 
 class MediaThumbnailSize(MediaThumbnailSizeBase, AdminModel["MediaThumbnailSizeEndpoint"]):
-    media_folder_configurations: ManyRelation["MediaFolderConfiguration"]
-    media_thumbnails: ManyRelation["MediaThumbnail"]
+    media_folder_configurations: ManyRelation["MediaFolderConfiguration"] = Field(default=...)
+    media_thumbnails: ManyRelation["MediaThumbnail"] = Field(default=...)
 
 
 class MediaThumbnailSizeEndpoint(AdminEndpoint[MediaThumbnailSize]):

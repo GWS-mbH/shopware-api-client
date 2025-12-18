@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
@@ -6,16 +8,16 @@ from shopware_api_client.models.state_machine_state import StateMachineStateBase
 
 class StateMachineState(StateMachineStateBase, AdminModel["StateMachineStateEndpoint"]):
     state_machine_id: IdField
-    state_machine: ForeignRelation["StateMachine"]
-    from_state_machine_transitions: ManyRelation["StateMachineTransition"]
-    to_state_machine_transitions: ManyRelation["StateMachineTransition"]
-    order_transactions: ManyRelation["OrderTransaction"]
-    order_deliveries: ManyRelation["OrderDelivery"]
-    orders: ManyRelation["Order"]
-    order_transaction_captures: ManyRelation["OrderTransactionCapture"]
-    order_transaction_capture_refunds: ManyRelation["OrderTransactionCaptureRefund"]
-    to_state_machine_history_entries: ManyRelation["StateMachineHistory"]
-    from_state_machine_history_entries: ManyRelation["StateMachineHistory"]
+    state_machine: ForeignRelation["StateMachine"] = Field(default=...)
+    from_state_machine_transitions: ManyRelation["StateMachineTransition"] = Field(default=...)
+    to_state_machine_transitions: ManyRelation["StateMachineTransition"] = Field(default=...)
+    order_transactions: ManyRelation["OrderTransaction"] = Field(default=...)
+    order_deliveries: ManyRelation["OrderDelivery"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    order_transaction_captures: ManyRelation["OrderTransactionCapture"] = Field(default=...)
+    order_transaction_capture_refunds: ManyRelation["OrderTransactionCaptureRefund"] = Field(default=...)
+    to_state_machine_history_entries: ManyRelation["StateMachineHistory"] = Field(default=...)
+    from_state_machine_history_entries: ManyRelation["StateMachineHistory"] = Field(default=...)
 
 
 class StateMachineStateEndpoint(AdminEndpoint[StateMachineState]):

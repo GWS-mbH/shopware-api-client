@@ -1,22 +1,24 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.category import CategoryBase
 
 
 class Category(CategoryBase, AdminModel["CategoryEndpoint"]):
-    parent: ForeignRelation["Category"]
-    children: ManyRelation["Category"]
-    media: ForeignRelation["Media"]
-    products: ManyRelation["Product"]
-    nested_products: ManyRelation["Product"]
-    tags: ManyRelation["Tag"]
-    cms_page: ForeignRelation["CmsPage"]
-    product_stream: ForeignRelation["ProductStream"]
-    navigation_sales_channels: ManyRelation["SalesChannel"]
-    footer_sales_channels: ManyRelation["SalesChannel"]
-    service_sales_channels: ManyRelation["SalesChannel"]
-    main_categories: ManyRelation["MainCategory"]
-    seo_urls: ManyRelation["SeoUrl"]
+    parent: ForeignRelation["Category"] = Field(default=...)
+    children: ManyRelation["Category"] = Field(default=...)
+    media: ForeignRelation["Media"] = Field(default=...)
+    products: ManyRelation["Product"] = Field(default=...)
+    nested_products: ManyRelation["Product"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
+    cms_page: ForeignRelation["CmsPage"] = Field(default=...)
+    product_stream: ForeignRelation["ProductStream"] = Field(default=...)
+    navigation_sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    footer_sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    service_sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    main_categories: ManyRelation["MainCategory"] = Field(default=...)
+    seo_urls: ManyRelation["SeoUrl"] = Field(default=...)
 
 
 class CategoryEndpoint(AdminEndpoint[Category]):

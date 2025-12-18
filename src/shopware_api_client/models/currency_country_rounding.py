@@ -1,5 +1,6 @@
 from shopware_api_client.base import ApiModelBase
-from shopware_api_client.endpoints.base_fields import IdField, Rounding
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.cash_rounding_config import CashRoundingConfig
 
 
 class CurrencyCountryRoundingBase(ApiModelBase):
@@ -7,5 +8,5 @@ class CurrencyCountryRoundingBase(ApiModelBase):
 
     currency_id: IdField
     country_id: IdField
-    item_rounding: Rounding
-    total_rounding: Rounding
+    item_rounding: CashRoundingConfig
+    total_rounding: CashRoundingConfig

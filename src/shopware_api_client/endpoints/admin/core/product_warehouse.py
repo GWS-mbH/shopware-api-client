@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.product_warehouse import ProductWarehouseBase
 
 
 class ProductWarehouse(ProductWarehouseBase, AdminModel["ProductWarehouseEndpoint"]):
-    product: ForeignRelation["Product"]
-    warehouse: ForeignRelation["Warehouse"]
+    product: ForeignRelation["Product"] = Field(default=...)
+    warehouse: ForeignRelation["Warehouse"] = Field(default=...)
 
 
 class ProductWarehouseEndpoint(AdminEndpoint[ProductWarehouse]):
