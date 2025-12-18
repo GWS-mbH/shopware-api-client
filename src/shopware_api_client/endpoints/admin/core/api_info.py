@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic.main import IncEx
 
 from shopware_api_client.base import AdminEndpoint, AdminModel
@@ -32,7 +32,7 @@ class ApiInfo(AdminModel["ApiInfoEndpoint"]):
     admin_worker: dict[str, Any]
     bundles: dict[str, Bundle | AppBundle]
     settings: dict[str, Any]
-    license_toggles: dict[str, bool] | None = None
+    license_toggles: dict[str, bool] | None = Field(default=None)
 
 
 class ApiInfoEndpoint(AdminEndpoint[ApiInfo]):

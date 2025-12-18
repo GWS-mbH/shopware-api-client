@@ -16,4 +16,4 @@ class DocumentBaseConfigBase(ApiModelBase, CustomFieldsMixin):
     filename_suffix: str | None = None
     global_: bool = Field(..., serialization_alias="global", validation_alias=AliasChoices("global_", "global"))
     document_number: str | None = None
-    config: dict[str, Any] | None = None
+    config: dict[str, Any] | None = Field(default=None)

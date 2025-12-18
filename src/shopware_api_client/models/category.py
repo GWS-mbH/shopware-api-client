@@ -29,7 +29,7 @@ class CategoryBase(ApiModelBase, CustomFieldsMixin):
         default=None, description="Runtime field, cannot be used as part of the criteria."
     )
     name: str
-    slot_config: dict[str, Any] | list[Any] | None = None
+    slot_config: dict[str, Any] | list[Any] | None = Field(default=None)
     link_type: str | None = None
     internal_link: str | None = None
     external_link: str | None = None

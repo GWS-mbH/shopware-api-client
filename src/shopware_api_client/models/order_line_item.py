@@ -4,6 +4,9 @@ from pydantic import Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.absolute_price_definition import AbsolutePriceDefinition
+from shopware_api_client.structs.quantity_price_definition import QuantityPriceDefinition
+from shopware_api_client.structs.reference_price_definition import ReferencePriceDefinition
 
 
 class OrderLineItemBase(ApiModelBase, CustomFieldsMixin):
@@ -21,13 +24,13 @@ class OrderLineItemBase(ApiModelBase, CustomFieldsMixin):
     referenced_id: str | None = None
     quantity: int
     label: str
-    payload: dict[str, Any] | list | None = None
+    payload: dict[str, Any] | list | None = Field(default=None)
     good: bool | None = None
     removable: bool | None = None
     stackable: bool | None = None
     position: int
     states: list[str]
-    price_definition: dict[str, Any] | None = None
+    price_definition: AbsolutePriceDefinition | QuantityPriceDefinition | ReferencePriceDefinition | None = None
     unit_price: float | None = None
     total_price: float | None = None
     description: str | None = None

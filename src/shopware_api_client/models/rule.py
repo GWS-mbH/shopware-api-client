@@ -13,4 +13,4 @@ class RuleBase(ApiModelBase, CustomFieldsMixin):
     description: str | None = None
     invalid: bool | None = Field(default=None, exclude=True)
     areas: list[str] | None = Field(default=None, exclude=True)
-    module_types: dict[str, Any] | None = None
+    module_types: list[str] | dict[str, Any] | None = Field(default=None)

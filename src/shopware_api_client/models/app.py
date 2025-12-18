@@ -19,12 +19,12 @@ class AppBase(ApiModelBase, CustomFieldsMixin):
     privacy: str | None = None
     version: str
     icon: str | None = Field(None, description="Runtime field, cannot be used as part of the criteria.", exclude=True)
-    modules: list[dict[str, Any]] | None = None
-    main_module: dict[str, Any] | None = None
-    cookies: list[dict[str, Any]] | None = None
+    modules: list[dict[str, Any]] | None = Field(default=None)
+    main_module: dict[str, Any] | None = Field(default=None)
+    cookies: list[dict[str, Any]] | None = Field(default=None)
     allow_disable: bool
     base_app_url: str | None = None
-    allowed_hosts: list[str] | None = None
+    allowed_hosts: list[str] | None = Field(default=None)
     template_load_priority: int | None = None
     label: str
     description: str | None = None
