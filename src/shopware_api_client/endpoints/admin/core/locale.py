@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.locale import LocaleBase
 
 
 class Locale(LocaleBase, AdminModel["LocaleEndpoint"]):
-    languages: ManyRelation["Language"]
-    users: ManyRelation["User"]
+    languages: ManyRelation["Language"] = Field(default=...)
+    users: ManyRelation["User"] = Field(default=...)
 
 
 class LocaleEndpoint(AdminEndpoint[Locale]):

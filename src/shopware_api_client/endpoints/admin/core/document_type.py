@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.document_type import DocumentTypeBase
 
 
 class DocumentType(DocumentTypeBase, AdminModel["DocumentTypeEndpoint"]):
-    documents: ManyRelation["Document"]
-    document_base_configs: ManyRelation["DocumentBaseConfig"]
-    document_base_config_sales_channels: ManyRelation["DocumentBaseConfigSalesChannel"]
+    documents: ManyRelation["Document"] = Field(default=...)
+    document_base_configs: ManyRelation["DocumentBaseConfig"] = Field(default=...)
+    document_base_config_sales_channels: ManyRelation["DocumentBaseConfigSalesChannel"] = Field(default=...)
 
 
 class DocumentTypeEndpoint(AdminEndpoint[DocumentType]):

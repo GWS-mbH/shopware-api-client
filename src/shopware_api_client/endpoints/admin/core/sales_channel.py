@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.base_fields import IdField
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
@@ -7,35 +9,35 @@ from shopware_api_client.models.sales_channel import SalesChannelBase
 class SalesChannel(SalesChannelBase, AdminModel["SalesChannelEndpoint"]):
     type_id: IdField
     access_key: str
-    currencies: ManyRelation["Currency"]
-    languages: ManyRelation["Language"]
-    countries: ManyRelation["Country"]
-    payment_methods: ManyRelation["PaymentMethod"]
-    shipping_methods: ManyRelation["ShippingMethod"]
-    language: ForeignRelation["Language"]
-    customer_group: ForeignRelation["CustomerGroup"]
-    currency: ForeignRelation["Currency"]
-    payment_method: ForeignRelation["PaymentMethod"]
-    shipping_method: ForeignRelation["ShippingMethod"]
-    country: ForeignRelation["Country"]
-    orders: ManyRelation["Order"]
-    customers: ManyRelation["Customer"]
-    home_cms_page: ForeignRelation["CmsPage"]
-    domains: ManyRelation["SalesChannelDomain"]
-    navigation_category: ForeignRelation["Category"]
-    footer_category: ForeignRelation["Category"]
-    service_category: ForeignRelation["Category"]
-    product_visibilities: ManyRelation["ProductVisibility"]
-    hreflang_default_domain: ForeignRelation["SalesChannelDomain"]
-    document_base_config_sales_channels: ManyRelation["DocumentBaseConfigSalesChannel"]
-    product_reviews: ManyRelation["ProductReview"]
-    seo_urls: ManyRelation["SeoUrl"]
-    main_categories: ManyRelation["MainCategory"]
-    product_exports: ManyRelation["ProductExport"]
-    customer_groups_registrations: ManyRelation["CustomerGroup"]
-    landing_pages: ManyRelation["LandingPage"]
-    bound_customers: ManyRelation["Customer"]
-    wishlists: ManyRelation["CustomerWishlist"]
+    currencies: ManyRelation["Currency"] = Field(default=...)
+    languages: ManyRelation["Language"] = Field(default=...)
+    countries: ManyRelation["Country"] = Field(default=...)
+    payment_methods: ManyRelation["PaymentMethod"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
+    customer_group: ForeignRelation["CustomerGroup"] = Field(default=...)
+    currency: ForeignRelation["Currency"] = Field(default=...)
+    payment_method: ForeignRelation["PaymentMethod"] = Field(default=...)
+    shipping_method: ForeignRelation["ShippingMethod"] = Field(default=...)
+    country: ForeignRelation["Country"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    customers: ManyRelation["Customer"] = Field(default=...)
+    home_cms_page: ForeignRelation["CmsPage"] = Field(default=...)
+    domains: ManyRelation["SalesChannelDomain"] = Field(default=...)
+    navigation_category: ForeignRelation["Category"] = Field(default=...)
+    footer_category: ForeignRelation["Category"] = Field(default=...)
+    service_category: ForeignRelation["Category"] = Field(default=...)
+    product_visibilities: ManyRelation["ProductVisibility"] = Field(default=...)
+    hreflang_default_domain: ForeignRelation["SalesChannelDomain"] = Field(default=...)
+    document_base_config_sales_channels: ManyRelation["DocumentBaseConfigSalesChannel"] = Field(default=...)
+    product_reviews: ManyRelation["ProductReview"] = Field(default=...)
+    seo_urls: ManyRelation["SeoUrl"] = Field(default=...)
+    main_categories: ManyRelation["MainCategory"] = Field(default=...)
+    product_exports: ManyRelation["ProductExport"] = Field(default=...)
+    customer_groups_registrations: ManyRelation["CustomerGroup"] = Field(default=...)
+    landing_pages: ManyRelation["LandingPage"] = Field(default=...)
+    bound_customers: ManyRelation["Customer"] = Field(default=...)
+    wishlists: ManyRelation["CustomerWishlist"] = Field(default=...)
 
     """
     Todo:

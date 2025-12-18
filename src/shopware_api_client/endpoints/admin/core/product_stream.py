@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.product_stream import ProductStreamBase
 
 
 class ProductStream(ProductStreamBase, AdminModel["ProductStreamEndpoint"]):
-    product_cross_sellings: ManyRelation["ProductCrossSelling"]
-    product_exports: ManyRelation["ProductExport"]
-    categories: ManyRelation["Category"]
+    product_cross_sellings: ManyRelation["ProductCrossSelling"] = Field(default=...)
+    product_exports: ManyRelation["ProductExport"] = Field(default=...)
+    categories: ManyRelation["Category"] = Field(default=...)
 
     """
     Todo:

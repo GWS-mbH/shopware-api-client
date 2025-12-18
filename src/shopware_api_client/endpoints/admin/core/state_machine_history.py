@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.state_machine_history import StateMachineHistoryBase
 
 
 class StateMachineHistory(StateMachineHistoryBase, AdminModel["StateMachineHistoryEndpoint"]):
-    state_machine: ForeignRelation["StateMachine"]
-    from_state: ForeignRelation["StateMachineState"]
-    to_state: ForeignRelation["StateMachineState"]
-    user: ForeignRelation["User"]
+    state_machine: ForeignRelation["StateMachine"] = Field(default=...)
+    from_state: ForeignRelation["StateMachineState"] = Field(default=...)
+    to_state: ForeignRelation["StateMachineState"] = Field(default=...)
+    user: ForeignRelation["User"] = Field(default=...)
 
 
 class StateMachineHistoryEndpoint(AdminEndpoint[StateMachineHistory]):

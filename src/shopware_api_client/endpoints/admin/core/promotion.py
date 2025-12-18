@@ -1,16 +1,18 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.promotion import PromotionBase
 
 
 class Promotion(PromotionBase, AdminModel["PromotionEndpoint"]):
-    sales_channels: ManyRelation["SalesChannel"]
-    discounts: ManyRelation["PromotionDiscount"]
-    persona_rules: ManyRelation["Rule"]
-    persona_customers: ManyRelation["Customer"]
-    order_rules: ManyRelation["Rule"]
-    cart_rules: ManyRelation["Rule"]
-    order_line_items: ManyRelation["OrderLineItem"]
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    discounts: ManyRelation["PromotionDiscount"] = Field(default=...)
+    persona_rules: ManyRelation["Rule"] = Field(default=...)
+    persona_customers: ManyRelation["Customer"] = Field(default=...)
+    order_rules: ManyRelation["Rule"] = Field(default=...)
+    cart_rules: ManyRelation["Rule"] = Field(default=...)
+    order_line_items: ManyRelation["OrderLineItem"] = Field(default=...)
 
     """
     Todo:

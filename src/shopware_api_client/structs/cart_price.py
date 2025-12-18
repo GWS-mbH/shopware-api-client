@@ -9,7 +9,7 @@ class CartPrice(FieldSetBase):
     net_price: float
     total_price: float
     position_price: float
-    calculated_taxes: list[CalculatedTax]
-    tax_rules: list[TaxRule]
+    calculated_taxes: list[CalculatedTax] | None = None
+    tax_rules: list[TaxRule] | None = None
     tax_status: Literal["gross", "net", "tax-free"]
-    raw_total: float | None = None
+    raw_total: float

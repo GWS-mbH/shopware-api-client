@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.models.customer_address import CustomerAddressBase
 from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.customer_address import CustomerAddressBase
 
 
 class CustomerAddress(CustomerAddressBase, AdminModel["CustomerAddressEndpoint"]):
-    country: ForeignRelation["Country"]
-    country_state: ForeignRelation["CountryState"]
-    salutation: ForeignRelation["Salutation"]
-    customer: ForeignRelation["Customer"]
+    country: ForeignRelation["Country"] = Field(default=...)
+    country_state: ForeignRelation["CountryState"] = Field(default=...)
+    salutation: ForeignRelation["Salutation"] = Field(default=...)
+    customer: ForeignRelation["Customer"] = Field(default=...)
 
 
 class CustomerAddressEndpoint(AdminEndpoint[CustomerAddress]):

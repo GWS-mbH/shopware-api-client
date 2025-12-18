@@ -1,20 +1,22 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.language import LanguageBase
 
 
 class Language(LanguageBase, AdminModel["LanguageEndpoint"]):
-    parent: ForeignRelation["Language"]
-    locale: ForeignRelation["Locale"]
-    translation_code: ForeignRelation["Locale"]
-    children: ManyRelation["Language"]
-    sales_channels: ManyRelation["SalesChannel"]
-    sales_channel_default_assignments: ManyRelation["SalesChannel"]
-    sales_channel_domains: ManyRelation["SalesChannelDomain"]
-    customers: ManyRelation["Customer"]
-    orders: ManyRelation["Order"]
-    product_search_keywords: ManyRelation["ProductSearchKeyword"]
-    product_reviews: ManyRelation["ProductReview"]
+    parent: ForeignRelation["Language"] = Field(default=...)
+    locale: ForeignRelation["Locale"] = Field(default=...)
+    translation_code: ForeignRelation["Locale"] = Field(default=...)
+    children: ManyRelation["Language"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_default_assignments: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_domains: ManyRelation["SalesChannelDomain"] = Field(default=...)
+    customers: ManyRelation["Customer"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    product_search_keywords: ManyRelation["ProductSearchKeyword"] = Field(default=...)
+    product_reviews: ManyRelation["ProductReview"] = Field(default=...)
 
     """
     Todo:

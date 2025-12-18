@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.document_base_config_sales_channel import DocumentBaseConfigSalesChannelBase
@@ -6,9 +8,9 @@ from shopware_api_client.models.document_base_config_sales_channel import Docume
 class DocumentBaseConfigSalesChannel(
     DocumentBaseConfigSalesChannelBase, AdminModel["DocumentBaseConfigSalesChannelEndpoint"]
 ):
-    document_type: ForeignRelation["DocumentType"]
-    document_base_config: ForeignRelation["DocumentBaseConfig"]
-    sales_channel: ForeignRelation["SalesChannel"]
+    document_type: ForeignRelation["DocumentType"] = Field(default=...)
+    document_base_config: ForeignRelation["DocumentBaseConfig"] = Field(default=...)
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
 
 
 class DocumentBaseConfigSalesChannelEndpoint(AdminEndpoint[DocumentBaseConfigSalesChannel]):

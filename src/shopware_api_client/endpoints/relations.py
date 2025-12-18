@@ -8,7 +8,7 @@ from shopware_api_client.base import AdminEndpoint, AdminModel, AdminModelClass,
 
 
 class ForeignRelation(Generic[AdminModelClass]):
-    def __init__(self, field_name: str, data: AdminModelClass | None = None):
+    def __init__(self, field_name: str, data: AdminModelClass | None = None) -> None:
         self.field_name: str = field_name
         self.data: AdminModelClass | None = data
         self.changed: bool = False
@@ -48,7 +48,7 @@ class ForeignRelation(Generic[AdminModelClass]):
             return None
         return value.data
 
-    async def _get(self, instance: AdminModelClass) -> AdminModelClass | None:
+    async def _get(self, instance: AdminModel[Any]) -> AdminModelClass | None:
         related_id = getattr(instance, f"{self.field_name}_id")
         if self.data is not None or related_id is None:
             self._ensure_client(instance._client)
@@ -63,10 +63,10 @@ class ForeignRelation(Generic[AdminModelClass]):
         self.data = data
         return self.data
 
-    def __get__(self, instance: AdminModelClass, owner: type[Any]) -> Coroutine[Any, Any, AdminModelClass | None]:
+    def __get__(self, instance: AdminModel[Any], owner: type[Any]) -> Coroutine[Any, Any, AdminModelClass | None]:
         return self._get(instance=instance)
 
-    def __set__(self, instance: AdminModelClass, value: Any) -> None:
+    def __set__(self, instance: AdminModel[Any], value: Any) -> None:
         if value is not None:
             model_class: type[AdminModelClass] = get_args(instance.model_fields[self.field_name].annotation)[0]
             model_class.model_validate(value)
@@ -80,7 +80,7 @@ class ForeignRelation(Generic[AdminModelClass]):
 
 
 class ManyRelation(Generic[AdminModelClass]):
-    def __init__(self, field_name: str, data: list[AdminModelClass] | None = None):
+    def __init__(self, field_name: str, data: list[AdminModelClass] | None = None) -> None:
         self.field_name: str = field_name
         self.data: list[AdminModelClass] | None = data
         self.changed: bool = False
@@ -128,7 +128,7 @@ class ManyRelation(Generic[AdminModelClass]):
             return None
         return value.data
 
-    async def _get(self, instance: AdminModelClass) -> list[AdminModelClass] | None:
+    async def _get(self, instance: AdminModel[Any]) -> list[AdminModelClass] | None:
         api_link = to_camel(self.field_name)
         if self.data is not None:
             self._ensure_client(instance._client)
@@ -143,10 +143,10 @@ class ManyRelation(Generic[AdminModelClass]):
         self.data = data
         return self.data
 
-    def __get__(self, instance: AdminModelClass, owner: type[Any]) -> Coroutine[Any, Any, list[AdminModelClass] | None]:
+    def __get__(self, instance: AdminModel[Any], owner: type[Any]) -> Coroutine[Any, Any, list[AdminModelClass] | None]:
         return self._get(instance=instance)
 
-    def __set__(self, instance: AdminModelClass, value: Any) -> None:
+    def __set__(self, instance: AdminModel[Any], value: Any) -> None:
         model_class: type[AdminModelClass] = get_args(instance.model_fields[self.field_name].annotation)[0]
         schema = core_schema.list_schema(
             core_schema.model_schema(cls=model_class, schema=model_class.__pydantic_core_schema__)

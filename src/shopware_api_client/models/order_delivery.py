@@ -1,7 +1,8 @@
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import Amount, IdField
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.calculated_price import CalculatedPrice
 
 
 class OrderDeliveryBase(ApiModelBase, CustomFieldsMixin):
@@ -16,4 +17,4 @@ class OrderDeliveryBase(ApiModelBase, CustomFieldsMixin):
     tracking_codes: list[str]
     shipping_date_earliest: AwareDatetime
     shipping_date_latest: AwareDatetime
-    shipping_costs: Amount | None = None
+    shipping_costs: CalculatedPrice | None = None

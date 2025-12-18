@@ -1,18 +1,20 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.rule import RuleBase
 
 
 class Rule(RuleBase, AdminModel["RuleEndpoint"]):
-    product_prices: ManyRelation["ProductPrice"]
-    shipping_methods: ManyRelation["ShippingMethod"]
-    payment_methods: ManyRelation["PaymentMethod"]
-    persona_promotions: ManyRelation["Promotion"]
-    tags: ManyRelation["Tag"]
-    order_promotions: ManyRelation["Promotion"]
-    cart_promotions: ManyRelation["Promotion"]
-    promotion_discounts: ManyRelation["PromotionDiscount"]
-    conditions: ManyRelation["RuleCondition"]
+    product_prices: ManyRelation["ProductPrice"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
+    payment_methods: ManyRelation["PaymentMethod"] = Field(default=...)
+    persona_promotions: ManyRelation["Promotion"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
+    order_promotions: ManyRelation["Promotion"] = Field(default=...)
+    cart_promotions: ManyRelation["Promotion"] = Field(default=...)
+    promotion_discounts: ManyRelation["PromotionDiscount"] = Field(default=...)
+    conditions: ManyRelation["RuleCondition"] = Field(default=...)
 
     """
     Todo:

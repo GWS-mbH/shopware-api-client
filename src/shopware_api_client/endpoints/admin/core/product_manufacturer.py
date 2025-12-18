@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.product_manufacturer import ProductManufacturerBase
 
 
 class ProductManufacturer(ProductManufacturerBase, AdminModel["ProductManufacturerEndpoint"]):
-    media: ForeignRelation["Media"]
-    products: ManyRelation["Product"]
+    media: ForeignRelation["Media"] = Field(default=...)
+    products: ManyRelation["Product"] = Field(default=...)
 
 
 class ProductManufacturerEndpoint(AdminEndpoint[ProductManufacturer]):

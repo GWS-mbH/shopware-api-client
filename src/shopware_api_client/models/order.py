@@ -3,7 +3,9 @@ from datetime import date
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import Amount, Price, IdField
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.calculated_price import CalculatedPrice
+from shopware_api_client.structs.cart_price import CartPrice
 
 
 class OrderBase(ApiModelBase, CustomFieldsMixin):
@@ -18,12 +20,12 @@ class OrderBase(ApiModelBase, CustomFieldsMixin):
     sales_channel_id: IdField
     order_date_time: AwareDatetime
     order_date: date | None = Field(default=None, exclude=True)
-    price: Price | None = None
+    price: CartPrice | None = None
     amount_total: float | None = Field(default=None, exclude=True)
     amount_net: float | None = Field(default=None, exclude=True)
     position_price: float | None = Field(default=None, exclude=True)
     tax_status: str | None = Field(default=None, exclude=True)
-    shipping_costs: Amount | None = None
+    shipping_costs: CalculatedPrice | None = None
     shipping_total: float | None = Field(default=None, exclude=True)
     currency_factor: float
     deep_link_code: str | None = None

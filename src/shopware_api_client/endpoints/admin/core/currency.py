@@ -1,16 +1,18 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.currency import CurrencyBase
 
 
 class Currency(CurrencyBase, AdminModel["CurrencyEndpoint"]):
-    sales_channel_default_assignments: ManyRelation["SalesChannel"]
-    orders: ManyRelation["Order"]
-    sales_channels: ManyRelation["SalesChannel"]
-    sales_channel_domains: ManyRelation["SalesChannelDomain"]
-    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"]
-    product_exports: ManyRelation["ProductExport"]
-    country_roundings: ManyRelation["CurrencyCountryRounding"]
+    sales_channel_default_assignments: ManyRelation["SalesChannel"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_domains: ManyRelation["SalesChannelDomain"] = Field(default=...)
+    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"] = Field(default=...)
+    product_exports: ManyRelation["ProductExport"] = Field(default=...)
+    country_roundings: ManyRelation["CurrencyCountryRounding"] = Field(default=...)
 
 
 class CurrencyEndpoint(AdminEndpoint[Currency]):

@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.customer_group import CustomerGroupBase
 
 
 class CustomerGroup(CustomerGroupBase, AdminModel["CustomerGroupEndpoint"]):
-    customers: ManyRelation["Customer"]
-    sales_channels: ManyRelation["SalesChannel"]
-    registration_sales_channels: ManyRelation["SalesChannel"]
+    customers: ManyRelation["Customer"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    registration_sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
 
 
 class CustomerGroupEndpoint(AdminEndpoint[CustomerGroup]):

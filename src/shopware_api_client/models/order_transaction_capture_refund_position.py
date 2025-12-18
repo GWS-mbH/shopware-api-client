@@ -1,5 +1,6 @@
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import Amount, IdField
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.calculated_price import CalculatedPrice
 
 
 class OrderTransactionCaptureRefundPositionBase(ApiModelBase, CustomFieldsMixin):
@@ -12,4 +13,4 @@ class OrderTransactionCaptureRefundPositionBase(ApiModelBase, CustomFieldsMixin)
     external_reference: str | None = None
     reason: str | None = None
     quantity: int | None = None
-    amount: Amount
+    amount: CalculatedPrice

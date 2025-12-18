@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.order_transaction_capture_refund import OrderTransactionCaptureRefundBase
@@ -6,9 +8,9 @@ from shopware_api_client.models.order_transaction_capture_refund import OrderTra
 class OrderTransactionCaptureRefund(
     OrderTransactionCaptureRefundBase, AdminModel["OrderTransactionCaptureRefundEndpoint"]
 ):
-    state: ForeignRelation["StateMachineState"]
-    capture: ForeignRelation["OrderTransactionCapture"]
-    positions: ManyRelation["OrderTransactionCaptureRefundPosition"]
+    state: ForeignRelation["StateMachineState"] = Field(default=...)
+    capture: ForeignRelation["OrderTransactionCapture"] = Field(default=...)
+    positions: ManyRelation["OrderTransactionCaptureRefundPosition"] = Field(default=...)
 
 
 class OrderTransactionCaptureRefundEndpoint(AdminEndpoint[OrderTransactionCaptureRefund]):

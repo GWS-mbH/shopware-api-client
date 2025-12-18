@@ -1,31 +1,33 @@
 from typing import Any
 
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.media import MediaBase
 
 
 class Media(MediaBase, AdminModel["MediaEndpoint"]):
-    tags: ManyRelation["Tag"]
-    thumbnails: ManyRelation["MediaThumbnail"]
-    user: ForeignRelation["User"]
-    categories: ManyRelation["Category"]
-    product_manufacturers: ManyRelation["ProductManufacturer"]
-    product_media: ManyRelation["ProductMedia"]
-    product_downloads: ManyRelation["ProductDownload"]
-    order_line_item_downloads: ManyRelation["OrderLineItemDownload"]
-    avatar_users: ManyRelation["Media"]
-    media_folder: ForeignRelation["MediaFolder"]
-    property_group_options: ManyRelation["PropertyGroupOption"]
-    document_base_configs: ManyRelation["DocumentBaseConfig"]
-    shipping_methods: ManyRelation["ShippingMethod"]
-    payment_methods: ManyRelation["PaymentMethod"]
-    product_configurator_settings: ManyRelation["ProductConfiguratorSetting"]
-    order_line_items: ManyRelation["OrderLineItem"]
-    cms_blocks: ManyRelation["CmsBlock"]
-    cms_sections: ManyRelation["CmsSection"]
-    cms_pages: ManyRelation["CmsPage"]
-    documents: ManyRelation["Document"]
+    tags: ManyRelation["Tag"] = Field(default=...)
+    thumbnails: ManyRelation["MediaThumbnail"] = Field(default=...)
+    user: ForeignRelation["User"] = Field(default=...)
+    categories: ManyRelation["Category"] = Field(default=...)
+    product_manufacturers: ManyRelation["ProductManufacturer"] = Field(default=...)
+    product_media: ManyRelation["ProductMedia"] = Field(default=...)
+    product_downloads: ManyRelation["ProductDownload"] = Field(default=...)
+    order_line_item_downloads: ManyRelation["OrderLineItemDownload"] = Field(default=...)
+    avatar_users: ManyRelation["Media"] = Field(default=...)
+    media_folder: ForeignRelation["MediaFolder"] = Field(default=...)
+    property_group_options: ManyRelation["PropertyGroupOption"] = Field(default=...)
+    document_base_configs: ManyRelation["DocumentBaseConfig"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
+    payment_methods: ManyRelation["PaymentMethod"] = Field(default=...)
+    product_configurator_settings: ManyRelation["ProductConfiguratorSetting"] = Field(default=...)
+    order_line_items: ManyRelation["OrderLineItem"] = Field(default=...)
+    cms_blocks: ManyRelation["CmsBlock"] = Field(default=...)
+    cms_sections: ManyRelation["CmsSection"] = Field(default=...)
+    cms_pages: ManyRelation["CmsPage"] = Field(default=...)
+    documents: ManyRelation["Document"] = Field(default=...)
 
     """
     Todo:

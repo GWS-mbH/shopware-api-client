@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.rule_condition import RuleConditionBase
 
 
 class RuleCondition(RuleConditionBase, AdminModel["RuleConditionEndpoint"]):
-    rule: ForeignRelation["Rule"]
-    app_script_condition: ForeignRelation["AppScriptCondition"]
-    parent: ForeignRelation["RuleCondition"]
-    children: ManyRelation["RuleCondition"]
+    rule: ForeignRelation["Rule"] = Field(default=...)
+    app_script_condition: ForeignRelation["AppScriptCondition"] = Field(default=...)
+    parent: ForeignRelation["RuleCondition"] = Field(default=...)
+    children: ManyRelation["RuleCondition"] = Field(default=...)
 
 
 class RuleConditionEndpoint(AdminEndpoint[RuleCondition]):

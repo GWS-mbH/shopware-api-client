@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.promotion_discount import PromotionDiscountBase
 
 
 class PromotionDiscount(PromotionDiscountBase, AdminModel["PromotionDiscountEndpoint"]):
-    promotion: ForeignRelation["Promotion"]
-    discount_rules: ManyRelation["Rule"]
-    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"]
+    promotion: ForeignRelation["Promotion"] = Field(default=...)
+    discount_rules: ManyRelation["Rule"] = Field(default=...)
+    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"] = Field(default=...)
 
 
 class PromotionDiscountEndpoint(AdminEndpoint[PromotionDiscount]):

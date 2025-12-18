@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.country_state import CountryStateBase
 
 
 class CountryState(CountryStateBase, AdminModel["CountryStateEndpoint"]):
-    country: ForeignRelation["Country"]
-    customer_addresses: ManyRelation["CustomerAddress"]
-    order_addresses: ManyRelation["OrderAddress"]
+    country: ForeignRelation["Country"] = Field(default=...)
+    customer_addresses: ManyRelation["CustomerAddress"] = Field(default=...)
+    order_addresses: ManyRelation["OrderAddress"] = Field(default=...)
 
 
 class CountryStateEndpoint(AdminEndpoint[CountryState]):

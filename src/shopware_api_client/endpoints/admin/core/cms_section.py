@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.cms_section import CmsSectionBase
 
 
 class CmsSection(CmsSectionBase, AdminModel["CmsSectionEndpoint"]):
-    page: ForeignRelation["CmsPage"]
-    background_media: ForeignRelation["Media"]
-    blocks: ManyRelation["CmsBlock"]
+    page: ForeignRelation["CmsPage"] = Field(default=...)
+    background_media: ForeignRelation["Media"] = Field(default=...)
+    blocks: ManyRelation["CmsBlock"] = Field(default=...)
 
 
 class CmsSectionEndpoint(AdminEndpoint[CmsSection]):

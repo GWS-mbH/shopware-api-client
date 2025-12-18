@@ -1,12 +1,14 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ManyRelation
 from shopware_api_client.models.tax import TaxBase
 
 
 class Tax(TaxBase, AdminModel["TaxEndpoint"]):
-    products: ManyRelation["Product"]
-    rules: ManyRelation["Rule"]
-    shipping_methods: ManyRelation["ShippingMethod"]
+    products: ManyRelation["Product"] = Field(default=...)
+    rules: ManyRelation["Rule"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
 
 
 class TaxEndpoint(AdminEndpoint[Tax]):

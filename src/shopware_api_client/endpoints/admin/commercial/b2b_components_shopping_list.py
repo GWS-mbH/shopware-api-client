@@ -1,13 +1,15 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.b2b_components_shopping_list import B2bComponentsShoppingListBase
 
 
 class B2bComponentsShoppingList(B2bComponentsShoppingListBase, AdminModel["B2bComponentsShoppingListEndpoint"]):
-    sales_channel: ForeignRelation["SalesChannel"]
-    line_items: ManyRelation["B2bComponentsShoppingListLineItem"]
-    customer: ForeignRelation["Customer"]
-    employee: ForeignRelation["B2bEmployee"]
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    line_items: ManyRelation["B2bComponentsShoppingListLineItem"] = Field(default=...)
+    customer: ForeignRelation["Customer"] = Field(default=...)
+    employee: ForeignRelation["B2bEmployee"] = Field(default=...)
 
 
 class B2bComponentsShoppingListEndpoint(AdminEndpoint[B2bComponentsShoppingList]):

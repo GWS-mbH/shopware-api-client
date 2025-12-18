@@ -1,11 +1,13 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.currency_country_rounding import CurrencyCountryRoundingBase
 
 
 class CurrencyCountryRounding(CurrencyCountryRoundingBase, AdminModel["CurrencyCountryRoundingEndpoint"]):
-    currency: ForeignRelation["Currency"]
-    country: ForeignRelation["Country"]
+    currency: ForeignRelation["Currency"] = Field(default=...)
+    country: ForeignRelation["Country"] = Field(default=...)
 
 
 class CurrencyCountryRoundingEndpoint(AdminEndpoint[CurrencyCountryRounding]):

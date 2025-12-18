@@ -1,18 +1,20 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.user import UserBase
 
 
 class User(UserBase, AdminModel["UserEndpoint"]):
-    locale: ForeignRelation["Locale"]
-    avatar_media: ManyRelation["Media"]
-    media: ManyRelation["Media"]
-    state_machine_history_entries: ManyRelation["StateMachineHistory"]
-    created_orders: ManyRelation["Order"]
-    updated_orders: ManyRelation["Order"]
-    created_customers: ManyRelation["Customer"]
-    updated_customers: ManyRelation["Customer"]
-    acl_roles: ManyRelation["AclRole"]
+    locale: ForeignRelation["Locale"] = Field(default=...)
+    avatar_media: ManyRelation["Media"] = Field(default=...)
+    media: ManyRelation["Media"] = Field(default=...)
+    state_machine_history_entries: ManyRelation["StateMachineHistory"] = Field(default=...)
+    created_orders: ManyRelation["Order"] = Field(default=...)
+    updated_orders: ManyRelation["Order"] = Field(default=...)
+    created_customers: ManyRelation["Customer"] = Field(default=...)
+    updated_customers: ManyRelation["Customer"] = Field(default=...)
+    acl_roles: ManyRelation["AclRole"] = Field(default=...)
 
     """
     Todo:

@@ -1,14 +1,16 @@
+from pydantic import Field
+
 from shopware_api_client.base import AdminModel, AdminEndpoint
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.sales_channel_domain import SalesChannelDomainBase
 
 
 class SalesChannelDomain(SalesChannelDomainBase, AdminModel["SalesChannelDomainEndpoint"]):
-    sales_channel: ForeignRelation["SalesChannel"]
-    language: ForeignRelation["Language"]
-    currency: ForeignRelation["Currency"]
-    sales_channel_default_hreflang: ManyRelation["SalesChannel"]
-    product_exports: ManyRelation["ProductExport"]
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
+    currency: ForeignRelation["Currency"] = Field(default=...)
+    sales_channel_default_hreflang: ManyRelation["SalesChannel"] = Field(default=...)
+    product_exports: ManyRelation["ProductExport"] = Field(default=...)
 
     """
     Not yet implemented Relations:
