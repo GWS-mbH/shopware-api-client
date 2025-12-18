@@ -3,6 +3,7 @@ from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.structs.price import Price
 from shopware_api_client.structs.variant_listing_config import VariantListingConfig
 
 
@@ -22,7 +23,7 @@ class ProductBase(ApiModelBase, CustomFieldsMixin):
     canonical_product_id: IdField | None = None
     cms_page_id: IdField | None = None
     cms_page_version_id: IdField | None = None
-    price: list[dict[str, Any]] | None = None
+    price: list[Price] | None = None
     product_number: str
     restock_time: int | None = None
     auto_increment: int | None = Field(default=None, exclude=True)
@@ -32,7 +33,7 @@ class ProductBase(ApiModelBase, CustomFieldsMixin):
     variation: list[str] | None = None
     display_group: str | None = Field(default=None, exclude=True)
     variant_listing_config: VariantListingConfig | None = None
-    variant_restrictions: dict[str, Any] | None = None
+    variant_restrictions: dict[str, Any] | None = Field(default=None)
     manufacturer_number: str | None = None
     ean: str | None = None
     purchase_steps: int | None = None
@@ -41,7 +42,7 @@ class ProductBase(ApiModelBase, CustomFieldsMixin):
     purchase_unit: float | None = None
     reference_unit: float | None = None
     shipping_free: bool | None = None
-    purchase_prices: list[dict[str, Any]] | None = None
+    purchase_prices: list[Price] | None = None
     mark_as_topseller: bool | None = None
     weight: float | None = None
     width: float | None = None
@@ -66,7 +67,7 @@ class ProductBase(ApiModelBase, CustomFieldsMixin):
     meta_title: str | None = None
     pack_unit: str | None = None
     pack_unit_plural: str | None = None
-    slot_config: dict[str, Any] | list | None = None
+    slot_config: dict[str, Any] | list | None = Field(default=None)
     custom_search_keywords: list[str] | None = None
     available_stock: int | None = Field(default=None, exclude=True)
     stock: int | None = None

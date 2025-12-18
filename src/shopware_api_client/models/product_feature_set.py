@@ -1,5 +1,7 @@
 from typing import Any
 
+from pydantic import Field
+
 from shopware_api_client.base import ApiModelBase
 
 
@@ -8,4 +10,4 @@ class ProductFeatureSetBase(ApiModelBase):
 
     name: str
     description: str | None = None
-    features: dict[str, Any] | None = None
+    features: dict[str, Any] | None = Field(default=None)

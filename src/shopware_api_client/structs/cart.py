@@ -1,5 +1,7 @@
 from typing import Any
 
+from pydantic import Field
+
 from .cart_price import CartPrice
 from .delivery import Delivery
 from .line_item import LineItem
@@ -12,7 +14,7 @@ class Cart(FieldSetBase):
     token: str | None = None
     price: CartPrice
     line_items: list[LineItem]
-    errors: list[dict[str, Any]] | dict[str, Any] | None = None
+    errors: list[dict[str, Any]] | dict[str, Any] | None = Field(default=None)
     deliveries: list[Delivery] | None = None
     transactions: list[Transaction] | None = None
     modified: bool | None = False

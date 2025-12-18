@@ -28,7 +28,7 @@ class SalesChannelBase(ApiModelBase, CustomFieldsMixin):
     name: str
     short_name: str | None = None
     tax_calculation_type: str | None = None
-    configuration: dict[str, Any] | None = None
+    configuration: dict[str, Any] | None = Field(default=None)
     active: bool | None = None
     hreflang_active: bool | None = None
     maintenance: bool | None = None
@@ -36,7 +36,7 @@ class SalesChannelBase(ApiModelBase, CustomFieldsMixin):
     payment_method_ids: list[IdField] | None = Field(default=None, exclude=True)
     home_cms_page_id: IdField | None = None
     home_cms_page_version_id: IdField | None = None
-    home_slot_config: dict[str, Any] | None = None
+    home_slot_config: dict[str, Any] | None = Field(default=None)
     home_enabled: bool
     home_name: str | None = None
     home_meta_title: str | None = None

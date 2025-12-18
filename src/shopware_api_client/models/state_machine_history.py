@@ -1,4 +1,3 @@
-from typing import Any
 
 from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
@@ -13,6 +12,6 @@ class StateMachineHistoryBase(ApiModelBase):
     to_state_id: IdField
     transition_action_name: str | None = None
     user_id: IdField | None = None
-    entity_id: dict[str, Any]
+    entity_id: IdField | None = None
     referenced_id: IdField | None = None
     referenced_version_id: IdField | None = None

@@ -1,5 +1,7 @@
 from typing import Any
 
+from pydantic import Field
+
 from shopware_api_client.base import ApiModelBase
 from shopware_api_client.endpoints.base_fields import IdField
 
@@ -12,5 +14,5 @@ class AppScriptConditionBase(ApiModelBase):
     active: bool
     group: str | None = None
     script: str | None = None
-    config: list[dict[str, Any]] | None = None
+    config: list[dict[str, Any]] | None = Field(default=None)
     app_id: IdField
