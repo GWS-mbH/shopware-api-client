@@ -2,13 +2,13 @@ from typing import Any, Literal
 
 from pydantic import Field
 
+from ..fieldsets import FieldSetBase
 from .absolute_price_definition import AbsolutePriceDefinition
 from .calculated_price import CalculatedPrice
 from .delivery_information import DeliveryInformation
 from .quantity_information import QuantityInformation
 from .quantity_price_definition import QuantityPriceDefinition
 from .reference_price_definition import ReferencePriceDefinition
-from ..fieldsets import FieldSetBase
 
 
 class LineItem(FieldSetBase):
@@ -32,7 +32,18 @@ class LineItem(FieldSetBase):
     removable: bool | None = False
     stackable: bool | None = False
     states: list[Literal["is-physical", "is-download"]] | None = None
-    type: Literal["product", "credit", "custom", "promotion", "discount", "container", "quantity"]
+    type: Literal[
+        "product",
+        "credit",
+        "custom",
+        "promotion",
+        "discount",
+        "container",
+        "quantity",
+        "customized-products",
+        "customized-products-option",
+        "option-values",
+    ]
     unique_identifier: str | None = None
 
 
