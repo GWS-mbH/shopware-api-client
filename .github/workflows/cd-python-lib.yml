@@ -35,7 +35,7 @@ jobs:
     - name: Update version
       run: poetry version patch
 
-    - uses: stefanzweifel/git-auto-commit-action@v6
+    - uses: stefanzweifel/git-auto-commit-action@v7
       with:
         commit_message: "Bump version"
 
