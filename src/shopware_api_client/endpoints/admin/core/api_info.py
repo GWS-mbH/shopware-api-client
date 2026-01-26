@@ -43,14 +43,14 @@ class ApiInfoEndpoint(AdminEndpoint[ApiInfo]):
     async def delete(self, pk: str) -> bool:
         raise SWAPIMethodNotAvailable()
 
-    async def get(self, pk: str) -> ApiInfo | dict[str, Any]:
+    async def get(self, pk: str, raw: bool = False) -> ApiInfo | dict[str, Any]:
         raise SWAPIMethodNotAvailable()
 
-    async def create(self, obj: ApiInfo | dict[str, Any]) -> ApiInfo | dict[str, Any] | None:
+    async def create(self, obj: ApiInfo | dict[str, Any], raw: bool = False) -> ApiInfo | dict[str, Any] | None:
         raise SWAPIMethodNotAvailable()
 
     async def update(
-        self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx | None = None
+        self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx | None = None, raw: bool = False
     ) -> ApiInfo | dict[str, Any] | None:
         raise SWAPIMethodNotAvailable()
 
