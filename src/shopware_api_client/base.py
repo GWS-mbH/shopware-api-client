@@ -399,6 +399,7 @@ class ApiModelBaseFields(BaseModel):
     translated: dict[str, Any] | list[Any] | None = None
     created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
+    extensions: dict[str, Any] | None = Field(default=None, exclude=True)
 
 
 class ApiModelBase(ApiModelBaseFields):
