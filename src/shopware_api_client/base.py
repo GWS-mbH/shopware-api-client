@@ -11,6 +11,7 @@ from typing import (
     AsyncGenerator,
     Callable,
     Generic,
+    Literal,
     Self,
     Type,
     TypeVar,
@@ -768,6 +769,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         return result_list
 
+    @overload
+    async def all(self, raw: Literal[False]) -> list[AdminModelClass]: ...
+
+    @overload
+    async def all(self, raw: Literal[True]) -> list[dict[str, Any]]: ...
+
+    @overload
+    async def all(self) -> list[AdminModelClass]: ...
+
     async def all(self, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
@@ -785,6 +795,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         return self._parse_response(result_data)
 
+    @overload
+    async def get(self, pk: str, raw: Literal[False]) -> AdminModelClass: ...
+
+    @overload
+    async def get(self, pk: str, raw: Literal[True]) -> dict[str, Any]: ...
+
+    @overload
+    async def get(self, pk: str) -> AdminModelClass: ...
+
     async def get(self, pk: str, raw: bool = False) -> AdminModelClass | dict[str, Any]:
         result = await self.client.get(f"{self.path}/{pk}")
         result_data: dict[str, Any] = self._parse_data_single(result.json())
@@ -793,6 +812,21 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
             return result_data
 
         return self._parse_response(result_data)
+
+    @overload
+    async def update(
+            self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None, raw: Literal[False]
+    ) -> AdminModelClass | None: ...
+
+    @overload
+    async def update(
+            self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None, raw: Literal[True]
+    ) -> dict[str, Any] | None: ...
+
+    @overload
+    async def update(
+            self, pk: str, obj: AdminModelClass | dict[str, Any], **kwargs: Any
+    ) -> AdminModelClass | None: ...
 
     async def update(
             self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None, raw: bool = False
@@ -814,6 +848,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         return self._parse_response(result_data)
 
+    @overload
+    async def first(self, raw: Literal[False]) -> AdminModelClass | None: ...
+
+    @overload
+    async def first(self, raw: Literal[True]) -> dict[str, Any] | None: ...
+
+    @overload
+    async def first(self) -> AdminModelClass | None: ...
+
     async def first(self, raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
         self._limit = 1
         result = await self.all(raw=raw)
@@ -825,6 +868,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
             return None
 
         return result[0]
+
+    @overload
+    async def create(self, obj: AdminModelClass | dict[str, Any], raw: Literal[False]) -> AdminModelClass | None: ...
+
+    @overload
+    async def create(self, obj: AdminModelClass | dict[str, Any], raw: Literal[True]) -> dict[str, Any] | None: ...
+
+    @overload
+    async def create(self, obj: AdminModelClass | dict[str, Any], **kwargs: Any) -> AdminModelClass | None: ...
 
     async def create(self, obj: AdminModelClass | dict[str, Any], raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
@@ -852,6 +904,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         return False
 
+    @overload
+    async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[False]) -> list[AdminModelClass]: ...
+
+    @overload
+    async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[False]) -> list[dict[str, Any]]: ...
+
+    @overload
+    async def get_related(self, parent: AdminModel[Any], relation: str, **kwargs) -> list[dict[str, Any]]: ...
+
     async def get_related(self, parent: AdminModel[Any], relation: str, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
         parent_endpoint = parent._get_endpoint()
         result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
@@ -871,6 +932,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
             self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
+
+    @overload
+    async def iter(self, raw: Literal[False], **kwargs: Any) -> AsyncGenerator[AdminModelClass, None]: ...
+
+    @overload
+    async def iter(self, raw: Literal[True], **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    async def iter(self, **kwargs: Any) -> AsyncGenerator[AdminModelClass, None]: ...
 
     async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
@@ -957,6 +1027,12 @@ class StoreEndpoint(EndpointBase):
 class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass]):
     path: str
 
+    @overload
+    async def all(self, raw: Literal[False]) -> list[ModelClass]: ...
+
+    @overload
+    async def all(self, raw: Literal[True]) -> list[dict[str, Any]]: ...
+
     async def all(self, raw: bool = False) -> list[ModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
@@ -968,6 +1044,15 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
             return result_data
 
         return self._parse_response(result_data, cls=self.model_class)
+
+    @overload
+    async def iter(self, raw: Literal[False], **kwargs: Any) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    async def iter(self, raw: Literal[True], **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    async def iter(self, **kwargs: Any) -> AsyncGenerator[ModelClass, None]: ...
 
     async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
         self._limit = batch_size
@@ -991,6 +1076,15 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
                 page += 1
             else:
                 break
+
+    @overload
+    async def first(self, raw: Literal[False]) -> ModelClass | None: ...
+
+    @overload
+    async def first(self, raw: Literal[True]) -> dict[str, Any] | None: ...
+
+    @overload
+    async def first(self) -> ModelClass | None: ...
 
     async def first(self, raw: bool = False) -> ModelClass | dict[str, Any] | None:
         self._limit = 1
