@@ -776,6 +776,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def all(self, raw: Literal[True]) -> list[dict[str, Any]]: ...
 
     @overload
+    async def all(self, raw: bool) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+
+    @overload
     async def all(self) -> list[AdminModelClass]: ...
 
     async def all(self, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
@@ -815,21 +818,26 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
     @overload
     async def update(
-            self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None, raw: Literal[False]
+        self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None, raw: Literal[False]
     ) -> AdminModelClass | None: ...
 
     @overload
     async def update(
-            self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None, raw: Literal[True]
+        self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None, raw: Literal[True]
     ) -> dict[str, Any] | None: ...
 
     @overload
     async def update(
-            self, pk: str, obj: AdminModelClass | dict[str, Any], **kwargs: Any
+        self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None
+    ) -> AdminModelClass | None: ...
+
+    @overload
+    async def update(
+        self, pk: str, obj: AdminModelClass | dict[str, Any]
     ) -> AdminModelClass | None: ...
 
     async def update(
-            self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None, raw: bool = False
+        self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None, raw: bool = False
     ) -> AdminModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True, include=update_fields)
@@ -876,7 +884,10 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def create(self, obj: AdminModelClass | dict[str, Any], raw: Literal[True]) -> dict[str, Any] | None: ...
 
     @overload
-    async def create(self, obj: AdminModelClass | dict[str, Any], **kwargs: Any) -> AdminModelClass | None: ...
+    async def create(self, obj: AdminModelClass | dict[str, Any], raw: bool) -> AdminModelClass | dict[str, Any] | None: ...
+
+    @overload
+    async def create(self, obj: AdminModelClass | dict[str, Any]) -> AdminModelClass | None: ...
 
     async def create(self, obj: AdminModelClass | dict[str, Any], raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
@@ -908,10 +919,13 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[False]) -> list[AdminModelClass]: ...
 
     @overload
-    async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[False]) -> list[dict[str, Any]]: ...
+    async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[True]) -> list[dict[str, Any]]: ...
 
     @overload
-    async def get_related(self, parent: AdminModel[Any], relation: str, **kwargs) -> list[dict[str, Any]]: ...
+    async def get_related(self, parent: AdminModel[Any], relation: str, raw: bool) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+
+    @overload
+    async def get_related(self, parent: AdminModel[Any], relation: str) -> list[AdminModelClass]: ...
 
     async def get_related(self, parent: AdminModel[Any], relation: str, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
         parent_endpoint = parent._get_endpoint()
@@ -932,15 +946,6 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
             self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
-
-    @overload
-    async def iter(self, raw: Literal[False], **kwargs: Any) -> AsyncGenerator[AdminModelClass, None]: ...
-
-    @overload
-    async def iter(self, raw: Literal[True], **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]: ...
-
-    @overload
-    async def iter(self, **kwargs: Any) -> AsyncGenerator[AdminModelClass, None]: ...
 
     async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
@@ -1033,6 +1038,9 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     @overload
     async def all(self, raw: Literal[True]) -> list[dict[str, Any]]: ...
 
+    @overload
+    async def all(self, raw: bool) -> list[ModelClass] | list[dict[str, Any]]: ...
+
     async def all(self, raw: bool = False) -> list[ModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
@@ -1044,15 +1052,6 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
             return result_data
 
         return self._parse_response(result_data, cls=self.model_class)
-
-    @overload
-    async def iter(self, raw: Literal[False], **kwargs: Any) -> AsyncGenerator[ModelClass, None]: ...
-
-    @overload
-    async def iter(self, raw: Literal[True], **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]: ...
-
-    @overload
-    async def iter(self, **kwargs: Any) -> AsyncGenerator[ModelClass, None]: ...
 
     async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
         self._limit = batch_size
@@ -1084,7 +1083,7 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def first(self, raw: Literal[True]) -> dict[str, Any] | None: ...
 
     @overload
-    async def first(self) -> ModelClass | None: ...
+    async def first(self, raw: bool) -> ModelClass | dict[str, Any] | None: ...
 
     async def first(self, raw: bool = False) -> ModelClass | dict[str, Any] | None:
         self._limit = 1
