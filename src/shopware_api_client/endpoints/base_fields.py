@@ -1,10 +1,25 @@
-from typing import Any, Annotated
+from typing import Annotated, Any
 
-from pydantic import Field, StringConstraints
+from pydantic import AfterValidator, Field, StringConstraints, ValidationInfo
 
 from shopware_api_client.fieldsets import FieldSetBase
 
+
+def normalize_php_assoc_array(value: Any, info: ValidationInfo) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    elif isinstance(value, list):
+        if len(value) > 0:
+            raise ValueError("Expected an associative array, but got a non-empty list")
+        return {}
+    elif value is None:
+        return None
+    else:
+        raise ValueError(f"Expected an associative array, but got {type(value).__name__}")
+
+
 IdField = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]
+PhpAssocArray = Annotated[dict[str, Any] | list | None, AfterValidator(normalize_php_assoc_array)]
 
 
 class Data(FieldSetBase):
