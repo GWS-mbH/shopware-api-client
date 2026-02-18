@@ -29,7 +29,7 @@ class TestBaseFields:
 
     def test_php_assoc_array_invalid_list(self) -> None:
         with pytest.raises(ValueError) as exc_info:
-            TestModel(data=[{"key": "value"}])
+            TestModel(data=[{"key": "value"}])  # type: ignore
         assert "Expected an associative array, but got a non-empty list" in str(exc_info.value)
 
     def test_php_assoc_array_invalid_type(self) -> None:

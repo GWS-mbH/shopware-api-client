@@ -1,11 +1,13 @@
 from typing import Annotated, Any
 
-from pydantic import AfterValidator, Field, StringConstraints, ValidationInfo
+from pydantic import Field, StringConstraints, ValidationInfo, ValidatorFunctionWrapHandler, WrapValidator
 
 from shopware_api_client.fieldsets import FieldSetBase
 
 
-def normalize_php_assoc_array(value: Any, info: ValidationInfo) -> dict[str, Any] | None:
+def normalize_php_assoc_array(
+    value: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
+) -> dict[str, Any] | None:
     if isinstance(value, dict):
         return value
     elif isinstance(value, list):
@@ -19,7 +21,7 @@ def normalize_php_assoc_array(value: Any, info: ValidationInfo) -> dict[str, Any
 
 
 IdField = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]
-PhpAssocArray = Annotated[dict[str, Any] | list | None, AfterValidator(normalize_php_assoc_array)]
+PhpAssocArray = Annotated[dict[str, Any] | None, WrapValidator(normalize_php_assoc_array)]
 
 
 class Data(FieldSetBase):
