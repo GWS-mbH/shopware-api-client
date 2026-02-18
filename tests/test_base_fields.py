@@ -17,7 +17,7 @@ class TestBaseFields:
         [
             ({"key": "value"}, {"key": "value"}),
             ([], {}),
-            (None, None),
+            (None, {}),
         ],
     )
     def test_php_assoc_array_valid(self, input_value, expected_output) -> None:

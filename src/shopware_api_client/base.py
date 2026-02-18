@@ -397,10 +397,10 @@ class EndpointMixin(Generic[EndpointClass]):
 class ApiModelBaseFields(BaseModel):
     id: "IdField | None" = None
     version_id: IdField | None = None
-    translated: PhpAssocArray = None
+    translated: PhpAssocArray | None = None
     created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
-    extensions: PhpAssocArray = Field(default=None, exclude=True)
+    extensions: PhpAssocArray | None = Field(default=None, exclude=True)
 
 
 class ApiModelBase(ApiModelBaseFields):
@@ -512,7 +512,7 @@ class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminE
 
 
 class CustomFieldsMixin(BaseModel):
-    custom_fields: PhpAssocArray = None
+    custom_fields: PhpAssocArray | None = None
 
 
 class EndpointBase:
