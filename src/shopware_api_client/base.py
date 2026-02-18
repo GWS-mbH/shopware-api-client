@@ -36,7 +36,7 @@ from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 
 from .cache import DictCache, RedisCache
-from .endpoints.base_fields import IdField
+from .endpoints.base_fields import IdField, PhpAssocArray
 from .exceptions import (
     SWAPIDataValidationError,
     SWAPIError,
@@ -71,11 +71,11 @@ HEADER_X_RATE_LIMIT_RESET = "X-Rate-Limit-Reset"
 
 class ConfigBase:
     def __init__(
-            self,
-            url: str,
-            retry_after_threshold: int = 60,
-            redis_client: "Redis | None" = None,
-            local_cache_cleanup_cycle_seconds: int = 10,
+        self,
+        url: str,
+        retry_after_threshold: int = 60,
+        redis_client: "Redis | None" = None,
+        local_cache_cleanup_cycle_seconds: int = 10,
     ) -> None:
         self.url = url.rstrip("/")
         self.retry_after_threshold = retry_after_threshold
@@ -147,7 +147,7 @@ class ClientBase:
 
     async def sleep_and_increment(self, retry_wait_base: int, retry_count: int) -> int:
         retry_count += 1
-        sleep_and_increment = retry_wait_base ** retry_count
+        sleep_and_increment = retry_wait_base**retry_count
         logger.debug(f"Try failed, retrying in {sleep_and_increment} seconds.")
         await asyncio.sleep(sleep_and_increment)
         return retry_count
@@ -317,7 +317,7 @@ class ClientBase:
                         exception = SWAPIError.from_response(response)
                         # prefix details with x-trace-header to
                         exception.detail = (
-                                f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
+                            f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
                         )
                         raise exception
 
@@ -350,20 +350,20 @@ class ClientBase:
         await self.http_client.aclose()
 
     async def bulk_upsert(
-            self,
-            name: str,
-            objs: list[ModelClass] | list[dict[str, Any]],
-            fail_silently: bool = False,
-            **request_kwargs: Any,
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
 
     async def bulk_delete(
-            self,
-            name: str,
-            objs: list[ModelClass] | list[dict[str, Any]],
-            fail_silently: bool = False,
-            **request_kwargs: Any,
+        self,
+        name: str,
+        objs: list[ModelClass] | list[dict[str, Any]],
+        fail_silently: bool = False,
+        **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
 
@@ -397,10 +397,10 @@ class EndpointMixin(Generic[EndpointClass]):
 class ApiModelBaseFields(BaseModel):
     id: "IdField | None" = None
     version_id: IdField | None = None
-    translated: dict[str, Any] | list[Any] | None = None
+    translated: PhpAssocArray | None = None
     created_at: AwareDatetime | None = Field(default_factory=lambda: datetime.now(UTC), exclude=True)
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
-    extensions: dict[str, Any] | None = Field(default=None, exclude=True)
+    extensions: PhpAssocArray | None = Field(default=None, exclude=True)
 
 
 class ApiModelBase(ApiModelBaseFields):
@@ -413,10 +413,7 @@ class ApiModelBase(ApiModelBaseFields):
     )
 
     def __init__(self, client: ClientBase | None = None, **kwargs: dict[str, Any]) -> None:
-        self._insert_translations(
-            data=kwargs,
-            translations=kwargs.get("translated")
-        )
+        self._insert_translations(data=kwargs, translations=kwargs.get("translated"))
 
         try:
             BaseModel.__init__(self, **kwargs)
@@ -493,7 +490,7 @@ class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminE
         super().__init__(client, **kwargs)
 
     async def save(
-            self, force_insert: bool = False, update_fields: IncEx | None = None
+        self, force_insert: bool = False, update_fields: IncEx | None = None
     ) -> "AdminModel[Any] | dict | None":
         endpoint = self._get_endpoint()
 
@@ -515,7 +512,7 @@ class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminE
 
 
 class CustomFieldsMixin(BaseModel):
-    custom_fields: dict[str, Any] | None = Field(default=None)
+    custom_fields: PhpAssocArray | None = None
 
 
 class EndpointBase:
@@ -832,9 +829,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     ) -> AdminModelClass | None: ...
 
     @overload
-    async def update(
-        self, pk: str, obj: AdminModelClass | dict[str, Any]
-    ) -> AdminModelClass | None: ...
+    async def update(self, pk: str, obj: AdminModelClass | dict[str, Any]) -> AdminModelClass | None: ...
 
     async def update(
         self, pk: str, obj: AdminModelClass | dict[str, Any], update_fields: IncEx | None = None, raw: bool = False
@@ -884,12 +879,16 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def create(self, obj: AdminModelClass | dict[str, Any], raw: Literal[True]) -> dict[str, Any] | None: ...
 
     @overload
-    async def create(self, obj: AdminModelClass | dict[str, Any], raw: bool) -> AdminModelClass | dict[str, Any] | None: ...
+    async def create(
+        self, obj: AdminModelClass | dict[str, Any], raw: bool
+    ) -> AdminModelClass | dict[str, Any] | None: ...
 
     @overload
     async def create(self, obj: AdminModelClass | dict[str, Any]) -> AdminModelClass | None: ...
 
-    async def create(self, obj: AdminModelClass | dict[str, Any], raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
+    async def create(
+        self, obj: AdminModelClass | dict[str, Any], raw: bool = False
+    ) -> AdminModelClass | dict[str, Any] | None:
         if isinstance(obj, ApiModelBase):
             data = obj.model_dump_json(by_alias=True)
         else:
@@ -916,18 +915,24 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return False
 
     @overload
-    async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[False]) -> list[AdminModelClass]: ...
+    async def get_related(
+        self, parent: AdminModel[Any], relation: str, raw: Literal[False]
+    ) -> list[AdminModelClass]: ...
 
     @overload
     async def get_related(self, parent: AdminModel[Any], relation: str, raw: Literal[True]) -> list[dict[str, Any]]: ...
 
     @overload
-    async def get_related(self, parent: AdminModel[Any], relation: str, raw: bool) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+    async def get_related(
+        self, parent: AdminModel[Any], relation: str, raw: bool
+    ) -> list[AdminModelClass] | list[dict[str, Any]]: ...
 
     @overload
     async def get_related(self, parent: AdminModel[Any], relation: str) -> list[AdminModelClass]: ...
 
-    async def get_related(self, parent: AdminModel[Any], relation: str, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
+    async def get_related(
+        self, parent: AdminModel[Any], relation: str, raw: bool = False
+    ) -> list[AdminModelClass] | list[dict[str, Any]]:
         parent_endpoint = parent._get_endpoint()
         result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
@@ -938,16 +943,18 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return self._parse_response(result_data)
 
     async def bulk_upsert(
-            self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
     async def bulk_delete(
-            self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
     ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
-    async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
+    async def iter(
+        self, batch_size: int = 100, raw: bool = False
+    ) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
         page = 1
@@ -994,7 +1001,7 @@ class StoreEndpoint(EndpointBase):
 
     @staticmethod
     def _parse_response(
-            data: list[dict[str, Any]] | dict[str, Any], cls: Type[ModelClass | FieldSet]
+        data: list[dict[str, Any]] | dict[str, Any], cls: Type[ModelClass | FieldSet]
     ) -> list[ModelClass | FieldSet] | ModelClass | FieldSet:
         single = False
 
