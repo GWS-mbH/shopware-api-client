@@ -6,8 +6,8 @@ class PropertyGroupBase(ApiModelBase, CustomFieldsMixin):
 
     name: str
     description: str | None = None
-    display_type: str
-    sorting_type: str
+    display_type: str | None = None
+    sorting_type: str | None = None
     filterable: bool | None = None
     visible_on_product_detail_page: bool | None = None
     position: int | None = None
