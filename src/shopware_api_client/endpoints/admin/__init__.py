@@ -241,7 +241,7 @@ class AdminEndpoints:
                     case "bool":
                         field_type = bool
                     case "many-to-many":
-                        continue
+                        field_type = list[dict[str, Any]]
                     case "many-to-one":
                         field_appendix = "_id"
                         field_type = IdField
