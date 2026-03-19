@@ -622,7 +622,9 @@ class EndpointSearchMixin(Generic[ModelClass]):
 
         return self
 
-    def filter(self, **kwargs: Any) -> Self:
+    def filter(self, __negate_filters: bool = False, **kwargs: Any) -> Self:
+        negate_queries = []
+
         for key, value in kwargs.items():
             filter_term = ""
             filter_type = "equals"
@@ -651,8 +653,6 @@ class EndpointSearchMixin(Generic[ModelClass]):
                         filter_type = "prefix"
                     case "endswith":
                         filter_type = "suffix"
-                    case "not":
-                        filter_type = "not"
                     case _:
                         filter_term = ""
 
@@ -681,12 +681,18 @@ class EndpointSearchMixin(Generic[ModelClass]):
                 else:
                     parameters = {filter_term: value}
 
-            if filter_type == "not":
-                self._filter.append({"type": "not", "operator": "or", "queries": [{"type": "equals", "field": field, "value": value}]})
+            if __negate_filters:
+                negate_queries.append({"type": filter_type, "field": field, "value": value, "parameters": parameters})
             else:
                 self._filter.append({"type": filter_type, "field": field, "value": value, "parameters": parameters})
 
+        if negate_queries:
+            self._filter.append({"type": "not", "operator": "and", "queries": negate_queries})
+
         return self
+
+    def exclude(self, **kwargs: Any) -> Self:
+        return self.filter(__negate_filters=True, **kwargs)
 
     def limit(self, count: int | None) -> "Self":
         self._limit = count
