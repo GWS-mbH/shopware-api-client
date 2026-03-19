@@ -651,6 +651,8 @@ class EndpointSearchMixin(Generic[ModelClass]):
                         filter_type = "prefix"
                     case "endswith":
                         filter_type = "suffix"
+                    case "not":
+                        filter_type = "not"
                     case _:
                         filter_term = ""
 
@@ -679,7 +681,10 @@ class EndpointSearchMixin(Generic[ModelClass]):
                 else:
                     parameters = {filter_term: value}
 
-            self._filter.append({"type": filter_type, "field": field, "value": value, "parameters": parameters})
+            if filter_type == "not":
+                self._filter.append({"type": "not", "operator": "or", "queries": [{"type": "equals", "field": field, "value": value}]})
+            else:
+                self._filter.append({"type": filter_type, "field": field, "value": value, "parameters": parameters})
 
         return self
 
