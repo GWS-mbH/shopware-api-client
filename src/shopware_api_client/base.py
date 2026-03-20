@@ -622,7 +622,7 @@ class EndpointSearchMixin(Generic[ModelClass]):
 
         return self
 
-    def filter(self, __negate_filters: bool = False, **kwargs: Any) -> Self:
+    def filter(self, _negate_filters: bool = False, **kwargs: Any) -> Self:
         negate_queries = []
 
         for key, value in kwargs.items():
@@ -681,7 +681,7 @@ class EndpointSearchMixin(Generic[ModelClass]):
                 else:
                     parameters = {filter_term: value}
 
-            if __negate_filters:
+            if _negate_filters:
                 negate_queries.append({"type": filter_type, "field": field, "value": value, "parameters": parameters})
             else:
                 self._filter.append({"type": filter_type, "field": field, "value": value, "parameters": parameters})
@@ -692,7 +692,7 @@ class EndpointSearchMixin(Generic[ModelClass]):
         return self
 
     def exclude(self, **kwargs: Any) -> Self:
-        return self.filter(__negate_filters=True, **kwargs)
+        return self.filter(_negate_filters=True, **kwargs)
 
     def limit(self, count: int | None) -> "Self":
         self._limit = count
