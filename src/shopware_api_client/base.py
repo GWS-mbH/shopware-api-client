@@ -963,6 +963,18 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     ) -> dict[str, Any]:
         return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
 
+    @overload
+    def iter(self, batch_size: int, raw: Literal[False]) -> AsyncGenerator[AdminModelClass, None]: ...
+
+    @overload
+    def iter(self, batch_size: int, raw: Literal[True]) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    def iter(self, batch_size: int) -> AsyncGenerator[AdminModelClass, None]: ...
+
+    @overload
+    def iter(self) -> AsyncGenerator[AdminModelClass, None]: ...
+
     async def iter(
         self, batch_size: int = 100, raw: bool = False
     ) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
