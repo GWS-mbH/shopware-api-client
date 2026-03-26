@@ -622,6 +622,12 @@ class EndpointSearchMixin(Generic[ModelClass]):
 
         return self
 
+    @overload
+    def filter(self, **kwargs: Any) -> Self: ...
+
+    @overload
+    def filter(self, _negate_filters: bool = False, **kwargs: Any) -> Self: ...
+
     def filter(self, _negate_filters: bool = False, **kwargs: Any) -> Self:
         negate_queries = []
 
@@ -971,6 +977,12 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
     @overload
     def iter(self, batch_size: int) -> AsyncGenerator[AdminModelClass, None]: ...
+
+    @overload
+    def iter(self, raw: Literal[False]) -> AsyncGenerator[AdminModelClass, None]: ...
+
+    @overload
+    def iter(self, raw: Literal[True]) -> AsyncGenerator[dict[str, Any], None]: ...
 
     @overload
     def iter(self) -> AsyncGenerator[AdminModelClass, None]: ...
