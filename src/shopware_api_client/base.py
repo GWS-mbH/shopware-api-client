@@ -972,6 +972,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     @overload
     def iter(self, batch_size: int) -> AsyncGenerator[AdminModelClass, None]: ...
 
+    @overload
+    def iter(self) -> AsyncGenerator[AdminModelClass, None]: ...
+
     async def iter(
         self, batch_size: int = 100, raw: bool = False
     ) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
