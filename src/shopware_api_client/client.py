@@ -12,12 +12,11 @@ from .exceptions import SWAPIConfigException, SWAPIError, SWAPIErrorList
 
 
 class AdminClient(ClientBase, AdminEndpoints):
-    def __init__(self, config: AdminConfig, raw: bool = False):
-        super().__init__(config, raw=raw)
+    def __init__(self, config: AdminConfig, raw: bool | None = None):
+        super().__init__(config=config, raw=raw)
         self.config = config
         self.api_url = f"{config.url}/api"
         self._client: httpx.AsyncClient | None = None
-        self.init_endpoints(self)
 
     def _get_http_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -173,7 +172,7 @@ class AdminClient(ClientBase, AdminEndpoints):
 
 
 class StoreClient(ClientBase, StoreEndpoints):
-    def __init__(self, config: StoreConfig, raw: bool = False):
+    def __init__(self, config: StoreConfig, raw: bool | None = None):
         super().__init__(config, raw=raw)
         self.config = config
         self.api_url = f"{config.url}/store-api"

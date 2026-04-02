@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from ...base import AdminModel
 
@@ -216,9 +216,131 @@ __all__ = [
 
 
 class AdminEndpoints:
-    async def load_custom_entities(self, client: "AdminClient") -> None:
+    _custom_entities_loaded = False
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        from ...client import AdminClient
+        assert isinstance(self, AdminClient)
+
+        # Commercial
+        self.b2b_employee = B2bEmployeeEndpoint(self)
+        self.b2b_components_role = B2bComponentsRoleEndpoint(self)
+        self.dynamic_access = DynamicAccessEndpoint(self)
+        self.b2b_components_shopping_list = B2bComponentsShoppingListEndpoint(self)
+        self.b2b_components_shopping_list_line_item = B2bComponentsShoppingListLineItemEndpoint(self)
+
+        # Core
+        self.acl_role = AclRoleEndpoint(self)
+        self.api_info = ApiInfoEndpoint(self)
+        self.app = AppEndpoint(self)
+        self.app_script_condition = AppScriptConditionEndpoint(self)
+        self.category = CategoryEndpoint(self)
+        self.cms_block = CmsBlockEndpoint(self)
+        self.cms_page = CmsPageEndpoint(self)
+        self.cms_section = CmsSectionEndpoint(self)
+        self.cms_slot = CmsSlotEndpoint(self)
+        self.country = CountryEndpoint(self)
+        self.country_state = CountryStateEndpoint(self)
+        self.currency = CurrencyEndpoint(self)
+        self.currency_country_rounding = CurrencyCountryRoundingEndpoint(self)
+        self.custom_entity = CustomEntityEndpoint(self)
+        self.custom_field = CustomFieldEndpoint(self)
+        self.customer = CustomerEndpoint(self)
+        self.customer_address = CustomerAddressEndpoint(self)
+        self.customer_group = CustomerGroupEndpoint(self)
+        self.customer_recovery = CustomerRecoveryEndpoint(self)
+        self.customer_wishlist = CustomerWishlistEndpoint(self)
+        self.customer_wishlist_product = CustomerWishlistProductEndpoint(self)
+        self.delivery_time = DeliveryTimeEndpoint(self)
+        self.document = DocumentEndpoint(self)
+        self.document_base_config = DocumentBaseConfigEndpoint(self)
+        self.document_base_config_sales_channel = DocumentBaseConfigSalesChannelEndpoint(self)
+        self.document_type = DocumentTypeEndpoint(self)
+        self.integration = IntegrationEndpoint(self)
+        self.landing_page = LandingPageEndpoint(self)
+        self.language = LanguageEndpoint(self)
+        self.locale = LocaleEndpoint(self)
+        self.main_category = MainCategoryEndpoint(self)
+        self.media = MediaEndpoint(self)
+        self.media_default_folder = MediaDefaultFolderEndpoint(self)
+        self.media_folder = MediaFolderEndpoint(self)
+        self.media_folder_configuration = MediaFolderConfigurationEndpoint(self)
+        self.media_thumbnail = MediaThumbnailEndpoint(self)
+        self.media_thumbnail_size = MediaThumbnailSizeEndpoint(self)
+        self.order = OrderEndpoint(self)
+        self.order_address = OrderAddressEndpoint(self)
+        self.order_customer = OrderCustomerEndpoint(self)
+        self.order_delivery = OrderDeliveryEndpoint(self)
+        self.order_delivery_position = OrderDeliveryPositionEndpoint(self)
+        self.order_line_item = OrderLineItemEndpoint(self)
+        self.order_line_item_download = OrderLineItemDownloadEndpoint(self)
+        self.order_transaction = OrderTransactionEndpoint(self)
+        self.order_transaction_capture = OrderTransactionCaptureEndpoint(self)
+        self.order_transaction_capture_refund = OrderTransactionCaptureRefundEndpoint(self)
+        self.order_transaction_capture_refund_position = OrderTransactionCaptureRefundPositionEndpoint(self)
+        self.payment_method = PaymentMethodEndpoint(self)
+        self.product = ProductEndpoint(self)
+        self.product_configurator_setting = ProductConfiguratorSettingEndpoint(self)
+        self.product_cross_selling = ProductCrossSellingEndpoint(self)
+        self.product_cross_selling_assigned_products = ProductCrossSellingAssignedProductsEndpoint(self)
+        self.product_download = ProductDownloadEndpoint(self)
+        self.product_export = ProductExportEndpoint(self)
+        self.product_feature_set = ProductFeatureSetEndpoint(self)
+        self.product_manufacturer = ProductManufacturerEndpoint(self)
+        self.product_media = ProductMediaEndpoint(self)
+        self.product_price = ProductPriceEndpoint(self)
+        self.product_review = ProductReviewEndpoint(self)
+        self.product_search_keyword = ProductSearchKeywordEndpoint(self)
+        self.product_stream = ProductStreamEndpoint(self)
+        self.product_visibility = ProductVisibilityEndpoint(self)
+        self.product_warehouse = ProductWarehouseEndpoint(self)
+        self.promotion = PromotionEndpoint(self)
+        self.promotion_discount = PromotionDiscountEndpoint(self)
+        self.promotion_discount_prices = PromotionDiscountPricesEndpoint(self)
+        self.property_group = PropertyGroupEndpoint(self)
+        self.property_group_option = PropertyGroupOptionEndpoint(self)
+        self.rule = RuleEndpoint(self)
+        self.rule_condition = RuleConditionEndpoint(self)
+        self.sales_channel = SalesChannelEndpoint(self)
+        self.sales_channel_domain = SalesChannelDomainEndpoint(self)
+        self.salutation = SalutationEndpoint(self)
+        self.seo_url = SeoUrlEndpoint(self)
+        self.shipping_method = ShippingMethodEndpoint(self)
+        self.shipping_method_price = ShippingMethodPriceEndpoint(self)
+        self.state_machine = StateMachineEndpoint(self)
+        self.state_machine_history = StateMachineHistoryEndpoint(self)
+        self.state_machine_state = StateMachineStateEndpoint(self)
+        self.state_machine_transition = StateMachineTransitionEndpoint(self)
+        self.system_config = SystemConfigEndpoint(self)
+        self.tag = TagEndpoint(self)
+        self.tax = TaxEndpoint(self)
+        self.tax_rule = TaxRuleEndpoint(self)
+        self.tax_rule_type = TaxRuleTypeEndpoint(self)
+        self.unit = UnitEndpoint(self)
+        self.user = UserEndpoint(self)
+        self.warehouse = WarehouseEndpoint(self)
+        self.warehouse_group = WarehouseGroupEndpoint(self)
+        self.warehouse_group_warehouse = WarehouseGroupWarehouseEndpoint(self)
+
+        super().__init__(*args, **kwargs)
+
+    @property
+    def custom_entities_loaded(self) -> bool:
+        return self._custom_entities_loaded
+
+    async def load_custom_entities(self, client: "AdminClient | None" = None) -> None:
+        if client is not None:
+            import warnings
+            warnings.warn("parameter 'client' of 'load_custom_entities' isn't used anymore and could get "
+                          "removed in future versions.", DeprecationWarning)
+
+        from ...client import AdminClient
+        assert isinstance(self, AdminClient)
+
+        if self.custom_entities_loaded:
+            return
+
         from types import new_class
-        from typing import Any
 
         from pydantic import AwareDatetime, create_model
 
@@ -275,105 +397,6 @@ class AdminEndpoints:
             ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"  # type: ignore
             ce_endpoint.model_class = ce_model  # type: ignore
 
-            setattr(client, custom_entity.name, ce_endpoint(client))
+            setattr(self, custom_entity.name, ce_endpoint(self))
 
-    def init_endpoints(self, client: "AdminClient") -> None:
-        # Commercial
-        self.b2b_employee = B2bEmployeeEndpoint(client)
-        self.b2b_components_role = B2bComponentsRoleEndpoint(client)
-        self.dynamic_access = DynamicAccessEndpoint(client)
-        self.b2b_components_shopping_list = B2bComponentsShoppingListEndpoint(client)
-        self.b2b_components_shopping_list_line_item = B2bComponentsShoppingListLineItemEndpoint(client)
-
-        # Core
-        self.acl_role = AclRoleEndpoint(client)
-        self.api_info = ApiInfoEndpoint(client)
-        self.app = AppEndpoint(client)
-        self.app_script_condition = AppScriptConditionEndpoint(client)
-        self.category = CategoryEndpoint(client)
-        self.cms_block = CmsBlockEndpoint(client)
-        self.cms_page = CmsPageEndpoint(client)
-        self.cms_section = CmsSectionEndpoint(client)
-        self.cms_slot = CmsSlotEndpoint(client)
-        self.country = CountryEndpoint(client)
-        self.country_state = CountryStateEndpoint(client)
-        self.currency = CurrencyEndpoint(client)
-        self.currency_country_rounding = CurrencyCountryRoundingEndpoint(client)
-        self.custom_entity = CustomEntityEndpoint(client)
-        self.custom_field = CustomFieldEndpoint(client)
-        self.customer = CustomerEndpoint(client)
-        self.customer_address = CustomerAddressEndpoint(client)
-        self.customer_group = CustomerGroupEndpoint(client)
-        self.customer_recovery = CustomerRecoveryEndpoint(client)
-        self.customer_wishlist = CustomerWishlistEndpoint(client)
-        self.customer_wishlist_product = CustomerWishlistProductEndpoint(client)
-        self.delivery_time = DeliveryTimeEndpoint(client)
-        self.document = DocumentEndpoint(client)
-        self.document_base_config = DocumentBaseConfigEndpoint(client)
-        self.document_base_config_sales_channel = DocumentBaseConfigSalesChannelEndpoint(client)
-        self.document_type = DocumentTypeEndpoint(client)
-        self.integration = IntegrationEndpoint(client)
-        self.landing_page = LandingPageEndpoint(client)
-        self.language = LanguageEndpoint(client)
-        self.locale = LocaleEndpoint(client)
-        self.main_category = MainCategoryEndpoint(client)
-        self.media = MediaEndpoint(client)
-        self.media_default_folder = MediaDefaultFolderEndpoint(client)
-        self.media_folder = MediaFolderEndpoint(client)
-        self.media_folder_configuration = MediaFolderConfigurationEndpoint(client)
-        self.media_thumbnail = MediaThumbnailEndpoint(client)
-        self.media_thumbnail_size = MediaThumbnailSizeEndpoint(client)
-        self.order = OrderEndpoint(client)
-        self.order_address = OrderAddressEndpoint(client)
-        self.order_customer = OrderCustomerEndpoint(client)
-        self.order_delivery = OrderDeliveryEndpoint(client)
-        self.order_delivery_position = OrderDeliveryPositionEndpoint(client)
-        self.order_line_item = OrderLineItemEndpoint(client)
-        self.order_line_item_download = OrderLineItemDownloadEndpoint(client)
-        self.order_transaction = OrderTransactionEndpoint(client)
-        self.order_transaction_capture = OrderTransactionCaptureEndpoint(client)
-        self.order_transaction_capture_refund = OrderTransactionCaptureRefundEndpoint(client)
-        self.order_transaction_capture_refund_position = OrderTransactionCaptureRefundPositionEndpoint(client)
-        self.payment_method = PaymentMethodEndpoint(client)
-        self.product = ProductEndpoint(client)
-        self.product_configurator_setting = ProductConfiguratorSettingEndpoint(client)
-        self.product_cross_selling = ProductCrossSellingEndpoint(client)
-        self.product_cross_selling_assigned_products = ProductCrossSellingAssignedProductsEndpoint(client)
-        self.product_download = ProductDownloadEndpoint(client)
-        self.product_export = ProductExportEndpoint(client)
-        self.product_feature_set = ProductFeatureSetEndpoint(client)
-        self.product_manufacturer = ProductManufacturerEndpoint(client)
-        self.product_media = ProductMediaEndpoint(client)
-        self.product_price = ProductPriceEndpoint(client)
-        self.product_review = ProductReviewEndpoint(client)
-        self.product_search_keyword = ProductSearchKeywordEndpoint(client)
-        self.product_stream = ProductStreamEndpoint(client)
-        self.product_visibility = ProductVisibilityEndpoint(client)
-        self.product_warehouse = ProductWarehouseEndpoint(client)
-        self.promotion = PromotionEndpoint(client)
-        self.promotion_discount = PromotionDiscountEndpoint(client)
-        self.promotion_discount_prices = PromotionDiscountPricesEndpoint(client)
-        self.property_group = PropertyGroupEndpoint(client)
-        self.property_group_option = PropertyGroupOptionEndpoint(client)
-        self.rule = RuleEndpoint(client)
-        self.rule_condition = RuleConditionEndpoint(client)
-        self.sales_channel = SalesChannelEndpoint(client)
-        self.sales_channel_domain = SalesChannelDomainEndpoint(client)
-        self.salutation = SalutationEndpoint(client)
-        self.seo_url = SeoUrlEndpoint(client)
-        self.shipping_method = ShippingMethodEndpoint(client)
-        self.shipping_method_price = ShippingMethodPriceEndpoint(client)
-        self.state_machine = StateMachineEndpoint(client)
-        self.state_machine_history = StateMachineHistoryEndpoint(client)
-        self.state_machine_state = StateMachineStateEndpoint(client)
-        self.state_machine_transition = StateMachineTransitionEndpoint(client)
-        self.system_config = SystemConfigEndpoint(client)
-        self.tag = TagEndpoint(client)
-        self.tax = TaxEndpoint(client)
-        self.tax_rule = TaxRuleEndpoint(client)
-        self.tax_rule_type = TaxRuleTypeEndpoint(client)
-        self.unit = UnitEndpoint(client)
-        self.user = UserEndpoint(client)
-        self.warehouse = WarehouseEndpoint(client)
-        self.warehouse_group = WarehouseGroupEndpoint(client)
-        self.warehouse_group_warehouse = WarehouseGroupWarehouseEndpoint(client)
+        self._custom_entities_loaded = True
