@@ -91,11 +91,28 @@ class ClientBase:
     raw: bool
     language_id: IdField | None = None
 
-    def __init__(self, config: ConfigBase, raw: bool = False) -> None:
+    def __init__(self, config: ConfigBase, raw: bool | None = None, *args: Any, **kwargs: Any) -> None:
         self.api_url = config.url
         self.retry_after_threshold = config.retry_after_threshold
         self.cache = config.cache
-        self.raw = raw
+
+        if raw is not None:
+            import warnings
+            warnings.warn("parameter 'raw' of ClientBase has been deprecated and could get removed in future versions. "
+                          "Use the raw parameter of .get(), .first(), .all(), ... directly.")
+            self.raw = raw
+        else:
+            self.raw = False
+
+        super().__init__(*args, *kwargs)
+
+    def __getattribute__(self, name: str) -> Any:
+        value = super().__getattribute__(name)
+
+        if isinstance(value, EndpointBase):
+            # client should always return a fresh endpoint
+            return value.__class__(client=self)
+        return value
 
     async def __aenter__(self) -> "Self":
         client = self.http_client
@@ -402,6 +419,11 @@ class ApiModelBaseFields(BaseModel):
     updated_at: AwareDatetime | None = Field(default=None, exclude=True)
     extensions: PhpAssocArray | None = Field(default=None, exclude=True)
 
+    def ensure_id(self) -> "IdField":
+        if self.id is None:
+            raise ValueError("Required obj to have an ID, but ID was None.")
+        return self.id
+
 
 class ApiModelBase(ApiModelBaseFields):
     model_config = ConfigDict(
@@ -584,14 +606,6 @@ class EndpointSearchMixin(Generic[ModelClass]):
 
         return data
 
-    def _reset_endpoint(self) -> None:
-        self._filter = []
-        self._limit = None
-        self._page = None
-        self._sort = []
-        self._associations = {}
-        self._includes = {}
-
     def _serialize_field_name(self, name: str) -> str:
         from .endpoints.relations import ForeignRelation, ManyRelation
 
@@ -730,6 +744,9 @@ class EndpointSearchMixin(Generic[ModelClass]):
 
         return self
 
+    def get_filter_dict(self) -> dict[str, Any]:
+        return self._get_data_dict()
+
 
 class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass]):
     model_class: Type[AdminModelClass]
@@ -805,8 +822,6 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
-        self._reset_endpoint()
-
         if self.raw or raw:
             return result_data
 
@@ -880,8 +895,6 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def first(self, raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
         self._limit = 1
         result = await self.all(raw=raw)
-
-        self._reset_endpoint()
 
         # return None instead of an KeyError, if result is empty
         if len(result) == 0:
@@ -992,16 +1005,17 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     ) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
+        is_search_query = self._is_search_query()
         page = 1
 
-        if self._is_search_query():
+        if is_search_query:
             url = f"/search{self.path}"
         else:
             url = self.path
 
         while True:
             data["page"] = page
-            if self._is_search_query():
+            if is_search_query:
                 result = await self.client.post(url, json=data)
             else:
                 result = await self.client.get(url, params=data)
@@ -1015,7 +1029,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
                 else:
                     yield self._parse_response(entry)
 
-            if len(result_data) >= self._limit:
+            if len(result_data) >= batch_size:
                 page += 1
             else:
                 break
@@ -1130,8 +1144,6 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def first(self, raw: bool = False) -> ModelClass | dict[str, Any] | None:
         self._limit = 1
         result = await self.all(raw=raw)
-
-        self._reset_endpoint()
 
         # return None instead of an KeyError, if result is empty
         if len(result) == 0:
