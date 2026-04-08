@@ -1,78 +1,61 @@
-from typing import Any, AsyncGenerator
+from typing import Any
 
-from ....base import EndpointBase
-from ....exceptions import SWAPIMethodNotAvailable
-from ...admin.core.country import CountryBase
-from ...admin.core.country_state import CountryStateBase
-from ...admin.core.customer_address import CustomerAddressBase
-from ...admin.core.salutation import SalutationBase
+from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin, CustomFieldsMixin
+from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.fieldsets import FieldSetBase
+from shopware_api_client.models.customer_address import CustomerAddressBase
 
 
-class Address(CustomerAddressBase["AddressEndpoint"]):
-    _identifier = "address"
-
-    country: CountryBase | None = None
-    customer_state: CountryStateBase | None = None
-    salutation: SalutationBase | None = None
+class Address(CustomerAddressBase, EndpointMixin["AddressEndpoint"]):
+    country: "Country | None" = None
+    country_state: "CountryState | None" = None
+    salutation: "Salutation | None" = None
 
 
-class AddressEndpoint(EndpointBase[Address]):
-    name = "address"
-    path = "/account/address"
+class AddressUpdateSchema(FieldSetBase, CustomFieldsMixin):
+    country_id: IdField
+    country_state_id: IdField | None = None
+    salutation_id: IdField | None = None
+    first_name: str
+    last_name: str
+    zipcode: str | None = None
+    city: str
+    company: str | None = None
+    street: str
+    department: str | None = None
+    title: str | None = None
+    phone_number: str | None = None
+    additional_address_line1: str | None = None
+    additional_address_line2: str | None = None
+
+
+class AddressEndpoint(StoreSearchEndpoint[Address]):
     model_class = Address
-    data_key = "elements"
+    path = "/account/list-address"
 
-    async def all(self) -> list[Address] | list[dict[str, Any]]:
-        data = self._get_data_dict()
+    async def delete(self, pk: IdField) -> bool:
+        result = await self.client.delete(f"/account/address/{pk}")
+        return bool(result.is_success)
 
-        result = await self.client.post("/account/list-address", json=data)
+    async def modify(self, pk: IdField, obj: AddressUpdateSchema) -> Address:
+        data = obj.model_dump_json(by_alias=True)
+        result: dict[str, Any] = (await self.client.patch(f"/account/address/{pk}", data=data)).json()
+        return self._parse_response(result, Address)
 
-        result_data: list[dict[str, Any]] = result.json().get(self.data_key, [])
+    async def create(self, obj: AddressUpdateSchema) -> Address:
+        data = obj.model_dump_json(by_alias=True)
+        result: dict[str, Any] = (await self.client.post("/account/address", data=data)).json()
+        return self._parse_response(result, Address)
 
-        if self.raw:
-            return result_data
-
-        return self._parse_response(result_data)
-
-    async def iter(self, batch_size: int = 100) -> AsyncGenerator[Address | dict[str, Any], None]:
-        self._limit = batch_size
-        data = self._get_data_dict()
-        page = 1
-
-        while True:
-            data["page"] = page
-            result = await self.client.post("/account/list-address", json=data)
-
-            result_dict: dict[str, Any] = result.json()
-            result_data: list[dict[str, Any]] = self._parse_data(result_dict)
-
-            for entry in result_data:
-                if self.raw:
-                    yield entry
-                else:
-                    yield self._parse_response(entry)
-
-            if "next" in result_dict.get("links", {}) and len(result_data) > 0:
-                page += 1
-            else:
-                break
-
-    async def set_default_shipping_address(self, pk: str) -> bool:
+    async def set_default_shipping_address(self, pk: IdField) -> bool:
         result = await self.client.patch(f"/account/address/default-shipping/{pk}")
-        return bool(result.status_code == 204)
+        return bool(result.is_success)
 
-    async def set_default_billing_address(self, pk: str) -> bool:
+    async def set_default_billing_address(self, pk: IdField) -> bool:
         result = await self.client.patch(f"/account/address/default-billing/{pk}")
-        return bool(result.status_code == 204)
+        return bool(result.is_success)
 
-    async def get(self, pk: str) -> Address | dict[str, Any]:
-        raise SWAPIMethodNotAvailable()
 
-    async def bulk_upsert(
-        self, objs: list[Address] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
-    ) -> dict[str, Any]:
-        raise SWAPIMethodNotAvailable()
-
-    async def bulk_delete(self, objs: list[Address] | list[dict[str, Any]], fail_silently: bool = False, 
-                          **request_kwargs: Any) -> dict[str, Any]:
-        raise SWAPIMethodNotAvailable()
+from .country import Country  # noqa: E402
+from .country_state import CountryState  # noqa: E402
+from .salutation import Salutation  # noqa: E402

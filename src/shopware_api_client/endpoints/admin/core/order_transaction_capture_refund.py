@@ -1,38 +1,19 @@
-from typing import Any
-
 from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Amount, IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class OrderTransactionCaptureRefundBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "order_transaction_capture_refund"
-
-    version_id: IdField | None = None
-    capture_id: IdField
-    capture_version_id: IdField | None = None
-    state_id: IdField = Field(..., exclude=True)
-    external_reference: str | None = None
-    reason: str | None = None
-    amount: Amount
-    custom_fields: dict[str, Any] | None = None
-
-
-class OrderTransactionCaptureRefundRelations:
-    state: ForeignRelation["StateMachineState"]
-    capture: ForeignRelation["OrderTransactionCapture"]
-    positions: ManyRelation["OrderTransactionCaptureRefundPosition"]
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.order_transaction_capture_refund import OrderTransactionCaptureRefundBase
 
 
 class OrderTransactionCaptureRefund(
-    OrderTransactionCaptureRefundBase["OrderTransactionCaptureRefundEndpoint"], OrderTransactionCaptureRefundRelations
+    OrderTransactionCaptureRefundBase, AdminModel["OrderTransactionCaptureRefundEndpoint"]
 ):
-    pass
+    state: ForeignRelation["StateMachineState"] = Field(default=...)
+    capture: ForeignRelation["OrderTransactionCapture"] = Field(default=...)
+    positions: ManyRelation["OrderTransactionCaptureRefundPosition"] = Field(default=...)
 
 
-class OrderTransactionCaptureRefundEndpoint(EndpointBase[OrderTransactionCaptureRefund]):
+class OrderTransactionCaptureRefundEndpoint(AdminEndpoint[OrderTransactionCaptureRefund]):
     name = "order_transaction_capture_refund"
     path = "/order-transaction-capture-refund"
     model_class = OrderTransactionCaptureRefund

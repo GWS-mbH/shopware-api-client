@@ -1,29 +1,17 @@
-from pydantic import AwareDatetime
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ForeignRelation, ManyRelation
-
-
-class AclRoleBase(ApiModelBase[EndpointClass]):
-    _identifier = "acl_role"
-
-    name: str
-    description: str | None = None
-    privileges: list[str]
-    deleted_at: AwareDatetime | None = None
+from shopware_api_client.base import AdminEndpoint, AdminModel
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.acl_role import AclRoleBase
 
 
-class AclRoleRelations:
-    users: ManyRelation["User"]
-    app: ForeignRelation["App"]
-    integrations: ManyRelation["Integration"]
+class AclRole(AclRoleBase, AdminModel["AclRoleEndpoint"]):
+    users: ManyRelation["User"] = Field(default=...)
+    app: ForeignRelation["App"] = Field(default=...)
+    integrations: ManyRelation["Integration"] = Field(default=...)
 
 
-class AclRole(AclRoleBase["AclRoleEndpoint"], AclRoleRelations):
-    pass
-
-
-class AclRoleEndpoint(EndpointBase[AclRole]):
+class AclRoleEndpoint(AdminEndpoint[AclRole]):
     name = "acl_role"
     path = "/acl-role"
     model_class = AclRole

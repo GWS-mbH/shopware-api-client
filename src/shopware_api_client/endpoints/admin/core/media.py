@@ -1,56 +1,33 @@
 from typing import Any
 
-from pydantic import AwareDatetime, Field
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class MediaBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "media"
-
-    user_id: IdField | None = None
-    media_folder_id: IdField | None = Field(default=None)
-    mime_type: str | None = Field(default=None)
-    file_extension: str | None = Field(default=None, exclude=True)
-    uploaded_at: AwareDatetime | None = Field(default=None, exclude=True)
-    file_name: str | None = Field(default=None)
-    file_size: int | None = Field(default=None, exclude=True)
-    meta_data: dict[str, Any] | None = Field(default=None, exclude=True)
-    media_type: dict[str, Any] | None = Field(default=None, exclude=True)
-    config: dict[str, Any] | None = Field(default=None, exclude=True)
-    alt: str | None = None
-    title: str | None = None
-    url: str | None = Field(default=None, description="Runtime field, cannot be used as part of the criteria.")
-    path: str | None = Field(default=None)
-    has_file: bool | None = Field(default=None, description="Runtime field, cannot be used as part of the criteria.")
-    private: bool | None = False
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.media import MediaBase
 
 
-class MediaRelations:
-    tags: ManyRelation["Tag"]
-    thumbnails: ManyRelation["MediaThumbnail"]
-    user: ForeignRelation["User"]
-    categories: ManyRelation["Category"]
-    product_manufacturers: ManyRelation["ProductManufacturer"]
-    product_media: ManyRelation["ProductMedia"]
-    product_downloads: ManyRelation["ProductDownload"]
-    order_line_item_downloads: ManyRelation["OrderLineItemDownload"]
-    avatar_users: ManyRelation["Media"]
-    media_folder: ForeignRelation["MediaFolder"]
-    property_group_options: ManyRelation["PropertyGroupOption"]
-    document_base_configs: ManyRelation["DocumentBaseConfig"]
-    shipping_methods: ManyRelation["ShippingMethod"]
-    payment_methods: ManyRelation["PaymentMethod"]
-    product_configurator_settings: ManyRelation["ProductConfiguratorSetting"]
-    order_line_items: ManyRelation["OrderLineItem"]
-    cms_blocks: ManyRelation["CmsBlock"]
-    cms_sections: ManyRelation["CmsSection"]
-    cms_pages: ManyRelation["CmsPage"]
-    documents: ManyRelation["Document"]
+class Media(MediaBase, AdminModel["MediaEndpoint"]):
+    tags: ManyRelation["Tag"] = Field(default=...)
+    thumbnails: ManyRelation["MediaThumbnail"] = Field(default=...)
+    user: ForeignRelation["User"] = Field(default=...)
+    categories: ManyRelation["Category"] = Field(default=...)
+    product_manufacturers: ManyRelation["ProductManufacturer"] = Field(default=...)
+    product_media: ManyRelation["ProductMedia"] = Field(default=...)
+    product_downloads: ManyRelation["ProductDownload"] = Field(default=...)
+    order_line_item_downloads: ManyRelation["OrderLineItemDownload"] = Field(default=...)
+    avatar_users: ManyRelation["Media"] = Field(default=...)
+    media_folder: ForeignRelation["MediaFolder"] = Field(default=...)
+    property_group_options: ManyRelation["PropertyGroupOption"] = Field(default=...)
+    document_base_configs: ManyRelation["DocumentBaseConfig"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
+    payment_methods: ManyRelation["PaymentMethod"] = Field(default=...)
+    product_configurator_settings: ManyRelation["ProductConfiguratorSetting"] = Field(default=...)
+    order_line_items: ManyRelation["OrderLineItem"] = Field(default=...)
+    cms_blocks: ManyRelation["CmsBlock"] = Field(default=...)
+    cms_sections: ManyRelation["CmsSection"] = Field(default=...)
+    cms_pages: ManyRelation["CmsPage"] = Field(default=...)
+    documents: ManyRelation["Document"] = Field(default=...)
 
     """
     Todo:
@@ -58,20 +35,33 @@ class MediaRelations:
     app_shipping_methods[AppShippingMethod]
     """
 
-
-class Media(MediaBase["MediaEndpoint"], MediaRelations):
-    async def upload_file(self, file_extension: str = "jpg", file_name: str | None = None, url: str | None = None, file: bytes | None = None) -> bool:
+    async def upload_file(
+        self,
+        file_extension: str = "jpg",
+        file_name: str | None = None,
+        url: str | None = None,
+        file: bytes | None = None,
+    ) -> bool:
         assert self.id is not None
-        return await self._get_endpoint().upload(self.id, file_extension=file_extension, file_name=file_name, url=url, file=file)
-    
+        return await self._get_endpoint().upload(
+            self.id, file_extension=file_extension, file_name=file_name, url=url, file=file
+        )
 
-class MediaEndpoint(EndpointBase[Media]):
+
+class MediaEndpoint(AdminEndpoint[Media]):
     name = "media"
     path = "/media"
     model_class = Media
 
-    async def upload(self, pk: str, file_extension: str = "jpg", file_name: str | None = None, 
-                     url: str | None = None, file: bytes | None = None, **request_kwargs: Any) -> bool:
+    async def upload(
+        self,
+        pk: str,
+        file_extension: str = "jpg",
+        file_name: str | None = None,
+        url: str | None = None,
+        file: bytes | None = None,
+        **request_kwargs: Any,
+    ) -> bool:
         api_url = f"/_action/media/{pk}/upload?extension={file_extension}"
 
         if file_name is not None:

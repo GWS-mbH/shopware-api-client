@@ -1,40 +1,20 @@
-from typing import Any
+from pydantic import Field
 
-from pydantic import AwareDatetime
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.user import UserBase
 
 
-class UserBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "user"
-
-    locale_id: IdField
-    username: str
-    first_name: str
-    last_name: str
-    password: str | None = None
-    title: str | None = None
-    email: str
-    active: bool | None = None
-    admin: bool | None = None
-    last_updated_password_at: AwareDatetime | None = None
-    time_zone: str
-    custom_fields: dict[str, Any] | None = None
-    avatar_id: IdField | None = None
-
-
-class UserRelations:
-    locale: ForeignRelation["Locale"]
-    avatar_media: ManyRelation["Media"]
-    media: ManyRelation["Media"]
-    state_machine_history_entries: ManyRelation["StateMachineHistory"]
-    created_orders: ManyRelation["Order"]
-    updated_orders: ManyRelation["Order"]
-    created_customers: ManyRelation["Customer"]
-    updated_customers: ManyRelation["Customer"]
-    acl_roles: ManyRelation["AclRole"]
+class User(UserBase, AdminModel["UserEndpoint"]):
+    locale: ForeignRelation["Locale"] = Field(default=...)
+    avatar_media: ManyRelation["Media"] = Field(default=...)
+    media: ManyRelation["Media"] = Field(default=...)
+    state_machine_history_entries: ManyRelation["StateMachineHistory"] = Field(default=...)
+    created_orders: ManyRelation["Order"] = Field(default=...)
+    updated_orders: ManyRelation["Order"] = Field(default=...)
+    created_customers: ManyRelation["Customer"] = Field(default=...)
+    updated_customers: ManyRelation["Customer"] = Field(default=...)
+    acl_roles: ManyRelation["AclRole"] = Field(default=...)
 
     """
     Todo:
@@ -43,11 +23,7 @@ class UserRelations:
     """
 
 
-class User(UserBase["UserEndpoint"], UserRelations):
-    pass
-
-
-class UserEndpoint(EndpointBase[User]):
+class UserEndpoint(AdminEndpoint[User]):
     name = "user"
     path = "/user"
     model_class = User

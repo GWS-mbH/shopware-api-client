@@ -1,29 +1,16 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from pydantic import Field
+
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.product_search_keyword import ProductSearchKeywordBase
 
 
-class ProductSearchKeywordBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_search_keyword"
-
-    version_id: IdField | None = None
-    language_id: IdField
-    product_id: IdField
-    product_version_id: IdField | None = None
-    keyword: str
-    ranking: float
+class ProductSearchKeyword(ProductSearchKeywordBase, AdminModel["ProductSearchKeywordEndpoint"]):
+    product: ForeignRelation["Product"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
 
 
-class ProductSearchKeywordRelations:
-    product: ForeignRelation["Product"]
-    language: ForeignRelation["Language"]
-
-
-class ProductSearchKeyword(ProductSearchKeywordBase["ProductSearchKeywordEndpoint"], ProductSearchKeywordRelations):
-    pass
-
-
-class ProductSearchKeywordEndpoint(EndpointBase[ProductSearchKeyword]):
+class ProductSearchKeywordEndpoint(AdminEndpoint[ProductSearchKeyword]):
     name = "product_search_keyword"
     path = "/product-search-keyword"
     model_class = ProductSearchKeyword

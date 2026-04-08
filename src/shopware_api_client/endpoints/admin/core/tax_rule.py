@@ -1,32 +1,17 @@
-from pydantic import AwareDatetime
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Data, IdField
-from ...relations import ForeignRelation
-
-
-class TaxRuleBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "tax_rule"
-
-    tax_rule_type_id: IdField
-    country_id: IdField
-    tax_rate: float
-    data: Data | None = None
-    tax_id: IdField
-    active_from: AwareDatetime | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.tax_rule import TaxRuleBase
 
 
-class TaxRuleRelations:
-    tax_rule_type: ForeignRelation["TaxRuleType"]
-    country: ForeignRelation["Country"]
-    tax: ForeignRelation["Tax"]
+class TaxRule(TaxRuleBase, AdminModel["TaxRuleEndpoint"]):
+    tax_rule_type: ForeignRelation["TaxRuleType"] = Field(default=...)
+    country: ForeignRelation["Country"] = Field(default=...)
+    tax: ForeignRelation["Tax"] = Field(default=...)
 
 
-class TaxRule(TaxRuleBase["TaxRuleEndpoint"], TaxRuleRelations):
-    pass
-
-
-class TaxRuleEndpoint(EndpointBase[TaxRule]):
+class TaxRuleEndpoint(AdminEndpoint[TaxRule]):
     name = "tax_rule"
     path = "/tax-rule"
     model_class = TaxRule

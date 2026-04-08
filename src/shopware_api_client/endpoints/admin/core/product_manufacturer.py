@@ -1,32 +1,16 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class ProductManufacturerBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "product_manufacturer"
-
-    version_id: IdField | None = None
-    media_id: IdField | None = None
-    link: str | None = None
-    name: str
-    description: str | None = None
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.product_manufacturer import ProductManufacturerBase
 
 
-class ProductManufacturerRelations:
-    media: ForeignRelation["Media"]
-    products: ManyRelation["Product"]
+class ProductManufacturer(ProductManufacturerBase, AdminModel["ProductManufacturerEndpoint"]):
+    media: ForeignRelation["Media"] = Field(default=...)
+    products: ManyRelation["Product"] = Field(default=...)
 
 
-class ProductManufacturer(ProductManufacturerBase["ProductManufacturerEndpoint"], ProductManufacturerRelations):
-    pass
-
-
-class ProductManufacturerEndpoint(EndpointBase[ProductManufacturer]):
+class ProductManufacturerEndpoint(AdminEndpoint[ProductManufacturer]):
     name = "product_manufacturer"
     path = "/product-manufacturer"
     model_class = ProductManufacturer

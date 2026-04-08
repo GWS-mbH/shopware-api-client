@@ -1,30 +1,19 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
+from pydantic import Field
 
-
-class DocumentBaseConfigSalesChannelBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "document_base_config_sales_channel"
-
-    document_base_config_id: IdField
-    sales_channel_id: IdField | None = None
-    document_type_id: IdField | None = None
-
-
-class DocumentBaseConfigSalesChannelRelations:
-    document_type: ForeignRelation["DocumentType"]
-    document_base_config: ForeignRelation["DocumentBaseConfig"]
-    sales_channel: ForeignRelation["SalesChannel"]
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.document_base_config_sales_channel import DocumentBaseConfigSalesChannelBase
 
 
 class DocumentBaseConfigSalesChannel(
-    DocumentBaseConfigSalesChannelBase["DocumentBaseConfigSalesChannelEndpoint"],
-    DocumentBaseConfigSalesChannelRelations,
+    DocumentBaseConfigSalesChannelBase, AdminModel["DocumentBaseConfigSalesChannelEndpoint"]
 ):
-    pass
+    document_type: ForeignRelation["DocumentType"] = Field(default=...)
+    document_base_config: ForeignRelation["DocumentBaseConfig"] = Field(default=...)
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
 
 
-class DocumentBaseConfigSalesChannelEndpoint(EndpointBase[DocumentBaseConfigSalesChannel]):
+class DocumentBaseConfigSalesChannelEndpoint(AdminEndpoint[DocumentBaseConfigSalesChannel]):
     name = "document_base_config_sales_channel"
     path = "/document-base-config-sales-channel"
     model_class = DocumentBaseConfigSalesChannel

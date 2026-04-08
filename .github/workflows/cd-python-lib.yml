@@ -20,9 +20,9 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Display Python version
@@ -35,7 +35,7 @@ jobs:
     - name: Update version
       run: poetry version patch
 
-    - uses: stefanzweifel/git-auto-commit-action@v6
+    - uses: stefanzweifel/git-auto-commit-action@v7
       with:
         commit_message: "Bump version"
 

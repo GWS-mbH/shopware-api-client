@@ -1,28 +1,16 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class SalesChannelDomainBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "sales_channel_domain"
-
-    url: str
-    sales_channel_id: IdField
-    language_id: IdField
-    currency_id: IdField
-    snippet_set_id: IdField
-    hreflang_use_only_locale: bool | None = None
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.sales_channel_domain import SalesChannelDomainBase
 
 
-class SalesChannelDomainRelations:
-    sales_channel: ForeignRelation["SalesChannel"]
-    language: ForeignRelation["Language"]
-    currency: ForeignRelation["Currency"]
-    sales_channel_default_hreflang: ManyRelation["SalesChannel"]
-    product_exports: ManyRelation["ProductExport"]
+class SalesChannelDomain(SalesChannelDomainBase, AdminModel["SalesChannelDomainEndpoint"]):
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
+    language: ForeignRelation["Language"] = Field(default=...)
+    currency: ForeignRelation["Currency"] = Field(default=...)
+    sales_channel_default_hreflang: ManyRelation["SalesChannel"] = Field(default=...)
+    product_exports: ManyRelation["ProductExport"] = Field(default=...)
 
     """
     Not yet implemented Relations:
@@ -30,11 +18,7 @@ class SalesChannelDomainRelations:
     """
 
 
-class SalesChannelDomain(SalesChannelDomainBase["SalesChannelDomainEndpoint"], SalesChannelDomainRelations):
-    pass
-
-
-class SalesChannelDomainEndpoint(EndpointBase[SalesChannelDomain]):
+class SalesChannelDomainEndpoint(AdminEndpoint[SalesChannelDomain]):
     name = "sales_channel_domain"
     path = "/sales-channel-domain"
     model_class = SalesChannelDomain

@@ -1,40 +1,19 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class DocumentBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "document"
-
-    document_type_id: IdField
-    file_type: str
-    referenced_document_id: IdField | None = None
-    order_id: IdField
-    document_media_file_id: IdField | None = None
-    order_version_id: IdField | None = None
-    config: dict[str, Any]
-    sent: bool | None = None
-    static: bool | None = None
-    deep_link_code: str
-    document_number: str | None = None
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.document import DocumentBase
 
 
-class DocumentRelations:
-    document_type: ForeignRelation["DocumentType"]
-    order: ForeignRelation["Order"]
-    referenced_document: ForeignRelation["Document"]
-    dependent_documents: ManyRelation["Document"]
-    document_media_file: ForeignRelation["Media"]
+class Document(DocumentBase, AdminModel["DocumentEndpoint"]):
+    document_type: ForeignRelation["DocumentType"] = Field(default=...)
+    order: ForeignRelation["Order"] = Field(default=...)
+    referenced_document: ForeignRelation["Document"] = Field(default=...)
+    dependent_documents: ManyRelation["Document"] = Field(default=...)
+    document_media_file: ForeignRelation["Media"] = Field(default=...)
 
 
-class Document(DocumentBase["DocumentEndpoint"], DocumentRelations):
-    pass
-
-
-class DocumentEndpoint(EndpointBase[Document]):
+class DocumentEndpoint(AdminEndpoint[Document]):
     name = "document"
     path = "/document"
     model_class = Document

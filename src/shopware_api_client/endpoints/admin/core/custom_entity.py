@@ -1,34 +1,12 @@
-
-from pydantic import AwareDatetime, Field
-
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.models.custom_entity import CustomEntityBase
 
 
-class CustomEntityBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "custom_entity"
-
-    name: str
-    fields: list
-    flags: list | None = None
-    app_id: IdField | None = None
-    plugin_id: IdField | None = None
-    cms_aware: bool | None = None
-    store_api_aware: bool | None = None
-    custom_fields_aware: bool | None = None
-    label_property: str | None = None
-    deleted_at: AwareDatetime | None = Field(default=None)
-
-
-class CustomEntityRelations:
+class CustomEntity(CustomEntityBase, AdminModel["CustomEntityEndpoint"]):
     pass
 
 
-class CustomEntity(CustomEntityBase["CustomEntityEndpoint"], CustomEntityRelations):
-    pass
-
-
-class CustomEntityEndpoint(EndpointBase[CustomEntity]):
+class CustomEntityEndpoint(AdminEndpoint[CustomEntity]):
     name = "custom_entity"
     path = "/custom-entity"
     model_class = CustomEntity

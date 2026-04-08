@@ -1,33 +1,20 @@
-from typing import Any
-
 from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.rule import RuleBase
 
 
-class RuleBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "rule"
-
-    name: str
-    priority: int
-    description: str | None = None
-    invalid: bool | None = Field(default=None, exclude=True)
-    areas: list[str] | None = Field(default=None, exclude=True)
-    custom_fields: dict[str, Any] | None = None
-    module_types: dict[str, Any] | None = None
-
-
-class RuleRelations:
-    product_prices: ManyRelation["ProductPrice"]
-    shipping_methods: ManyRelation["ShippingMethod"]
-    payment_methods: ManyRelation["PaymentMethod"]
-    persona_promotions: ManyRelation["Promotion"]
-    tags: ManyRelation["Tag"]
-    order_promotions: ManyRelation["Promotion"]
-    cart_promotions: ManyRelation["Promotion"]
-    promotion_discounts: ManyRelation["PromotionDiscount"]
-    conditions: ManyRelation["RuleCondition"]
+class Rule(RuleBase, AdminModel["RuleEndpoint"]):
+    product_prices: ManyRelation["ProductPrice"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
+    payment_methods: ManyRelation["PaymentMethod"] = Field(default=...)
+    persona_promotions: ManyRelation["Promotion"] = Field(default=...)
+    tags: ManyRelation["Tag"] = Field(default=...)
+    order_promotions: ManyRelation["Promotion"] = Field(default=...)
+    cart_promotions: ManyRelation["Promotion"] = Field(default=...)
+    promotion_discounts: ManyRelation["PromotionDiscount"] = Field(default=...)
+    conditions: ManyRelation["RuleCondition"] = Field(default=...)
 
     """
     Todo:
@@ -37,11 +24,7 @@ class RuleRelations:
     """
 
 
-class Rule(RuleBase["RuleEndpoint"], RuleRelations):
-    pass
-
-
-class RuleEndpoint(EndpointBase[Rule]):
+class RuleEndpoint(AdminEndpoint[Rule]):
     name = "rule"
     path = "/rule"
     model_class = Rule

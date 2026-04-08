@@ -1,25 +1,12 @@
-from typing import Any
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.models.media_default_folder import MediaDefaultFolderBase
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
 
-
-class MediaDefaultFolderBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "media_default_folder"
-
-    entity: str
-    custom_fields: dict[str, Any] | None = None
+class MediaDefaultFolder(MediaDefaultFolderBase, AdminModel["MediaDefaultFolderEndpoint"]):
     folder: "MediaFolder | None" = None
 
 
-class MediaDefaultFolderRelations:
-    pass
-
-
-class MediaDefaultFolder(MediaDefaultFolderBase["MediaDefaultFolderEndpoint"], MediaDefaultFolderRelations):
-    pass
-
-
-class MediaDefaultFolderEndpoint(EndpointBase[MediaDefaultFolder]):
+class MediaDefaultFolderEndpoint(AdminEndpoint[MediaDefaultFolder]):
     name = "media_default_folder"
     path = "/media-default-folder"
     model_class = MediaDefaultFolder

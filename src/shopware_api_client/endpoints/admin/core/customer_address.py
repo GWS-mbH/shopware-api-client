@@ -1,43 +1,18 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
-
-
-class CustomerAddressBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "customer_address"
-
-    customer_id: IdField
-    country_id: IdField
-    country_state_id: IdField | None = None
-    salutation_id: IdField | None = None
-    first_name: str
-    last_name: str
-    zipcode: str | None = None
-    city: str
-    company: str | None = None
-    street: str
-    department: str | None = None
-    title: str | None = None
-    phone_number: str | None = None
-    additional_address_line1: str | None = None
-    additional_address_line2: str | None = None
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.customer_address import CustomerAddressBase
 
 
-class CustomerAddressRelations:
-    customer: ForeignRelation["Customer"]
-    country: ForeignRelation["Country"]
-    country_state: ForeignRelation["CountryState"]
-    salutation: ForeignRelation["Salutation"]
+class CustomerAddress(CustomerAddressBase, AdminModel["CustomerAddressEndpoint"]):
+    country: ForeignRelation["Country"] = Field(default=...)
+    country_state: ForeignRelation["CountryState"] = Field(default=...)
+    salutation: ForeignRelation["Salutation"] = Field(default=...)
+    customer: ForeignRelation["Customer"] = Field(default=...)
 
 
-class CustomerAddress(CustomerAddressBase["CustomerAddressEndpoint"], CustomerAddressRelations):
-    pass
-
-
-class CustomerAddressEndpoint(EndpointBase[CustomerAddress]):
+class CustomerAddressEndpoint(AdminEndpoint[CustomerAddress]):
     name = "customer_address"
     path = "/customer-address"
     model_class = CustomerAddress

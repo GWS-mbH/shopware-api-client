@@ -1,33 +1,17 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class CountryStateBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "country_state"
-
-    country_id: IdField
-    short_code: str
-    name: str
-    position: int | None = None
-    active: bool | None = None
-    custom_fields: dict[str, Any] | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.country_state import CountryStateBase
 
 
-class CountryStateRelations:
-    country: ForeignRelation["Country"]
-    customer_addresses: ManyRelation["CustomerAddress"]
-    order_addresses: ManyRelation["OrderAddress"]
+class CountryState(CountryStateBase, AdminModel["CountryStateEndpoint"]):
+    country: ForeignRelation["Country"] = Field(default=...)
+    customer_addresses: ManyRelation["CustomerAddress"] = Field(default=...)
+    order_addresses: ManyRelation["OrderAddress"] = Field(default=...)
 
 
-class CountryState(CountryStateBase["CountryStateEndpoint"], CountryStateRelations):
-    pass
-
-
-class CountryStateEndpoint(EndpointBase[CountryState]):
+class CountryStateEndpoint(AdminEndpoint[CountryState]):
     name = "country_state"
     path = "/country_state"
     model_class = CountryState

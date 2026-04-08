@@ -1,22 +1,19 @@
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...relations import ManyRelation
+from pydantic import Field
+
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.tag import TagBase
 
 
-class TagBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "tag"
-
-    name: str
-
-
-class TagRelations:
-    products: ManyRelation["Product"]
-    media: ManyRelation["Media"]
-    categories: ManyRelation["Category"]
-    customers: ManyRelation["Customer"]
-    orders: ManyRelation["Order"]
-    shipping_methods: ManyRelation["ShippingMethod"]
-    landing_pages: ManyRelation["LandingPage"]
-    rules: ManyRelation["Rule"]
+class Tag(TagBase, AdminModel["TagEndpoint"]):
+    products: ManyRelation["Product"] = Field(default=...)
+    media: ManyRelation["Media"] = Field(default=...)
+    categories: ManyRelation["Category"] = Field(default=...)
+    customers: ManyRelation["Customer"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    shipping_methods: ManyRelation["ShippingMethod"] = Field(default=...)
+    landing_pages: ManyRelation["LandingPage"] = Field(default=...)
+    rules: ManyRelation["Rule"] = Field(default=...)
 
     """
     Todo:
@@ -24,11 +21,7 @@ class TagRelations:
     """
 
 
-class Tag(TagBase["TagEndpoint"], TagRelations):
-    pass
-
-
-class TagEndpoint(EndpointBase[Tag]):
+class TagEndpoint(AdminEndpoint[Tag]):
     name = "tag"
     path = "/tag"
     model_class = Tag

@@ -1,31 +1,17 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ManyRelation
-
-
-class StateMachineBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "state_machine"
-
-    technical_name: str
-    name: str
-    custom_fields: dict[str, Any] | None = None
-    initial_state_id: IdField | None = None
-    translated: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.state_machine import StateMachineBase
 
 
-class StateMachineRelations:
-    states: ManyRelation["StateMachineState"]
-    transitions: ManyRelation["StateMachineTransition"]
-    history_entries: ManyRelation["StateMachineHistory"]
+class StateMachine(StateMachineBase, AdminModel["StateMachineEndpoint"]):
+    states: ManyRelation["StateMachineState"] = Field(default=...)
+    transitions: ManyRelation["StateMachineTransition"] = Field(default=...)
+    history_entries: ManyRelation["StateMachineHistory"] = Field(default=...)
 
 
-class StateMachine(StateMachineBase["StateMachineEndpoint"], StateMachineRelations):
-    pass
-
-
-class StateMachineEndpoint(EndpointBase[StateMachine]):
+class StateMachineEndpoint(AdminEndpoint[StateMachine]):
     name = "state_machine"
     path = "/state-machine"
     model_class = StateMachine

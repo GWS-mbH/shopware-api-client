@@ -1,32 +1,22 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class LanguageBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "language"
-
-    parent_id: IdField | None = None
-    locale_id: IdField
-    translation_code_id: IdField | None = None
-    name: str
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.language import LanguageBase
 
 
-class LanguageRelations:
-    parent: ForeignRelation["Language"]
-    locale: ForeignRelation["Locale"]
-    translation_code: ForeignRelation["Locale"]
-    children: ManyRelation["Language"]
-    sales_channels: ManyRelation["SalesChannel"]
-    sales_channel_default_assignments: ManyRelation["SalesChannel"]
-    sales_channel_domains: ManyRelation["SalesChannelDomain"]
-    customers: ManyRelation["Customer"]
-    orders: ManyRelation["Order"]
-    product_search_keywords: ManyRelation["ProductSearchKeyword"]
-    product_reviews: ManyRelation["ProductReview"]
+class Language(LanguageBase, AdminModel["LanguageEndpoint"]):
+    parent: ForeignRelation["Language"] = Field(default=...)
+    locale: ForeignRelation["Locale"] = Field(default=...)
+    translation_code: ForeignRelation["Locale"] = Field(default=...)
+    children: ManyRelation["Language"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_default_assignments: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_domains: ManyRelation["SalesChannelDomain"] = Field(default=...)
+    customers: ManyRelation["Customer"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    product_search_keywords: ManyRelation["ProductSearchKeyword"] = Field(default=...)
+    product_reviews: ManyRelation["ProductReview"] = Field(default=...)
 
     """
     Todo:
@@ -35,11 +25,7 @@ class LanguageRelations:
     """
 
 
-class Language(LanguageBase["LanguageEndpoint"], LanguageRelations):
-    pass
-
-
-class LanguageEndpoint(EndpointBase[Language]):
+class LanguageEndpoint(AdminEndpoint[Language]):
     name = "language"
     path = "/language"
     model_class = Language

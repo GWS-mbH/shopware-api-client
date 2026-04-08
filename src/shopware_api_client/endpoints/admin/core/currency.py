@@ -1,47 +1,21 @@
-from typing import Any
-
 from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import Rounding
-from ...relations import ManyRelation
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ManyRelation
+from shopware_api_client.models.currency import CurrencyBase
 
 
-class CurrencyBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "currency"
-
-    factor: float
-    symbol: str
-    iso_code: str
-    short_name: str
-    name: str
-    position: int | None = None
-    is_system_default: bool | None = Field(
-        None,
-        description="Runtime field, cannot be used as part of the criteria.",
-    )
-    tax_free_from: float | None = None
-    custom_fields: dict[str, Any] | None = None
-    item_rounding: Rounding
-    total_rounding: Rounding
-    translated: dict[str, Any] | None = None
+class Currency(CurrencyBase, AdminModel["CurrencyEndpoint"]):
+    sales_channel_default_assignments: ManyRelation["SalesChannel"] = Field(default=...)
+    orders: ManyRelation["Order"] = Field(default=...)
+    sales_channels: ManyRelation["SalesChannel"] = Field(default=...)
+    sales_channel_domains: ManyRelation["SalesChannelDomain"] = Field(default=...)
+    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"] = Field(default=...)
+    product_exports: ManyRelation["ProductExport"] = Field(default=...)
+    country_roundings: ManyRelation["CurrencyCountryRounding"] = Field(default=...)
 
 
-class CurrencyRelations:
-    sales_channel_default_assignments: ManyRelation["SalesChannel"]
-    orders: ManyRelation["Order"]
-    sales_channels: ManyRelation["SalesChannel"]
-    sales_channel_domains: ManyRelation["SalesChannelDomain"]
-    promotion_discount_prices: ManyRelation["PromotionDiscountPrices"]
-    product_exports: ManyRelation["ProductExport"]
-    country_roundings: ManyRelation["CurrencyCountryRounding"]
-
-
-class Currency(CurrencyBase["CurrencyEndpoint"], CurrencyRelations):
-    pass
-
-
-class CurrencyEndpoint(EndpointBase[Currency]):
+class CurrencyEndpoint(AdminEndpoint[Currency]):
     name = "currency"
     path = "/currency"
     model_class = Currency

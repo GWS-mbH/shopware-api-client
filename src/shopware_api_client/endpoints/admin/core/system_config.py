@@ -1,27 +1,15 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation
-
-
-class SystemConfigBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "system_config"
-
-    configuration_key: str
-    configuration_value: Any
-    sales_channel_id: IdField | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation
+from shopware_api_client.models.system_config import SystemConfigBase
 
 
-class SystemConfigRelations:
-    sales_channel: ForeignRelation["SalesChannel"]
+class SystemConfig(SystemConfigBase, AdminModel["SystemConfigEndpoint"]):
+    sales_channel: ForeignRelation["SalesChannel"] = Field(default=...)
 
 
-class SystemConfig(SystemConfigBase["SystemConfigEndpoint"], SystemConfigRelations):
-    pass
-
-
-class SystemConfigEndpoint(EndpointBase[SystemConfig]):
+class SystemConfigEndpoint(AdminEndpoint[SystemConfig]):
     name = "system_config"
     path = "/system-config"
     model_class = SystemConfig

@@ -1,34 +1,18 @@
-from typing import Any
+from pydantic import Field
 
-from ....base import ApiModelBase, EndpointBase, EndpointClass
-from ...base_fields import IdField
-from ...relations import ForeignRelation, ManyRelation
-
-
-class RuleConditionBase(ApiModelBase[EndpointClass]):
-    _identifier: str = "rule_condition"
-
-    type: str
-    rule_id: IdField
-    script_id: IdField | None = None
-    parent_id: IdField | None = None
-    value: Any | None = None
-    position: int | None = None
-    custom_fields: dict[str, Any] | None = None
+from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
+from shopware_api_client.models.rule_condition import RuleConditionBase
 
 
-class RuleConditionRelations:
-    rule: ForeignRelation["Rule"]
-    app_script_condition: ForeignRelation["AppScriptCondition"]
-    parent: ForeignRelation["RuleCondition"]
-    children: ManyRelation["RuleCondition"]
+class RuleCondition(RuleConditionBase, AdminModel["RuleConditionEndpoint"]):
+    rule: ForeignRelation["Rule"] = Field(default=...)
+    app_script_condition: ForeignRelation["AppScriptCondition"] = Field(default=...)
+    parent: ForeignRelation["RuleCondition"] = Field(default=...)
+    children: ManyRelation["RuleCondition"] = Field(default=...)
 
 
-class RuleCondition(RuleConditionBase["RuleConditionEndpoint"], RuleConditionRelations):
-    pass
-
-
-class RuleConditionEndpoint(EndpointBase[RuleCondition]):
+class RuleConditionEndpoint(AdminEndpoint[RuleCondition]):
     name = "rule_condition"
     path = "/rule-condition"
     model_class = RuleCondition
