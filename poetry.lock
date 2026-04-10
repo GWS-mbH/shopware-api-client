@@ -177,14 +177,14 @@ toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 
 [[package]]
 name = "fakeredis"
-version = "2.34.1"
+version = "2.35.0"
 description = "Python implementation of redis API, can be used for testing purposes."
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "fakeredis-2.34.1-py3-none-any.whl", hash = "sha256:0107ec99d48913e7eec2a5e3e2403d1bd5f8aa6489d1a634571b975289c48f12"},
-    {file = "fakeredis-2.34.1.tar.gz", hash = "sha256:4ff55606982972eecce3ab410e03d746c11fe5deda6381d913641fbd8865ea9b"},
+    {file = "fakeredis-2.35.0-py3-none-any.whl", hash = "sha256:565d337a5492e8c19be33a89e7acc078374741c65cb6d4413bd8818346b8c252"},
+    {file = "fakeredis-2.35.0.tar.gz", hash = "sha256:5d1a0192c2c559e55b2d05328d86282ddd2079c1712a91e6d1b3010e0dd45ca6"},
 ]
 
 [package.dependencies]
@@ -199,6 +199,7 @@ json = ["jsonpath-ng (>=1.6)"]
 lua = ["lupa (>=2.1)"]
 probabilistic = ["pyprobables (>=0.6)"]
 valkey = ["valkey (>=6) ; python_version >= \"3.8\""]
+vectorset = ["jsonpath-ng (>=1.6) ; python_version >= \"3.11\"", "numpy (>=2.4.0) ; python_version >= \"3.11\""]
 
 [[package]]
 name = "h11"
@@ -1210,4 +1211,4 @@ redis = ["redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "a26cccb1ccbbe144cc98e18588dbdd5f71a1264f44c77f982178aa5d6275e3c9"
+content-hash = "8abeac53c2cc911fb2313f1e022b2413cbf079253803c3c737f3279f778928f9"
