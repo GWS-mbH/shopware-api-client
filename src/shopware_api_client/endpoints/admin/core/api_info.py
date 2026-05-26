@@ -81,26 +81,18 @@ class ApiInfoEndpoint(AdminEndpoint[ApiInfo]):
     ) -> dict[str, Any] | None: ...
 
     @overload
-    async def update(
-        self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx | None
-    ) -> ApiInfo | None: ...
+    async def update(self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx | None) -> ApiInfo | None: ...
 
     @overload
-    async def update(
-        self, pk: str, obj: ApiInfo | dict[str, Any]
-    ) -> ApiInfo | None: ...
+    async def update(self, pk: str, obj: ApiInfo | dict[str, Any]) -> ApiInfo | None: ...
 
     async def update(
         self, pk: str, obj: ApiInfo | dict[str, Any], update_fields: IncEx | None = None, raw: bool = False
     ) -> ApiInfo | dict[str, Any] | None:
         raise SWAPIMethodNotAvailable()
 
-    async def bulk_upsert(
-        self, objs: list[ApiInfo] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
-    ) -> dict[str, Any]:
+    async def bulk_upsert(self, objs: list[ApiInfo] | list[dict[str, Any]], **request_kwargs: Any) -> dict[str, Any]:
         raise SWAPIMethodNotAvailable()
 
-    async def bulk_delete(
-        self, objs: list[ApiInfo] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
-    ) -> dict[str, Any]:
+    async def bulk_delete(self, objs: list[ApiInfo] | list[dict[str, Any]], **request_kwargs: Any) -> dict[str, Any]:
         raise SWAPIMethodNotAvailable()

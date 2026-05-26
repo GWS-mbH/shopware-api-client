@@ -48,6 +48,8 @@ from .exceptions import (
     SWAPIServiceUnavailable,
     SWFilterException,
     SWNoClientProvided,
+    SWAPISqlDuplicateEntryError,
+    SWAPISqlForeignKeyError,
 )
 from .fieldsets import FieldSetBase
 from .logging import logger
@@ -98,8 +100,11 @@ class ClientBase:
 
         if raw is not None:
             import warnings
-            warnings.warn("parameter 'raw' of ClientBase has been deprecated and could get removed in future versions. "
-                          "Use the raw parameter of .get(), .first(), .all(), ... directly.")
+
+            warnings.warn(
+                "parameter 'raw' of ClientBase has been deprecated and could get removed in future versions. "
+                "Use the raw parameter of .get(), .first(), .all(), ... directly."
+            )
             self.raw = raw
         else:
             self.raw = False
@@ -219,9 +224,10 @@ class ClientBase:
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
-        no_retry_errors = tuple(kwargs.pop("no_retry_errors", []))
+        no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPISqlDuplicateEntryError, SWAPISqlForeignKeyError]))
 
         kwargs.setdefault("follow_redirects", True)
+        orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
 
         key_base = RETRY_CACHE_KEY.format(
             url=url.removeprefix("https://").removeprefix("http://"),
@@ -282,7 +288,7 @@ class ClientBase:
             if response.status_code == 429:
                 retry_wait_time = self.parse_retry_after(response.headers)
                 if retry_wait_time > retry_after_threshold:
-                    error = SWAPIError.from_response(response)
+                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)
                     raise SWAPIRetryException(
                         f"Retry threshold exceeded for endpoint {url!r}. Threshold: {retry_after_threshold}s, Retry-After: {retry_wait_time}s"
                     ) from error
@@ -301,9 +307,9 @@ class ClientBase:
                     if not isinstance(errors, (list, tuple)):
                         raise ValueError("`errors` attribute in json not a list/tuple!")
 
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_errors(errors, response)  # type: ignore
+                    error = SWAPIError.from_errors(errors, response, orig_objs)
                 except ValueError:
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)  # type: ignore
+                    error = SWAPIError.from_response(response)
 
                 if isinstance(error, SWAPIErrorList) and len(error.errors) == 1:
                     error = error.errors[0]
@@ -370,7 +376,6 @@ class ClientBase:
         self,
         name: str,
         objs: list[ModelClass] | list[dict[str, Any]],
-        fail_silently: bool = False,
         **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_upsert is only supported in the admin API")
@@ -379,7 +384,6 @@ class ClientBase:
         self,
         name: str,
         objs: list[ModelClass] | list[dict[str, Any]],
-        fail_silently: bool = False,
         **request_kwargs: Any,
     ) -> dict[str, Any]:
         raise SWAPIException("bulk_delete is only supported in the admin API")
@@ -871,7 +875,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         else:
             data = json.dumps(obj)
 
-        result = await self.client.patch(f"{self.path}/{pk}", data=data)
+        result = await self.client.patch(f"{self.path}/{pk}", data=data, orig_objs=[obj])
         # 204 - "no data" handling
         if result.status_code == 204:
             return None
@@ -924,7 +928,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         else:
             data = json.dumps(obj)
 
-        result = await self.client.post(f"{self.path}", data=data)
+        result = await self.client.post(f"{self.path}", data=data, orig_objs=[obj])
         # 204 - "no data" handling
         if result.status_code == 204:
             return None
@@ -973,14 +977,14 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return self._parse_response(result_data)
 
     async def bulk_upsert(
-        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self, objs: list[AdminModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
-        return await self.client.bulk_upsert(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
+        return await self.client.bulk_upsert(name=self.name, objs=objs, **request_kwargs)
 
     async def bulk_delete(
-        self, objs: list[AdminModelClass] | list[dict[str, Any]], fail_silently: bool = False, **request_kwargs: Any
+        self, objs: list[AdminModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
-        return await self.client.bulk_delete(name=self.name, objs=objs, fail_silently=fail_silently, **request_kwargs)
+        return await self.client.bulk_delete(name=self.name, objs=objs, **request_kwargs)
 
     @overload
     def iter(self, batch_size: int, raw: Literal[False]) -> AsyncGenerator[AdminModelClass, None]: ...

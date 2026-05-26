@@ -1,5 +1,4 @@
-import json
-from typing import Any, Literal
+from typing import Any, cast
 
 import httpx
 from httpx_auth import OAuth2ClientCredentials, OAuth2ResourceOwnerPasswordCredentials
@@ -8,7 +7,7 @@ from .base import ApiModelBase, ClientBase, ModelClass
 from .config import AdminConfig, StoreConfig
 from .endpoints.admin import AdminEndpoints
 from .endpoints.store import StoreEndpoints
-from .exceptions import SWAPIConfigException, SWAPIError, SWAPIErrorList
+from .exceptions import SWAPIConfigException
 
 
 class AdminClient(ClientBase, AdminEndpoints):
@@ -54,60 +53,10 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         return self._client
 
-    def _merge_results(self, dict1: dict[str, Any], dict2: dict[str, Any]) -> dict[str, Any]:
-        for key in dict2:
-            if key in dict1:
-                if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
-                    self._merge_results(dict1[key], dict2[key])
-                elif isinstance(dict1[key], list) and isinstance(dict2[key], list):
-                    dict1[key].extend(dict2[key])
-            else:
-                dict1[key] = dict2[key]
-        return dict1
-
-    async def _retry_bulk_parts(
-        self,
-        action: Literal["upsert", "delete"],
-        name: str,
-        objs: list[ModelClass] | list[dict[str, Any]],
-        exception: SWAPIError | SWAPIErrorList,
-        **request_kwargs: Any,
-    ) -> dict[str, Any]:
-        result_dict: dict[str, Any] = {}
-
-        if isinstance(exception, SWAPIErrorList):
-            errors = exception.errors
-        else:
-            errors = [exception]
-
-        if len(objs) == len(errors):
-            error_list = []
-
-            for idx, obj in enumerate(objs, start=0):
-                if isinstance(obj, ApiModelBase):
-                    obj = json.loads(obj.model_dump_json())
-
-                error_list.append({"code": errors[idx].code, "detail": errors[idx].detail, "object": obj})
-            return {"errors": error_list}
-
-        split = int(len(objs) / 2)
-
-        for part in [objs[:split], objs[split:]]:
-            if action == "upsert":
-                result = await self.bulk_upsert(name=name, objs=part, fail_silently=True, **request_kwargs)
-            else:
-                result = await self.bulk_delete(name=name, objs=part, fail_silently=True, **request_kwargs)
-
-            if result is not None:
-                self._merge_results(result_dict, result)
-
-        return result_dict
-
     async def bulk_upsert(
         self,
         name: str,
         objs: list[ModelClass] | list[dict[str, Any]],
-        fail_silently: bool = False,
         **request_kwargs: Any,
     ) -> dict[str, Any]:
         obj_list: list[dict] = []
@@ -121,24 +70,14 @@ class AdminClient(ClientBase, AdminEndpoints):
         data = {f"write-{name}": {"entity": name, "action": "upsert", "payload": obj_list}}
 
         request_kwargs.setdefault("timeout", 600)
+        response = await self.post("/_action/sync", json=data, orig_objs=objs, **request_kwargs)
 
-        try:
-            response = await self.post("/_action/sync", json=data, **request_kwargs)
-        except (SWAPIErrorList, SWAPIError) as e:
-            if not fail_silently:
-                raise
-
-            result = await self._retry_bulk_parts(action="upsert", name=name, objs=objs, exception=e, **request_kwargs)
-        else:
-            result = response.json()
-
-        return result
+        return cast(dict[str, Any], response.json())
 
     async def bulk_delete(
         self,
         name: str,
         objs: list[ModelClass] | list[dict[str, Any]],
-        fail_silently: bool = False,
         **request_kwargs: Any,
     ) -> dict[str, Any]:
         obj_list: list[dict] = []
@@ -155,20 +94,9 @@ class AdminClient(ClientBase, AdminEndpoints):
         # remove indexing-behavior queing behavior because it's not supported in bulk delete.
         request_kwargs.setdefault("headers", {}).pop("indexing-behavior", None)
 
-        try:
-            response = await self.post("/_action/sync", json=data, **request_kwargs)
-        except (SWAPIErrorList, SWAPIError) as e:
-            if not fail_silently:
-                raise
+        response = await self.post("/_action/sync", json=data, orig_objs=objs, **request_kwargs)
 
-            result = await self._retry_bulk_parts(action="delete", name=name, objs=objs, exception=e, **request_kwargs)
-        else:
-            if hasattr(response, "json_cached"):
-                result = response.json_cached
-            else:
-                result = response.json()
-
-        return result
+        return cast(dict, response.json_cached if hasattr(response, "json_cached") else response.json())
 
 
 class StoreClient(ClientBase, StoreEndpoints):
