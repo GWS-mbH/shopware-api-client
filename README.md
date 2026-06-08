@@ -215,8 +215,8 @@ class CustomerGroupEndpoint(AdminEndpoint[CustomerGroup]):
 
 - `all()` return all objects (GET /customer-group or POST /search/customer-group if filter or sort is set)
 - `get(pk: str = id)` returns the object with the passed id (GET /customer-group/id)
-- `update(pk: str = id, obj: ModelClass | dict[str: Any]` updates an object (PATCH /customer-group/id)
-- `create(obj: ModelClass | dict[str: Any]` creates a new object (POST /customer-group)
+- `update(pk: str = id, obj: ModelClass | dict[str: Any])` updates an object (PATCH /customer-group/id)
+- `create(obj: ModelClass | dict[str: Any])` creates a new object (POST /customer-group)
 - `delete(pk: str = id)` deletes an object (DELETE /customer-group/id)
 - `filter(name="Cats")` adds a filter to the query. Needs to be called with .all(), .iter() or .first())) More Info: [Filter](#filter)
 - `limit(count: int | None)` sets the limit parameter, to limit the amount of results. Needs to be called with .all() or .first()
