@@ -1,47 +1,45 @@
 {
-	"name": "Python",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "services",
-	"workspaceFolder": "/workspaces",
+	"name": "Shopware API Client (Python library)",
+	"service": "library",
 	"remoteUser": "vscode",
-	"files.eol": "\n",
-	"postCreateCommand": "bash .devcontainer/post-create.sh",
-	"postStartCommand": "bash .devcontainer/post-start.sh",
+	"workspaceFolder": "/workspaces",
+	"dockerComposeFile": "docker-compose.yml",
+	"mounts": [
+		"type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly"
+	],
+	"initializeCommand": "bash .devcontainer/scripts/initialize.sh",
+	"postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
+	"postStartCommand": "bash .devcontainer/scripts/post-start.sh",
+	"init": true,
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": "true",
+			"username": "vscode",
+			"userUid": "1000",
+			"userGid": "1000",
+			"upgradePackages": "true"
+		}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
-				"ms-python.mypy-type-checker",
-				"tamasfe.even-better-toml",
-				"charliermarsh.ruff",
-				"ryanluker.vscode-coverage-gutters",
-				"GitHub.copilot",
-				"GitHub.copilot-chat",
+				"ms-python.debugpy",
+				"ms-toolsai.jupyter",
+				"ms-toolsai.datawrangler",
 				"ms-vsliveshare.vsliveshare",
+				"ms-vscode.vscode-speech",
+				"GitHub.copilot-chat",
 				"GitHub.vscode-pull-request-github",
-				"github.vscode-github-actions"
-			],
-			"settings": {
-				"[python]": {
-					"editor.defaultFormatter": "charliermarsh.ruff",
-					"editor.codeActionsOnSave": {
-						"source.fixAll": true,
-						"source.organizeImports": true
-					},
-					"files.eol": "\n"
-				},
-				"mypy-type-checker.importStrategy": "fromEnvironment",
-				"mypy-type-checker.args": [
-					"--config-file=${workspaceFolder}/src/pyproject.toml"
-				],
-				"python.analysis.typeCheckingMode": "basic",
-				"coverage-gutters.coverageBaseDir": "/workspaces/src",
-				"coverage-gutters.coverageFileNames": [
-					"coverage.xml"
-				]
-			}
+				"github.vscode-github-actions",
+				"GitHub.github-vscode-theme",
+				"charliermarsh.ruff",
+				"astral-sh.ty",
+				"tamasfe.even-better-toml",
+				"redhat.vscode-yaml",
+				"esbenp.prettier-vscode",
+				"eamodio.gitlens"
+			]
 		}
-	},
-	"forwardPorts": [],
-	"initializeCommand": "bash .devcontainer/initialize.sh"
+	}
 }
