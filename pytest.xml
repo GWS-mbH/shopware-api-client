@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="2" time="1.011" timestamp="2026-06-16T15:28:10.171146+00:00" hostname="8a44890ce369"><testcase classname="" name="tests.test_cache" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/tests/test_cache.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_cache.py:5: in &lt;module&gt;
+    import fakeredis
+E   ModuleNotFoundError: No module named 'fakeredis'</error></testcase><testcase classname="" name="tests.test_client" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/tests/test_client.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_client.py:10: in &lt;module&gt;
+    from pytest_mock import MockerFixture
+E   ModuleNotFoundError: No module named 'pytest_mock'</error></testcase></testsuite></testsuites>
