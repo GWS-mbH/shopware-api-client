@@ -1,4 +1,4 @@
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ...base import AdminModel
 
@@ -393,9 +393,9 @@ class AdminEndpoints:
             )
 
             ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (AdminEndpoint[AdminModel],))
-            ce_endpoint.name = custom_entity.name  # type: ignore
-            ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"  # type: ignore
-            ce_endpoint.model_class = ce_model  # type: ignore
+            ce_endpoint.name = custom_entity.name
+            ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"
+            ce_endpoint.model_class = ce_model
 
             setattr(self, custom_entity.name, ce_endpoint(self))
 
