@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from httpx2 import AsyncClient, Timeout
+from httpx2 import AsyncClient, Headers, Timeout
 
 from shopware_api_client.auth import ShopwareAdminAPIAuth, ShopwareAdminPasswordAPIAuth
 
@@ -86,7 +86,7 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         response = await self.post("/_action/sync", json=data, orig_objs=objs, **request_kwargs)
 
-        return cast(dict, response.json_cached if hasattr(response, "json_cached") else response.json())
+        return cast(dict, getattr(response, "json_cached", response.json()))
 
 
 class StoreClient(ClientBase, StoreEndpoints):
@@ -94,12 +94,12 @@ class StoreClient(ClientBase, StoreEndpoints):
         super().__init__(config, raw=raw)
         self.config = config
         self.api_url = f"{config.url}/store-api"
-        self._client: httpx.AsyncClient | None = None
+        self._client: AsyncClient | None = None
         self.init_endpoints(self)
 
-    def _get_http_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> AsyncClient:
         if self._client is None:
-            self._client = httpx.AsyncClient(
+            self._client = AsyncClient(
                 event_hooks={"request": [self.log_request], "response": [self.log_response]},
             )
 
@@ -113,8 +113,7 @@ class StoreClient(ClientBase, StoreEndpoints):
                 headers["sw-context-token"] = self.config.context_token
 
             # increase default(10s) timeouts
-            self._client.timeout = httpx.Timeout(15, read=45, write=45)
-
-            self._client.headers = httpx.Headers(headers)
+            self._client.timeout = Timeout(15, read=45, write=45)
+            self._client.headers = Headers(headers)
 
         return self._client

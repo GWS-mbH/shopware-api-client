@@ -18,7 +18,8 @@ from typing import (
     overload,
 )
 
-import httpx
+from httpx2 import AsyncClient, Headers, Request, RequestError, Response, Timeout
+from httpx2._types import TimeoutTypes
 from pydantic import (
     AliasChoices,
     AliasGenerator,
@@ -33,7 +34,7 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 
-from .cache import CacheProtocol
+from .cache import CacheProtocol, DictCache
 from .endpoints.base_fields import IdField, PhpAssocArray
 from .exceptions import (
     SWAPIDataValidationError,
@@ -74,7 +75,7 @@ class ConfigBase:
     ) -> None:
         self.url = url.rstrip("/")
         self.retry_after_threshold = retry_after_threshold
-        self.cache = cache
+        self.cache = cache or DictCache(cleanup_cycle_seconds=10)
 
 
 class ClientBase:
@@ -110,18 +111,18 @@ class ClientBase:
 
     async def __aenter__(self) -> "Self":
         client = self.http_client
-        assert isinstance(client, httpx.AsyncClient), "http_client must be an instance of httpx.AsyncClient"
+        assert isinstance(client, AsyncClient), "http_client must be an instance of AsyncClient"
         return self
 
     async def __aexit__(self, *args: Any) -> None:
         await self.http_client.aclose()
 
-    async def log_request(self, request: httpx.Request) -> None:
+    async def log_request(self, request: Request) -> None:
         if not hasattr(request, "_content"):
             await request.aread()
         logger.debug("Request: %s %s - %r <headers: %s>", request.method, request.url, request.content, request.headers)
 
-    async def log_response(self, response: httpx.Response) -> None:
+    async def log_response(self, response: Response) -> None:
         await response.aread()
         logger.debug(
             "Response: %s - %s - %r <headers: %s>",
@@ -132,10 +133,10 @@ class ClientBase:
         )
 
     @cached_property
-    def http_client(self) -> httpx.AsyncClient:
+    def http_client(self) -> AsyncClient:
         return self._get_http_client()
 
-    def _get_http_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> AsyncClient:
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
@@ -147,12 +148,12 @@ class ClientBase:
         return headers
 
     @property
-    def timeout(self) -> httpx.Timeout:
+    def timeout(self) -> Timeout:
         client = self.http_client
         return client.timeout
 
     @timeout.setter
-    def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
+    def timeout(self, timeout: TimeoutTypes) -> None:
         client = self.http_client
         client.timeout = timeout
 
@@ -167,7 +168,7 @@ class ClientBase:
 
         return server_dt.timestamp()
 
-    def parse_reset_time(self, headers: httpx.Headers) -> int:
+    def parse_reset_time(self, headers: Headers) -> int:
         """Determine reset wait time based on server time"""
         server_ts = self.get_header_ts(headers.get("Date"), time())
         reset_ts = float(headers.get(HEADER_X_RATE_LIMIT_RESET, "0"))
@@ -175,7 +176,7 @@ class ClientBase:
 
         return max(0, ceil(adjusted_time))
 
-    def parse_retry_after(self, headers: httpx.Headers) -> int:
+    def parse_retry_after(self, headers: Headers) -> int:
         retry_header: str | None = headers.get("Retry-After")
         if retry_header is None:
             return 1
@@ -190,7 +191,7 @@ class ClientBase:
 
         return max(1, ceil(adjusted_time))
 
-    async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
             url = relative_url
         else:
@@ -212,12 +213,15 @@ class ClientBase:
         for attempt in range(retries + 1):
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
-            except httpx.RequestError as exc:
+            except RequestError as exc:
                 if attempt >= retries:
                     raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
                 continue
 
             if response.status_code == 429:
+                if attempt >= retries:
+                    raise SWAPIError.from_response(response)
+
                 # Retry after
                 await asyncio.sleep(self.parse_retry_after(response.headers))
                 continue
@@ -271,23 +275,23 @@ class ClientBase:
 
         return response
 
-    async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def get(self, relative_url: str, **kwargs: Any) -> Response:
         return await self._make_request(method="GET", relative_url=relative_url, **kwargs)
 
-    async def post(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def post(self, relative_url: str, **kwargs: Any) -> Response:
         # we need to set a response type, otherwise we don't get one
         relative_url += "?_response=basic" if "?" not in relative_url else "&_response=basic"
         return await self._make_request(method="POST", relative_url=relative_url, **kwargs)
 
-    async def patch(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def patch(self, relative_url: str, **kwargs: Any) -> Response:
         # we need to set a reponse type, otherwise we don't get one
         relative_url += "?_response=basic" if "?" not in relative_url else "&_response=basic"
         return await self._make_request(method="PATCH", relative_url=relative_url, **kwargs)
 
-    async def delete(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def delete(self, relative_url: str, **kwargs: Any) -> Response:
         return await self._make_request(method="DELETE", relative_url=relative_url, **kwargs)
 
-    async def upload(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def upload(self, relative_url: str, **kwargs: Any) -> Response:
         return await self._make_request(
             method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"}, **kwargs
         )

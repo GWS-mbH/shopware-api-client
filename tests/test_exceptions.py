@@ -1,4 +1,6 @@
 import pytest
+from httpx2 import Request, Response
+
 from shopware_api_client.endpoints.admin import Unit
 from shopware_api_client.exceptions import (
     SWAPIError,
@@ -7,7 +9,6 @@ from shopware_api_client.exceptions import (
     SWAPISqlDuplicateEntryError,
     SWAPISqlForeignKeyError,
 )
-from httpx import Response, Request
 
 
 class TestSWAPIError:
