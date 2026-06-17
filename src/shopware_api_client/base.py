@@ -204,7 +204,7 @@ class ClientBase:
 
         orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
 
-        retries = int(kwargs.pop("retries", 0))
+        retries = int(kwargs.pop("retries", 2))
         retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
         no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPISqlDuplicateEntryError, SWAPISqlForeignKeyError]))
         retry_errors = tuple(
