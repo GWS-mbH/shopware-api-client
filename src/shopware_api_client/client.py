@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from httpx2 import AsyncClient, Headers, Timeout
+from httpx2 import AsyncClient, AsyncHTTPTransport, Headers, Timeout
 
 from shopware_api_client.auth import ShopwareAdminAPIAuth, ShopwareAdminPasswordAPIAuth
 
@@ -21,7 +21,8 @@ class AdminClient(ClientBase, AdminEndpoints):
     def _get_http_client(self) -> AsyncClient:
         if self._client is None:
             self._client = AsyncClient(
-                event_hooks={"request": [self.log_request], "response": [self.log_response]}
+                event_hooks={"request": [self.log_request], "response": [self.log_response]},
+                transport=AsyncHTTPTransport(retries=1),
             )
 
             # increase default(10s) timeouts
@@ -101,6 +102,7 @@ class StoreClient(ClientBase, StoreEndpoints):
         if self._client is None:
             self._client = AsyncClient(
                 event_hooks={"request": [self.log_request], "response": [self.log_response]},
+                transport=AsyncHTTPTransport(retries=1),
             )
 
             headers = {

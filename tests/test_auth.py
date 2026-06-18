@@ -71,6 +71,7 @@ class TestShopwareAdminAPIAuth:
         fetch_mock.assert_not_called()
 
     async def test_get_access_token_fetches_oauth_when_cache_miss(self, mocker: MockerFixture) -> None:
+        cache_set_mock = mocker.patch.object(self.config.cache, "set", AsyncMock())
         fetch_mock = mocker.patch.object(
             self.auth,
             "_get_access_token_from_shopware",
@@ -81,6 +82,7 @@ class TestShopwareAdminAPIAuth:
 
         assert token == "FRESH_TOKEN"
         fetch_mock.assert_awaited_once()
+        cache_set_mock.assert_awaited_once_with(self.auth._cache_key, "FRESH_TOKEN", 290)
 
     async def test_async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
         mocker.patch.object(self.auth, "_get_access_token", AsyncMock(return_value="FLOW_TOKEN"))
@@ -147,6 +149,7 @@ class TestShopwareAdminPasswordAPIAuth:
         fetch_mock.assert_not_called()
 
     async def test_get_access_token_fetches_oauth_when_cache_miss(self, mocker: MockerFixture) -> None:
+        cache_set_mock = mocker.patch.object(self.config.cache, "set", AsyncMock())
         fetch_mock = mocker.patch.object(
             self.auth,
             "_get_access_token_from_shopware",
@@ -157,6 +160,7 @@ class TestShopwareAdminPasswordAPIAuth:
 
         assert token == "FRESH_PASSWORD_TOKEN"
         fetch_mock.assert_awaited_once()
+        cache_set_mock.assert_awaited_once_with(self.auth._cache_key, "FRESH_PASSWORD_TOKEN", 290)
 
     async def test_async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
         mocker.patch.object(self.auth, "_get_access_token", AsyncMock(return_value="FLOW_PASSWORD_TOKEN"))

@@ -1,7 +1,7 @@
 from functools import cached_property
 from typing import AsyncGenerator
 
-from httpx2 import AsyncClient, Auth, Request, Response
+from httpx2 import AsyncClient, AsyncHTTPTransport, Auth, Request, Response
 
 from shopware_api_client.config import AdminConfig
 
@@ -21,7 +21,9 @@ class ShopwareAdminAPIAuth(Auth):
             "grant_type": "client_credentials",
             **self.config.extra,
         }
-        async with AsyncClient() as client:
+
+        transport = AsyncHTTPTransport(retries=1)
+        async with AsyncClient(transport=transport) as client:
             response = await client.post(self.auth_url, data=payload)
             response.raise_for_status()
             data = response.json()
@@ -38,6 +40,7 @@ class ShopwareAdminAPIAuth(Auth):
         if not token:
             # If not, get a new one from Shopware.
             token, expires_in = await self._get_access_token_from_shopware()
+            await self.config.cache.set(self._cache_key, token, expires_in - 10)  # cache a bit less than actual expiry
 
         return token
 
@@ -67,7 +70,9 @@ class ShopwareAdminPasswordAPIAuth(ShopwareAdminAPIAuth):
             "password": self.config.password,
             **self.config.extra,
         }
-        async with AsyncClient() as client:
+
+        transport = AsyncHTTPTransport(retries=1)
+        async with AsyncClient(transport=transport) as client:
             response = await client.post(self.auth_url, data=payload)
             response.raise_for_status()
             data =  response.json()
