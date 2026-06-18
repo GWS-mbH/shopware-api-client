@@ -347,12 +347,18 @@ class AdminEndpoints:
         from ...base import AdminEndpoint
         from ..base_fields import IdField
 
-        async for custom_entity in self.custom_entity.iter():
-            assert isinstance(custom_entity, CustomEntity)
+        cache_key = f"custom_entities:{self.api_url}"
+        custom_entities = await self.cache.get(cache_key)
+        if custom_entities is None:
+            custom_entities = [ce async for ce in self.custom_entity.iter(raw=True)]
+            await self.cache.set(cache_key, custom_entities, 300)  # cache for 5 minutes
+
+        for custom_entity in custom_entities:
+            custom_entity_name = custom_entity["name"]
+            custom_entity_fields = custom_entity.get("fields", [])
             fields: dict[str, Any] = {}
 
-            for field in custom_entity.fields:
-                field_type: Any = str
+            for field in custom_entity_fields:
                 field_appendix = ""
 
                 match field["type"]:
@@ -386,17 +392,17 @@ class AdminEndpoints:
                 else:
                     fields[field["name"] + field_appendix] = (field_type | None, None)
 
-            fields["_identifier"] = (str, custom_entity.name)
+            fields["_identifier"] = (str, custom_entity_name)
 
             ce_model: type[AdminModel[Any]] = create_model(
-                custom_entity.name, **fields, __base__=AdminModel[AdminEndpoint]
+                custom_entity_name, **fields, __base__=AdminModel[AdminEndpoint]
             )
 
-            ce_endpoint = new_class(f"{custom_entity.name}Endpoint", (AdminEndpoint[AdminModel],))
-            ce_endpoint.name = custom_entity.name
-            ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"
+            ce_endpoint = new_class(f"{custom_entity_name}Endpoint", (AdminEndpoint[AdminModel],))
+            ce_endpoint.name = custom_entity_name
+            ce_endpoint.path = f"/{custom_entity_name.replace('_', '-')}"
             ce_endpoint.model_class = ce_model
 
-            setattr(self, custom_entity.name, ce_endpoint(self))
+            setattr(self, custom_entity_name, ce_endpoint(self))
 
         self._custom_entities_loaded = True
