@@ -159,3 +159,4 @@ cython_debug/
 #.idea/
 model_openapi3.py
 openapi3.json
+pytest.xml
