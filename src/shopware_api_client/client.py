@@ -12,8 +12,8 @@ from .exceptions import SWAPIConfigException
 
 
 class AdminClient(ClientBase, AdminEndpoints):
-    def __init__(self, config: AdminConfig, raw: bool | None = None):
-        super().__init__(config=config, raw=raw)
+    def __init__(self, config: AdminConfig):
+        super().__init__(config=config)
         self.config = config
         self.api_url = f"{config.url}/api"
         self._client: AsyncClient | None = None
@@ -91,8 +91,8 @@ class AdminClient(ClientBase, AdminEndpoints):
 
 
 class StoreClient(ClientBase, StoreEndpoints):
-    def __init__(self, config: StoreConfig, raw: bool | None = None):
-        super().__init__(config, raw=raw)
+    def __init__(self, config: StoreConfig):
+        super().__init__(config)
         self.config = config
         self.api_url = f"{config.url}/store-api"
         self._client: AsyncClient | None = None

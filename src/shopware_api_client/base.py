@@ -81,24 +81,12 @@ class ConfigBase:
 
 class ClientBase:
     api_url: str
-    raw: bool
     language_id: IdField | None = None
 
-    def __init__(self, config: ConfigBase, raw: bool | None = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, config: ConfigBase, *args: Any, **kwargs: Any) -> None:
         self.api_url = config.url
         self.retry_after_threshold = config.retry_after_threshold
         self.cache = config.cache
-
-        if raw is not None:
-            import warnings
-
-            warnings.warn(
-                "parameter 'raw' of ClientBase has been deprecated and could get removed in future versions. "
-                "Use the raw parameter of .get(), .first(), .all(), ... directly."
-            )
-            self.raw = raw
-        else:
-            self.raw = False
 
         super().__init__(*args, *kwargs)
 
@@ -192,6 +180,24 @@ class ClientBase:
 
         return max(1, ceil(adjusted_time))
 
+    def _serialize_response(self, response: Response) -> str:
+        return json.dumps(
+            {
+                "status_code": response.status_code,
+                "content": response.content.decode(),
+                "headers": dict(response.headers),
+            }
+        )
+
+    def _deserialize_response(self, cached_response: str) -> Response:
+        data = json.loads(cached_response)
+        response = Response(
+            status_code=data["status_code"],
+            content=data["content"].encode(),
+            headers=Headers(headers=data["headers"]),
+        )
+        return response
+
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> Response:
         if relative_url.startswith("http://") or relative_url.startswith("https://"):
             url = relative_url
@@ -222,7 +228,7 @@ class ClientBase:
             cached_response = await self.cache.get(cache_key)
             if cached_response:
                 logger.debug(f"Cache hit for {method} {url} with kwargs {kwargs} and headers {headers}")
-                return cached_response
+                return self._deserialize_response(cached_response)
 
         for attempt in range(retries + 1):
             try:
@@ -275,7 +281,7 @@ class ClientBase:
                 # guard against "200 okay" responses with malformed json
                 try:
                     setattr(response, "json_cached", response.json())
-                    return response
+                    break
                 except json.JSONDecodeError:
                     # retries exhausted?
                     if attempt >= retries:
@@ -288,7 +294,7 @@ class ClientBase:
                         raise exception
 
         if cache_for:
-            await self.cache.set(cache_key, response, cache_for)
+            await self.cache.set(cache_key, self._serialize_response(response), cache_for)
 
         return response
 
@@ -488,13 +494,11 @@ class CustomFieldsMixin(BaseModel):
 class EndpointBase:
     name: str
     path: str
-    raw: bool
     search_prefix: str = "/search"
 
     def __init__(self, client: ClientBase, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.client = client
-        self.raw = client.raw
 
     def _parse_data(self, response_dict: dict[str, Any]) -> list[dict[str, Any]]:
         if "data" in response_dict:
@@ -776,7 +780,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -800,7 +804,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         result = await self.client.get(f"{self.path}/{pk}", cache_for=cache_for)
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -838,7 +842,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -894,7 +898,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -930,7 +934,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -990,7 +994,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
 
             for entry in result_data:
-                if self.raw or raw:
+                if raw:
                     yield entry
                 else:
                     yield self._parse_response(entry)
@@ -1076,7 +1080,7 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
 
         result_data: list[dict[str, Any]] = result.json().get("elements", [])
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data, cls=self.model_class)
@@ -1115,7 +1119,7 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
 
             for entry in result_data:
-                if self.raw or raw:
+                if raw:
                     yield entry
                 else:
                     yield self._parse_response(entry, cls=self.model_class)
