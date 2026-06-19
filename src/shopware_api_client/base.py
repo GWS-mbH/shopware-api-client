@@ -199,7 +199,7 @@ class ClientBase:
         return response
 
     async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> Response:
-        if relative_url.startswith("http://") or relative_url.startswith("https://"):
+        if relative_url.startswith(("http://", "https://")):
             url = relative_url
         else:
             url = f"{self.api_url}{relative_url}"
@@ -209,7 +209,6 @@ class ClientBase:
         headers.update(kwargs.pop("headers", {}))
         kwargs.setdefault("follow_redirects", True)
 
-        # TODO: Add cache_for here and on several methods (all, ...)
         cache_for: int | None = kwargs.pop("cache_for", None)
 
         orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
