@@ -1,7 +1,7 @@
 [project]
 name = "shopware-api-client"
 description = " An api client for the Shopware API"
-version = "1.2.1"
+version = "2.0.0"
 license = "MIT"
 authors = [
     { name = "GWS Gesellschaft für Warenwirtschafts-Systeme mbH", email = "ebusiness@gws.ms" }
