@@ -3,6 +3,7 @@ import json
 from datetime import UTC, datetime, timezone
 from email.utils import parsedate_to_datetime
 from functools import cached_property
+from hashlib import sha256
 from math import ceil
 from time import time
 from typing import (
@@ -202,6 +203,9 @@ class ClientBase:
         headers.update(kwargs.pop("headers", {}))
         kwargs.setdefault("follow_redirects", True)
 
+        # TODO: Add cache_for here and on several methods (all, ...)
+        cache_for: int | None = kwargs.pop("cache_for", None)
+
         orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
 
         retries = int(kwargs.pop("retries", 2))
@@ -210,6 +214,16 @@ class ClientBase:
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
+
+        if cache_for:
+            kwargs_hash = sha256(json.dumps(kwargs, sort_keys=True, default=str).encode()).hexdigest()
+            headers_hash = sha256(json.dumps(headers, sort_keys=True, default=str).encode()).hexdigest()
+            cache_key = f"shopware_api_client:cached_request:{method}:{url}:{kwargs_hash}:{headers_hash}"
+            cached_response = await self.cache.get(cache_key)
+            if cached_response:
+                logger.debug(f"Cache hit for {method} {url} with kwargs {kwargs} and headers {headers}")
+                return cached_response
+
         for attempt in range(retries + 1):
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
@@ -272,6 +286,9 @@ class ClientBase:
                             f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
                         )
                         raise exception
+
+        if cache_for:
+            await self.cache.set(cache_key, response, cache_for)
 
         return response
 
@@ -741,15 +758,21 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def all(self, raw: bool) -> list[AdminModelClass] | list[dict[str, Any]]: ...
 
     @overload
+    async def all(self, *, cache_for: int | None) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+
+    @overload
+    async def all(self, *, raw: bool, cache_for: int | None) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+
+    @overload
     async def all(self) -> list[AdminModelClass]: ...
 
-    async def all(self, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
+    async def all(self, raw: bool = False, cache_for: int | None = None) -> list[AdminModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
         if self._is_search_query():
-            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data)
+            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data, cache_for=cache_for)
         else:
-            result = await self.client.get(self.path, params=data)
+            result = await self.client.get(self.path, params=data, cache_for=cache_for)
 
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
@@ -765,10 +788,16 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def get(self, pk: str, raw: Literal[True]) -> dict[str, Any]: ...
 
     @overload
+    async def get(self, pk: str, *, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]: ...
+
+    @overload
+    async def get(self, pk: str, *, raw: bool, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]: ...
+
+    @overload
     async def get(self, pk: str) -> AdminModelClass: ...
 
-    async def get(self, pk: str, raw: bool = False) -> AdminModelClass | dict[str, Any]:
-        result = await self.client.get(f"{self.path}/{pk}")
+    async def get(self, pk: str, raw: bool = False, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]:
+        result = await self.client.get(f"{self.path}/{pk}", cache_for=cache_for)
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if self.raw or raw:
@@ -823,9 +852,12 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     @overload
     async def first(self) -> AdminModelClass | None: ...
 
-    async def first(self, raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
+    @overload
+    async def first(self, *, cache_for: int | None) -> AdminModelClass | dict[str, Any] | None: ...
+
+    async def first(self, raw: bool = False, cache_for: int | None = None) -> AdminModelClass | dict[str, Any] | None:
         self._limit = 1
-        result = await self.all(raw=raw)
+        result = await self.all(raw=raw, cache_for=cache_for)
 
         # return None instead of an KeyError, if result is empty
         if len(result) == 0:
@@ -923,6 +955,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     def iter(self, batch_size: int) -> AsyncGenerator[AdminModelClass, None]: ...
 
     @overload
+    def iter(self, *, cache_for: int | None = None) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]: ...
+
+    @overload
     def iter(self, *, raw: Literal[False]) -> AsyncGenerator[AdminModelClass, None]: ...
 
     @overload
@@ -932,7 +967,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     def iter(self) -> AsyncGenerator[AdminModelClass, None]: ...
 
     async def iter(
-        self, batch_size: int = 100, raw: bool = False
+        self, batch_size: int = 100, raw: bool = False, cache_for: int | None = None
     ) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
@@ -947,9 +982,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         while True:
             data["page"] = page
             if is_search_query:
-                result = await self.client.post(url, json=data)
+                result = await self.client.post(url, json=data, cache_for=cache_for)
             else:
-                result = await self.client.get(url, params=data)
+                result = await self.client.get(url, params=data, cache_for=cache_for)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
@@ -1026,12 +1061,18 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def all(self, raw: Literal[True]) -> list[dict[str, Any]]: ...
 
     @overload
-    async def all(self, raw: bool) -> list[ModelClass] | list[dict[str, Any]]: ...
+    async def all(self, *, raw: bool) -> list[ModelClass] | list[dict[str, Any]]: ...
 
-    async def all(self, raw: bool = False) -> list[ModelClass] | list[dict[str, Any]]:
+    @overload
+    async def all(self, *, cache_for: int | None) -> list[ModelClass] | list[dict[str, Any]]: ...
+
+    @overload
+    async def all(self, raw: bool, cache_for: int | None) -> list[ModelClass] | list[dict[str, Any]]: ...
+
+    async def all(self, raw: bool = False, cache_for: int | None = None) -> list[ModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
-        result = await self.client.post(self.path, json=data)
+        result = await self.client.post(self.path, json=data, cache_for=cache_for)
 
         result_data: list[dict[str, Any]] = result.json().get("elements", [])
 
@@ -1040,14 +1081,35 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
 
         return self._parse_response(result_data, cls=self.model_class)
 
-    async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
+    @overload
+    def iter(self, batch_size: int, raw: Literal[False]) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    def iter(self, batch_size: int, raw: Literal[True]) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    def iter(self, batch_size: int) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    def iter(self, *, cache_for: int | None = None) -> AsyncGenerator[ModelClass | dict[str, Any], None]: ...
+
+    @overload
+    def iter(self, *, raw: Literal[False]) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    def iter(self, *, raw: Literal[True]) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    def iter(self) -> AsyncGenerator[ModelClass, None]: ...
+
+    async def iter(self, batch_size: int = 100, raw: bool = False, cache_for: int | None = None) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
         page = 1
 
         while True:
             data["page"] = page
-            result = await self.client.post(self.path, json=data)
+            result = await self.client.post(self.path, json=data, cache_for=cache_for)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
@@ -1070,11 +1132,14 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def first(self, raw: Literal[True]) -> dict[str, Any] | None: ...
 
     @overload
-    async def first(self, raw: bool) -> ModelClass | dict[str, Any] | None: ...
+    async def first(self, *, raw: bool) -> ModelClass | dict[str, Any] | None: ...
 
-    async def first(self, raw: bool = False) -> ModelClass | dict[str, Any] | None:
+    @overload
+    async def first(self, *, cache_for: int | None) -> ModelClass | dict[str, Any] | None: ...
+
+    async def first(self, raw: bool = False, *, cache_for: int | None = None) -> ModelClass | dict[str, Any] | None:
         self._limit = 1
-        result = await self.all(raw=raw)
+        result = await self.all(raw=raw, cache_for=cache_for)
 
         # return None instead of an KeyError, if result is empty
         if len(result) == 0:

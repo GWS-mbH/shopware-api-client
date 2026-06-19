@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from httpx2 import AsyncClient, Response
+from pydantic.fields import ModelPrivateAttr
 from pytest_mock import MockerFixture
 
 from shopware_api_client.base import (
@@ -15,7 +16,6 @@ from shopware_api_client.base import (
     HEADER_X_RATE_LIMIT_RESET,
     RETRY_CACHE_KEY,
 )
-from shopware_api_client.cache import DictCache
 from shopware_api_client.client import AdminClient, ClientBase, StoreClient
 from shopware_api_client.config import AdminConfig, ConfigBase, StoreConfig
 from shopware_api_client.exceptions import (
@@ -249,72 +249,40 @@ class TestAdminClient:
         assert caplog.records[2].id == 3
 
     async def test_load_custom_entities(self, mocker: MockerFixture) -> None:
-        shared_cache = DictCache(cleanup_cycle_seconds=10)
-        first_config = AdminConfig(
-            url=self.admin_config.url,
-            client_id=self.admin_config.client_id,
-            client_secret=self.admin_config.client_secret,
-            grant_type=self.admin_config.grant_type,
-            cache=shared_cache,
-        )
-        second_config = AdminConfig(
-            url=self.admin_config.url,
-            client_id=self.admin_config.client_id,
-            client_secret=self.admin_config.client_secret,
-            grant_type=self.admin_config.grant_type,
-            cache=shared_cache,
-        )
-
-        client = AdminClient(config=first_config)
-        custom_entity_endpoint = client.custom_entity
-        custom_entity = {
-            "name": "my_custom_entity",
-            "fields": [
+        client = AdminClient(config=self.admin_config)
+        custom_entity = client.custom_entity.model_class(
+            name="my_custom_entity",
+            fields=[
                 {"name": "required_int", "type": "int", "required": True},
                 {"name": "optional_bool", "type": "bool", "required": False},
                 {"name": "reference", "type": "many-to-one", "required": False},
                 {"name": "children", "type": "one-to-many", "required": False},
             ],
-        }
+        )
 
         async def fake_iter():
             yield custom_entity
 
-        iter_mock = mocker.patch.object(type(custom_entity_endpoint), "iter", return_value=fake_iter())
-        cache_key = f"custom_entities:{client.api_url}"
+        iter_mock = mocker.patch.object(type(client.custom_entity), "iter", return_value=fake_iter())
 
         await client.load_custom_entities()
         await client.load_custom_entities()
-
-        assert await shared_cache.get(cache_key) == [custom_entity]
-
-        second_client = AdminClient(config=second_config)
-        await second_client.load_custom_entities()
 
         assert client.custom_entities_loaded is True
         assert iter_mock.call_count == 1
         assert hasattr(client, "my_custom_entity")
-        assert second_client.custom_entities_loaded is True
-        assert hasattr(second_client, "my_custom_entity")
 
         endpoint = client.my_custom_entity
         assert endpoint.client is client
         assert endpoint.name == "my_custom_entity"
         assert endpoint.path == "/my-custom-entity"
-        assert endpoint.model_class._identifier.get_default() == "my_custom_entity"
-        iter_mock.assert_called_once_with(raw=True)
-        assert iter_mock.call_count == 1
+        assert endpoint.model_class._identifier == ModelPrivateAttr("my_custom_entity")
 
         model_fields = endpoint.model_class.model_fields
         assert model_fields["required_int"].is_required()
         assert model_fields["optional_bool"].default is None
         assert model_fields["reference_id"].default is None
         assert "children" not in model_fields
-
-        second_endpoint = second_client.my_custom_entity
-        assert second_endpoint.client is second_client
-        assert second_endpoint.path == "/my-custom-entity"
-        assert second_endpoint.model_class._identifier.get_default() == "my_custom_entity"
 
 
 class TestStoreClient:

@@ -31,7 +31,7 @@ class ShopwareAdminAPIAuth(Auth):
 
     @cached_property
     def _cache_key(self):
-        return f"access_token:client_credentials:{self.auth_url}"
+        return f"shopware_api_client:access_token:client_credentials:{self.auth_url}"
 
     async def _get_access_token(self) -> str:
         # do we have a cached token and is it still valid?
@@ -57,7 +57,7 @@ class ShopwareAdminPasswordAPIAuth(ShopwareAdminAPIAuth):
 
     @cached_property
     def _cache_key(self):
-        return f"access_token:password:{self.auth_url}"
+        return f"shopware_api_client:access_token:password:{self.auth_url}"
 
     async def _get_access_token_from_shopware(self) -> tuple[str, int]:
         assert isinstance(self.config, AdminConfig), "Config must be of type AdminConfig"
