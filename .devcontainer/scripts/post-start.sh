@@ -1,1 +1,1 @@
-uv sync --all-groups --all-extras
+uv sync --all-groups<
