@@ -229,7 +229,7 @@ class ClientBase:
                 logger.debug(f"Cache hit for {method} {url} with kwargs {kwargs} and headers {headers}")
                 return self._deserialize_response(cached_response)
 
-        for attempt in range(1, retries + 1):
+        for attempt in range(retries + 1):
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
             except RequestError as exc:
