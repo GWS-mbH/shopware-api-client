@@ -5,8 +5,9 @@ from email.utils import parsedate_to_datetime
 from typing import Tuple
 from unittest.mock import AsyncMock
 
-import httpx
 import pytest
+from httpx2 import AsyncClient, Response
+from pydantic.fields import ModelPrivateAttr
 from pytest_mock import MockerFixture
 
 from shopware_api_client.base import (
@@ -21,7 +22,7 @@ from shopware_api_client.exceptions import (
     SWAPIConfigException,
     SWAPIDataValidationError,
     SWAPIError,
-    SWAPIRetryException,
+    SWAPITooManyRequests,
 )
 
 
@@ -45,10 +46,11 @@ def rate_limit_headers():
 @pytest.fixture
 def patch_request(mocker: MockerFixture):
     def _patch(status: int, content: str = "", headers: dict[str, str] = {}) -> None:
-        mocker.patch(
-            "httpx.AsyncClient.request",
+        mocker.patch.object(
+            AsyncClient,
+            "request",
             AsyncMock(
-                return_value=httpx.Response(
+                return_value=Response(
                     status_code=status,
                     content=content,
                     headers=headers,
@@ -64,16 +66,16 @@ def patch_requests(mocker: MockerFixture):
     def _patch(response_contents: list[Tuple[int, str, dict[str, str]]]) -> None:
         responses = []
         for status, content, headers in response_contents:
-            responses.append(httpx.Response(status_code=status, content=content, headers=headers))
+            responses.append(Response(status_code=status, content=content, headers=headers))
 
-        mocker.patch("httpx.AsyncClient.request", AsyncMock(side_effect=responses))
+        mocker.patch.object(AsyncClient, "request", AsyncMock(side_effect=responses))
 
     return _patch
 
 
 class TestClientBase:
-    def _get_http_client(self) -> httpx.AsyncClient:
-        return httpx.AsyncClient()
+    def _get_http_client(self) -> AsyncClient:
+        return AsyncClient()
 
     async def fake_sleep(self, _) -> None:
         self.sleep_hitcount += 1
@@ -93,11 +95,7 @@ class TestClientBase:
         self.url = "https://localhost"
         self.relative_url = "/test"
         self.method = "get"
-        self.base_config = ConfigBase(
-            url=self.url,
-            retry_after_threshold=10,
-            local_cache_cleanup_cycle_seconds=10,
-        )
+        self.base_config = ConfigBase(url=self.url, retry_after_threshold=10)
         self.client = ClientBase(config=self.base_config)
         self.client._get_http_client = self._get_http_client
         self.cache_key_base = RETRY_CACHE_KEY.format(
@@ -128,26 +126,26 @@ class TestClientBase:
         )
 
     def test_parse_reset_time(self, rate_limit_headers) -> None:
-        response = httpx.Response(status_code=200, headers=rate_limit_headers(remaining=0, reset=45))
+        response = Response(status_code=200, headers=rate_limit_headers(remaining=0, reset=45))
         assert 45 == self.client.parse_reset_time(response.headers), (
             f"Parsing {HEADER_X_RATE_LIMIT_RESET} was not successful"
         )
 
-        response = httpx.Response(status_code=200, headers=rate_limit_headers(remaining=0, reset=-45))
+        response = Response(status_code=200, headers=rate_limit_headers(remaining=0, reset=-45))
         assert 0 == self.client.parse_reset_time(response.headers), (
             f"Parsing {HEADER_X_RATE_LIMIT_RESET} was not successful"
         )
 
     def test_parse_retry_after(self) -> None:
-        response = httpx.Response(status_code=429)
+        response = Response(status_code=429)
         assert 1 == self.client.parse_retry_after(response.headers), "Missing Retry-After header did not return 1"
 
-        response = httpx.Response(status_code=429, headers={"Retry-After": "0"})
+        response = Response(status_code=429, headers={"Retry-After": "0"})
         assert 1 == self.client.parse_retry_after(response.headers), (
             "Retry-After header of 0 did not result in returning 1"
         )
 
-        response = httpx.Response(status_code=200, headers={"Retry-After": "5"})
+        response = Response(status_code=200, headers={"Retry-After": "5"})
         assert 5 == self.client.parse_retry_after(response.headers), (
             "Missing Retry-After header did not parse int correctly"
         )
@@ -157,7 +155,7 @@ class TestClientBase:
             "Retry-After": (now + timedelta(seconds=10)).strftime("%a, %d %b %Y %H:%M:%S"),
             "Date": now.strftime("%a, %d %b %Y %H:%M:%S"),
         }
-        response = httpx.Response(status_code=200, headers=headers)
+        response = Response(status_code=200, headers=headers)
         assert 10 == self.client.parse_retry_after(response.headers), (
             "Missing Retry-After header did not parse date format correctly"
         )
@@ -167,105 +165,29 @@ class TestClientBase:
                 "Retry-After": (now - timedelta(seconds=10)).strftime("%a, %d %b %Y %H:%M:%S"),
             }
         )
-        response = httpx.Response(status_code=200, headers=headers)
+        response = Response(status_code=200, headers=headers)
         assert 1 == self.client.parse_retry_after(response.headers), (
             "Negative time-delay from Retry-After header did not result in returning 1"
         )
 
-    async def test_x_rate_limit_retry(self, patch_request, rate_limit_headers, monkeypatch) -> None:
-        now = datetime.now()
-        wait_time = 9
-        patch_request(status=200, content="1", headers=rate_limit_headers(remaining=0, reset=wait_time, now=now))
-        monkeypatch.setattr("shopware_api_client.base.asyncio.sleep", self.fake_sleep)
-
-        result_count = 0
-
-        response_1 = await self.client._make_request(self.method, self.relative_url)
-        result_count += response_1.json()
-        assert result_count == 1, "First request did not succeeded"
-        assert self.sleep_hitcount == 0, "Request waited even though it shouldn't"
-
-        response_2 = asyncio.create_task(self.client._make_request(self.method, self.relative_url))
-        try:
-            result = await asyncio.wait_for(response_2, 1)
-        except asyncio.TimeoutError:
-            raise AssertionError("_make_request is expected to return almost instantaneously in this test")
-
-        result_count += result.json()
-        assert result_count == 2, "Second request did not succeeded"
-        assert self.sleep_hitcount == 1, "Request did not wait even though it should have"
-
-        assert await self.client.cache.has_lock(self.retry_lock_key, 1) is True, "Key was not released properly"
-        await self.client.cache.delete(self.retry_lock_key)
-
-        self.client.cache.delete = self.fake_cache_delete
-        response_3 = await self.client._make_request(self.method, self.relative_url)
-        result_count += response_3.json()
-        assert result_count == 3, "Third request did not succeeded"
-        assert self.sleep_hitcount == 2, "Request did not wait even though it should have"
-
-        assert await self.client.cache.has_lock(self.retry_lock_key, 1) is False, "Key has not been taken properly"
-
-        attempts = (asyncio.create_task(self.client._make_request(self.method, self.relative_url)) for _ in range(10))
-        for attempt in attempts:
-            assert attempt.done() is False, "Request is not waiting even though key is taken"
-            attempt.cancel()
-        assert result_count == 3, "Requests got through even though all should be in back-off loop"
-
-        assert 1 == await self.client.cache.get(self.limit_key), "Limit was not cached properly"
-        assert 0 == await self.client.cache.get(self.remaining_key), "Remaining requests were not cached properly"
-        await self.assert_cached_reset_timestamp(now, wait_time)
-
-    async def test_x_rate_limit_retry_0_reset_time(self, patch_request, rate_limit_headers) -> None:
-        patch_request(status=200, content="{}", headers=rate_limit_headers(remaining=1, reset=0))
-        await self.client._make_request(self.method, self.relative_url)
-        assert (
-            self.client.cache._cache.get(self.reset_key) is None  # type: ignore
-        ), f"Cache key was set for {self.reset_key!r} but it shouldn't be set"
-
-        patch_request(status=200, content="{}", headers=rate_limit_headers(remaining=0, reset=None))
-        await self.client._make_request(self.method, self.relative_url)
-        assert (
-            self.client.cache._cache.get(self.reset_key) is None  # type: ignore
-        ), f"Cache key was set for {self.reset_key!r} but it shouldn't be set"
-
-    async def test_x_rate_limit_retry_threshold(self, patch_request, rate_limit_headers) -> None:
-        patch_request(status=200, content="{}", headers=rate_limit_headers(remaining=0, reset=60))
-
-        await self.client._make_request(self.method, self.relative_url)
-        with pytest.raises(SWAPIRetryException):
-            await self.client._make_request(self.method, self.relative_url)
-
     async def test_429_retry(self, patch_requests, monkeypatch) -> None:
-        now = datetime.now()
         wait_time = 9
         patch_requests([(429, "", {"Retry-After": f"{wait_time}"}), (200, "1", "")])
         monkeypatch.setattr("shopware_api_client.base.asyncio.sleep", self.fake_sleep)
 
-        task = asyncio.create_task(self.client._make_request(self.method, self.relative_url))
+        task = asyncio.create_task(self.client._make_request(self.method, self.relative_url, retries=1))
 
         result = await task
         assert 1 == result.json(), "Request did not succeed"
         assert 1 == self.sleep_hitcount, "Request did not wait even though it should have"
-        await self.assert_cached_reset_timestamp(now, wait_time)
 
-    async def test_429_retry_threshold(self, patch_request) -> None:
+    async def test_429_retry_raises_without_retries(self, patch_request) -> None:
         patch_request(status=429, content="{}", headers={"Retry-After": "60"})
 
-        with pytest.raises(SWAPIRetryException):
-            await self.client._make_request(self.method, self.relative_url)
+        with pytest.raises(SWAPITooManyRequests) as exc_info:
+            await self.client._make_request(self.method, self.relative_url, retries=0)
 
-    async def test_429_with_x_rate_limit_retry(self, patch_requests, rate_limit_headers, monkeypatch):
-        now = datetime.now()
-        monkeypatch.setattr("shopware_api_client.base.asyncio.sleep", self.fake_sleep)
-        rl_headers = rate_limit_headers(remaining=0, reset=9, now=now)
-        patch_requests([(200, "1", rl_headers), (429, "", {"Retry-After": "9"}), (200, "1", rl_headers)])
-
-        result_1 = await self.client._make_request(self.method, self.relative_url)
-        result_2 = await self.client._make_request(self.method, self.relative_url)
-
-        assert 1 == result_1.json() == result_2.json(), "Requests did not succeed"
-        assert 2 == self.sleep_hitcount, "Requests did not wait properly"
+        assert exc_info.value.headers["Retry-After"] == "60", "Retry-After header was not included in exception"
 
 
 class TestAdminClient:
@@ -289,7 +211,7 @@ class TestAdminClient:
 
         exc: SWAPIError = exc_info.value
         assert exc.status == 500
-        assert exc.title == httpx.codes.get_reason_phrase(500)
+        assert exc.title == "Internal Server Error"
         assert "x-trace-id" in exc.headers
         assert "bla" in exc.detail
 
@@ -300,7 +222,7 @@ class TestAdminClient:
     def test_get_client(self) -> None:
         client = AdminClient(config=self.admin_config)
         httpx_client = client.http_client
-        assert isinstance(httpx_client, httpx.AsyncClient)
+        assert isinstance(httpx_client, AsyncClient)
 
     def test_wrong_config(self) -> None:
         self.admin_config.client_id = None
@@ -326,6 +248,42 @@ class TestAdminClient:
         assert caplog.records[1].id is None
         assert caplog.records[2].id == 3
 
+    async def test_load_custom_entities(self, mocker: MockerFixture) -> None:
+        client = AdminClient(config=self.admin_config)
+        custom_entity = client.custom_entity.model_class(
+            name="my_custom_entity",
+            fields=[
+                {"name": "required_int", "type": "int", "required": True},
+                {"name": "optional_bool", "type": "bool", "required": False},
+                {"name": "reference", "type": "many-to-one", "required": False},
+                {"name": "children", "type": "one-to-many", "required": False},
+            ],
+        )
+
+        async def fake_iter():
+            yield custom_entity
+
+        iter_mock = mocker.patch.object(type(client.custom_entity), "iter", return_value=fake_iter())
+
+        await client.load_custom_entities()
+        await client.load_custom_entities()
+
+        assert client.custom_entities_loaded is True
+        assert iter_mock.call_count == 1
+        assert hasattr(client, "my_custom_entity")
+
+        endpoint = client.my_custom_entity
+        assert endpoint.client is client
+        assert endpoint.name == "my_custom_entity"
+        assert endpoint.path == "/my-custom-entity"
+        assert endpoint.model_class._identifier == ModelPrivateAttr("my_custom_entity")
+
+        model_fields = endpoint.model_class.model_fields
+        assert model_fields["required_int"].is_required()
+        assert model_fields["optional_bool"].default is None
+        assert model_fields["reference_id"].default is None
+        assert "children" not in model_fields
+
 
 class TestStoreClient:
     def setup_method(self) -> None:
@@ -338,7 +296,7 @@ class TestStoreClient:
     def test_get_client(self) -> None:
         client = StoreClient(config=self.store_config)
         httpx_client = client.http_client
-        assert isinstance(httpx_client, httpx.AsyncClient)
+        assert isinstance(httpx_client, AsyncClient)
 
     def test_context_token(self) -> None:
         config = StoreConfig(url="https://localhost", access_key="ACCESS_KEY", context_token="CONTEXT_TOKEN")

@@ -1,8 +1,8 @@
 import json
-from typing import Any, TypedDict, TYPE_CHECKING, Union
 from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, TypedDict, Union
 
-from httpx import Response
+from httpx2 import Response
 from pydantic import ValidationError
 
 if TYPE_CHECKING:

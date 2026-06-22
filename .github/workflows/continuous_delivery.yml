@@ -1,0 +1,36 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Continuous Delivery (Python)
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    environment: PYPI
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.14"]  # Add more Python versions to test here
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - name: Install uv
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: uv sync --all-groups
+
+    - name: Build and publish Package
+      env:
+        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      if: ${{ env.UV_PUBLISH_TOKEN }}
+      run: |
+        uv version ${{ github.ref_name }}
+        uv build
+        uv publish

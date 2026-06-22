@@ -52,7 +52,7 @@ class ApiInfoEndpoint(AdminEndpoint[ApiInfo]):
     @overload
     async def get(self, pk: str) -> ApiInfo: ...
 
-    async def get(self, pk: str, raw: bool = False) -> ApiInfo | dict[str, Any]:
+    async def get(self, pk: str, raw: bool = False) -> ApiInfo | dict[str, Any]:  # ty: ignore[invalid-method-override]
         raise SWAPIMethodNotAvailable()
 
     @overload

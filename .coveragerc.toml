@@ -1,0 +1,15 @@
+[run]
+relative_files = true
+omit = [
+    "*/tests/*",
+    "**/conftest.py",
+]
+
+[report]
+fail_under = 70
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

@@ -3,10 +3,10 @@ import json
 from datetime import UTC, datetime, timezone
 from email.utils import parsedate_to_datetime
 from functools import cached_property
+from hashlib import sha256
 from math import ceil
 from time import time
 from typing import (
-    TYPE_CHECKING,
     Any,
     AsyncGenerator,
     Callable,
@@ -15,12 +15,12 @@ from typing import (
     Self,
     Type,
     TypeVar,
-    cast,
     get_origin,
     overload,
 )
 
-import httpx
+from httpx2 import AsyncClient, Headers, Request, RequestError, Response, Timeout
+from httpx2._types import TimeoutTypes
 from pydantic import (
     AliasChoices,
     AliasGenerator,
@@ -35,7 +35,7 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 
-from .cache import DictCache, RedisCache
+from .cache import CacheProtocol, DictCache
 from .endpoints.base_fields import IdField, PhpAssocArray
 from .exceptions import (
     SWAPIDataValidationError,
@@ -44,7 +44,6 @@ from .exceptions import (
     SWAPIException,
     SWAPIGatewayTimeout,
     SWAPIInternalServerError,
-    SWAPIRetryException,
     SWAPIServiceUnavailable,
     SWAPISqlDuplicateEntryError,
     SWAPISqlForeignKeyError,
@@ -53,9 +52,6 @@ from .exceptions import (
 )
 from .fieldsets import FieldSetBase
 from .logging import logger
-
-if TYPE_CHECKING:
-    from redis.asyncio import Redis
 
 APPLICATION_JSON = "application/json"
 
@@ -76,38 +72,21 @@ class ConfigBase:
         self,
         url: str,
         retry_after_threshold: int = 60,
-        redis_client: "Redis | None" = None,
-        local_cache_cleanup_cycle_seconds: int = 10,
+        cache: CacheProtocol | None = None,
     ) -> None:
         self.url = url.rstrip("/")
         self.retry_after_threshold = retry_after_threshold
-        self.cache = (
-            RedisCache(redis_client)
-            if redis_client
-            else DictCache(cleanup_cycle_seconds=local_cache_cleanup_cycle_seconds)
-        )
+        self.cache = cache or DictCache(cleanup_cycle_seconds=10)
 
 
 class ClientBase:
     api_url: str
-    raw: bool
     language_id: IdField | None = None
 
-    def __init__(self, config: ConfigBase, raw: bool | None = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, config: ConfigBase, *args: Any, **kwargs: Any) -> None:
         self.api_url = config.url
         self.retry_after_threshold = config.retry_after_threshold
         self.cache = config.cache
-
-        if raw is not None:
-            import warnings
-
-            warnings.warn(
-                "parameter 'raw' of ClientBase has been deprecated and could get removed in future versions. "
-                "Use the raw parameter of .get(), .first(), .all(), ... directly."
-            )
-            self.raw = raw
-        else:
-            self.raw = False
 
         super().__init__(*args, *kwargs)
 
@@ -121,18 +100,18 @@ class ClientBase:
 
     async def __aenter__(self) -> "Self":
         client = self.http_client
-        assert isinstance(client, httpx.AsyncClient), "http_client must be an instance of httpx.AsyncClient"
+        assert isinstance(client, AsyncClient), "http_client must be an instance of AsyncClient"
         return self
 
     async def __aexit__(self, *args: Any) -> None:
         await self.http_client.aclose()
 
-    async def log_request(self, request: httpx.Request) -> None:
+    async def log_request(self, request: Request) -> None:
         if not hasattr(request, "_content"):
             await request.aread()
         logger.debug("Request: %s %s - %r <headers: %s>", request.method, request.url, request.content, request.headers)
 
-    async def log_response(self, response: httpx.Response) -> None:
+    async def log_response(self, response: Response) -> None:
         await response.aread()
         logger.debug(
             "Response: %s - %s - %r <headers: %s>",
@@ -143,10 +122,10 @@ class ClientBase:
         )
 
     @cached_property
-    def http_client(self) -> httpx.AsyncClient:
+    def http_client(self) -> AsyncClient:
         return self._get_http_client()
 
-    def _get_http_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> AsyncClient:
         raise NotImplementedError()
 
     def _get_headers(self) -> dict[str, str]:
@@ -158,21 +137,14 @@ class ClientBase:
         return headers
 
     @property
-    def timeout(self) -> httpx.Timeout:
+    def timeout(self) -> Timeout:
         client = self.http_client
         return client.timeout
 
     @timeout.setter
-    def timeout(self, timeout: httpx._types.TimeoutTypes) -> None:
+    def timeout(self, timeout: TimeoutTypes) -> None:
         client = self.http_client
-        client.timeout = timeout  # type: ignore
-
-    async def sleep_and_increment(self, retry_wait_base: int, retry_count: int) -> int:
-        retry_count += 1
-        sleep_and_increment = retry_wait_base**retry_count
-        logger.debug(f"Try failed, retrying in {sleep_and_increment} seconds.")
-        await asyncio.sleep(sleep_and_increment)
-        return retry_count
+        client.timeout = timeout
 
     def get_header_ts(self, header: str | None, fallback_time: float) -> float:
         if header is None:
@@ -185,7 +157,7 @@ class ClientBase:
 
         return server_dt.timestamp()
 
-    def parse_reset_time(self, headers: httpx.Headers) -> int:
+    def parse_reset_time(self, headers: Headers) -> int:
         """Determine reset wait time based on server time"""
         server_ts = self.get_header_ts(headers.get("Date"), time())
         reset_ts = float(headers.get(HEADER_X_RATE_LIMIT_RESET, "0"))
@@ -193,7 +165,7 @@ class ClientBase:
 
         return max(0, ceil(adjusted_time))
 
-    def parse_retry_after(self, headers: httpx.Headers) -> int:
+    def parse_retry_after(self, headers: Headers) -> int:
         retry_header: str | None = headers.get("Retry-After")
         if retry_header is None:
             return 1
@@ -208,8 +180,26 @@ class ClientBase:
 
         return max(1, ceil(adjusted_time))
 
-    async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> httpx.Response:
-        if relative_url.startswith("http://") or relative_url.startswith("https://"):
+    def _serialize_response(self, response: Response) -> str:
+        return json.dumps(
+            {
+                "status_code": response.status_code,
+                "content": response.content.decode(),
+                "headers": dict(response.headers),
+            }
+        )
+
+    def _deserialize_response(self, cached_response: str) -> Response:
+        data = json.loads(cached_response)
+        response = Response(
+            status_code=data["status_code"],
+            content=data["content"].encode(),
+            headers=Headers(headers=data["headers"]),
+        )
+        return response
+
+    async def _make_request(self, method: str, relative_url: str, **kwargs: Any) -> Response:
+        if relative_url.startswith(("http://", "https://")):
             url = relative_url
         else:
             url = f"{self.api_url}{relative_url}"
@@ -217,89 +207,45 @@ class ClientBase:
 
         headers = self._get_headers()
         headers.update(kwargs.pop("headers", {}))
+        kwargs.setdefault("follow_redirects", True)
 
-        retry_after_threshold = int(kwargs.pop("retry_after_threshold", self.retry_after_threshold))
-        retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
+        cache_for: int | None = kwargs.pop("cache_for", None)
+
+        orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
+
         retries = int(kwargs.pop("retries", 3))
+        retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
+        no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPISqlDuplicateEntryError, SWAPISqlForeignKeyError]))
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
-        no_retry_errors = tuple(kwargs.pop("no_retry_errors", [SWAPISqlDuplicateEntryError, SWAPISqlForeignKeyError]))
 
-        kwargs.setdefault("follow_redirects", True)
-        orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
+        if cache_for:
+            kwargs_hash = sha256(json.dumps(kwargs, sort_keys=True, default=str).encode()).hexdigest()
+            headers_hash = sha256(json.dumps(headers, sort_keys=True, default=str).encode()).hexdigest()
+            cache_key = f"shopware_api_client:cached_request:{method}:{url}:{kwargs_hash}:{headers_hash}"
+            cached_response = await self.cache.get(cache_key)
+            if cached_response:
+                logger.debug(f"Cache hit for {method} {url} with kwargs {kwargs} and headers {headers}")
+                return self._deserialize_response(cached_response)
 
-        key_base = RETRY_CACHE_KEY.format(
-            url=url.removeprefix("https://").removeprefix("http://"),
-            method=method,
-        )
-        x_retry_limit_cache_key = key_base + ":limit"
-        x_retry_remaining_cache_key = key_base + ":remaining"
-        x_retry_reset_cache_key = key_base + ":reset"
-        x_retry_lock_cache_key = key_base + ":lock"
-        got_lock = False
-
-        retry_count = 0
-        while True:
-            x_retry_remaining = await self.cache.get_and_decrement(x_retry_remaining_cache_key)
-            if x_retry_remaining is not None and x_retry_remaining <= 0 and not got_lock:
-                current_time = int(time())
-                reset_time = cast(int, await self.cache.get(x_retry_reset_cache_key)) or 0
-                wait_time = max(1, reset_time - current_time)
-
-                if wait_time > retry_after_threshold:
-                    raise SWAPIRetryException(
-                        f"Retry threshold exceeded for endpoint {url!r}. Threshold: {retry_after_threshold}s, Retry-After: {wait_time}s"
-                    )
-
-                await asyncio.sleep(wait_time)
-
-                got_lock = await self.cache.has_lock(x_retry_lock_cache_key, wait_time)
-                continue
-
+        for attempt in range(retries + 1):
             try:
                 response = await client.request(method, url, headers=headers, **kwargs)
-            except httpx.RequestError as exc:
-                if retry_count >= retries:
+            except RequestError as exc:
+                if attempt >= retries:
                     raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
-                retry_count = await self.sleep_and_increment(retry_wait_base, retry_count)
                 continue
 
-            # Set retry-cache if headers are present
-            if rl_limit := response.headers.get(HEADER_X_RATE_LIMIT_LIMIT):
-                x_retry_limit = int(rl_limit)
-                wait_time = self.parse_reset_time(response.headers)
-                remaining_requests = int(response.headers.get(HEADER_X_RATE_LIMIT_REMAINING))
-
-                tasks = [
-                    self.cache.set(x_retry_remaining_cache_key, remaining_requests),
-                    self.cache.set(x_retry_limit_cache_key, x_retry_limit),
-                ]
-
-                if wait_time > 0:
-                    tasks.append(self.cache.set(x_retry_reset_cache_key, int(time()) + wait_time, wait_time))
-
-                await asyncio.gather(*tasks)
-
-                if got_lock:
-                    await self.cache.delete(x_retry_lock_cache_key)
-                    got_lock = False
-
             if response.status_code == 429:
-                retry_wait_time = self.parse_retry_after(response.headers)
-                if retry_wait_time > retry_after_threshold:
-                    error: SWAPIError | SWAPIErrorList = SWAPIError.from_response(response)
-                    raise SWAPIRetryException(
-                        f"Retry threshold exceeded for endpoint {url!r}. Threshold: {retry_after_threshold}s, Retry-After: {retry_wait_time}s"
-                    ) from error
+                if attempt >= retries:
+                    raise SWAPIError.from_response(response)
 
-                # If 429 is thrown, Retry-After == X-Rate-Limit-Reset
-                await asyncio.gather(
-                    self.cache.set(x_retry_reset_cache_key, int(time()) + retry_wait_time, retry_wait_time),
-                    asyncio.sleep(retry_wait_time),
-                )
+                # Retry after
+                await asyncio.sleep(self.parse_retry_after(response.headers))
+                continue
 
-            elif response.status_code >= 400:
+            if response.status_code >= 400:
                 # retry other failure codes
                 try:
                     errors: list = response.json().get("errors")
@@ -324,18 +270,20 @@ class ClientBase:
                 elif isinstance(error, no_retry_errors) or not isinstance(error, retry_errors):
                     raise error
 
-                if retry_count >= retries:
+                if attempt >= retries:
                     raise error
 
-                retry_count = await self.sleep_and_increment(retry_wait_base, retry_count)
-            elif response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
+                await asyncio.sleep(retry_wait_base * (2 ** attempt))
+                continue
+
+            if response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
                 # guard against "200 okay" responses with malformed json
                 try:
                     setattr(response, "json_cached", response.json())
-                    return response
+                    break
                 except json.JSONDecodeError:
                     # retries exhausted?
-                    if retry_count >= retries:
+                    if attempt >= retries:
                         response.status_code = 500
                         exception = SWAPIError.from_response(response)
                         # prefix details with x-trace-header to
@@ -344,27 +292,28 @@ class ClientBase:
                         )
                         raise exception
 
-                    retry_count = await self.sleep_and_increment(retry_wait_base, retry_count)
-            else:
-                return response
+        if cache_for:
+            await self.cache.set(cache_key, self._serialize_response(response), cache_for)
 
-    async def get(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+        return response
+
+    async def get(self, relative_url: str, **kwargs: Any) -> Response:
         return await self._make_request(method="GET", relative_url=relative_url, **kwargs)
 
-    async def post(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def post(self, relative_url: str, **kwargs: Any) -> Response:
         # we need to set a response type, otherwise we don't get one
         relative_url += "?_response=basic" if "?" not in relative_url else "&_response=basic"
         return await self._make_request(method="POST", relative_url=relative_url, **kwargs)
 
-    async def patch(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def patch(self, relative_url: str, **kwargs: Any) -> Response:
         # we need to set a reponse type, otherwise we don't get one
         relative_url += "?_response=basic" if "?" not in relative_url else "&_response=basic"
         return await self._make_request(method="PATCH", relative_url=relative_url, **kwargs)
 
-    async def delete(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def delete(self, relative_url: str, **kwargs: Any) -> Response:
         return await self._make_request(method="DELETE", relative_url=relative_url, **kwargs)
 
-    async def upload(self, relative_url: str, **kwargs: Any) -> httpx.Response:
+    async def upload(self, relative_url: str, **kwargs: Any) -> Response:
         return await self._make_request(
             method="POST", relative_url=relative_url, headers={"Content-Type": "application/octet-stream"}, **kwargs
         )
@@ -544,13 +493,11 @@ class CustomFieldsMixin(BaseModel):
 class EndpointBase:
     name: str
     path: str
-    raw: bool
     search_prefix: str = "/search"
 
     def __init__(self, client: ClientBase, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.client = client
-        self.raw = client.raw
 
     def _parse_data(self, response_dict: dict[str, Any]) -> list[dict[str, Any]]:
         if "data" in response_dict:
@@ -623,10 +570,10 @@ class EndpointSearchMixin(Generic[ModelClass]):
         if name in self.model_class.model_fields:
             field = self.model_class.model_fields[name]
         else:
-            return cast(str, to_camel(name))
+            return to_camel(name)
 
         if get_origin(field.annotation) in [ForeignRelation, ManyRelation]:
-            return cast(str, to_camel(name))
+            return to_camel(name)
         else:
             return self.model_class.model_fields[name].serialization_alias or name
 
@@ -814,19 +761,25 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def all(self, raw: bool) -> list[AdminModelClass] | list[dict[str, Any]]: ...
 
     @overload
+    async def all(self, *, cache_for: int | None) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+
+    @overload
+    async def all(self, *, raw: bool, cache_for: int | None) -> list[AdminModelClass] | list[dict[str, Any]]: ...
+
+    @overload
     async def all(self) -> list[AdminModelClass]: ...
 
-    async def all(self, raw: bool = False) -> list[AdminModelClass] | list[dict[str, Any]]:
+    async def all(self, raw: bool = False, cache_for: int | None = None) -> list[AdminModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
         if self._is_search_query():
-            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data)
+            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data, cache_for=cache_for)
         else:
-            result = await self.client.get(self.path, params=data)
+            result = await self.client.get(self.path, params=data, cache_for=cache_for)
 
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -838,13 +791,19 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def get(self, pk: str, raw: Literal[True]) -> dict[str, Any]: ...
 
     @overload
+    async def get(self, pk: str, *, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]: ...
+
+    @overload
+    async def get(self, pk: str, *, raw: bool, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]: ...
+
+    @overload
     async def get(self, pk: str) -> AdminModelClass: ...
 
-    async def get(self, pk: str, raw: bool = False) -> AdminModelClass | dict[str, Any]:
-        result = await self.client.get(f"{self.path}/{pk}")
+    async def get(self, pk: str, raw: bool = False, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]:
+        result = await self.client.get(f"{self.path}/{pk}", cache_for=cache_for)
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -882,7 +841,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -896,9 +855,12 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     @overload
     async def first(self) -> AdminModelClass | None: ...
 
-    async def first(self, raw: bool = False) -> AdminModelClass | dict[str, Any] | None:
+    @overload
+    async def first(self, *, cache_for: int | None) -> AdminModelClass | dict[str, Any] | None: ...
+
+    async def first(self, raw: bool = False, cache_for: int | None = None) -> AdminModelClass | dict[str, Any] | None:
         self._limit = 1
-        result = await self.all(raw=raw)
+        result = await self.all(raw=raw, cache_for=cache_for)
 
         # return None instead of an KeyError, if result is empty
         if len(result) == 0:
@@ -935,7 +897,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
 
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -971,7 +933,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data)
@@ -996,6 +958,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     def iter(self, batch_size: int) -> AsyncGenerator[AdminModelClass, None]: ...
 
     @overload
+    def iter(self, *, cache_for: int | None = None) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]: ...
+
+    @overload
     def iter(self, *, raw: Literal[False]) -> AsyncGenerator[AdminModelClass, None]: ...
 
     @overload
@@ -1005,7 +970,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     def iter(self) -> AsyncGenerator[AdminModelClass, None]: ...
 
     async def iter(
-        self, batch_size: int = 100, raw: bool = False
+        self, batch_size: int = 100, raw: bool = False, cache_for: int | None = None
     ) -> AsyncGenerator[AdminModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
@@ -1020,15 +985,15 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         while True:
             data["page"] = page
             if is_search_query:
-                result = await self.client.post(url, json=data)
+                result = await self.client.post(url, json=data, cache_for=cache_for)
             else:
-                result = await self.client.get(url, params=data)
+                result = await self.client.get(url, params=data, cache_for=cache_for)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
 
             for entry in result_data:
-                if self.raw or raw:
+                if raw:
                     yield entry
                 else:
                     yield self._parse_response(entry)
@@ -1099,34 +1064,61 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def all(self, raw: Literal[True]) -> list[dict[str, Any]]: ...
 
     @overload
-    async def all(self, raw: bool) -> list[ModelClass] | list[dict[str, Any]]: ...
+    async def all(self, *, raw: bool) -> list[ModelClass] | list[dict[str, Any]]: ...
 
-    async def all(self, raw: bool = False) -> list[ModelClass] | list[dict[str, Any]]:
+    @overload
+    async def all(self, *, cache_for: int | None) -> list[ModelClass] | list[dict[str, Any]]: ...
+
+    @overload
+    async def all(self, raw: bool, cache_for: int | None) -> list[ModelClass] | list[dict[str, Any]]: ...
+
+    async def all(self, raw: bool = False, cache_for: int | None = None) -> list[ModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
-        result = await self.client.post(self.path, json=data)
+        result = await self.client.post(self.path, json=data, cache_for=cache_for)
 
         result_data: list[dict[str, Any]] = result.json().get("elements", [])
 
-        if self.raw or raw:
+        if raw:
             return result_data
 
         return self._parse_response(result_data, cls=self.model_class)
 
-    async def iter(self, batch_size: int = 100, raw: bool = False) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
+    @overload
+    def iter(self, batch_size: int, raw: Literal[False]) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    def iter(self, batch_size: int, raw: Literal[True]) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    def iter(self, batch_size: int) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    def iter(self, *, cache_for: int | None = None) -> AsyncGenerator[ModelClass | dict[str, Any], None]: ...
+
+    @overload
+    def iter(self, *, raw: Literal[False]) -> AsyncGenerator[ModelClass, None]: ...
+
+    @overload
+    def iter(self, *, raw: Literal[True]) -> AsyncGenerator[dict[str, Any], None]: ...
+
+    @overload
+    def iter(self) -> AsyncGenerator[ModelClass, None]: ...
+
+    async def iter(self, batch_size: int = 100, raw: bool = False, cache_for: int | None = None) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
         page = 1
 
         while True:
             data["page"] = page
-            result = await self.client.post(self.path, json=data)
+            result = await self.client.post(self.path, json=data, cache_for=cache_for)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)
 
             for entry in result_data:
-                if self.raw or raw:
+                if raw:
                     yield entry
                 else:
                     yield self._parse_response(entry, cls=self.model_class)
@@ -1143,11 +1135,14 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
     async def first(self, raw: Literal[True]) -> dict[str, Any] | None: ...
 
     @overload
-    async def first(self, raw: bool) -> ModelClass | dict[str, Any] | None: ...
+    async def first(self, *, raw: bool) -> ModelClass | dict[str, Any] | None: ...
 
-    async def first(self, raw: bool = False) -> ModelClass | dict[str, Any] | None:
+    @overload
+    async def first(self, *, cache_for: int | None) -> ModelClass | dict[str, Any] | None: ...
+
+    async def first(self, raw: bool = False, *, cache_for: int | None = None) -> ModelClass | dict[str, Any] | None:
         self._limit = 1
-        result = await self.all(raw=raw)
+        result = await self.all(raw=raw, cache_for=cache_for)
 
         # return None instead of an KeyError, if result is empty
         if len(result) == 0:

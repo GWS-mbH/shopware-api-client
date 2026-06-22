@@ -18,5 +18,5 @@ class AppEndpoint(AdminEndpoint[App]):
 
 
 from .acl_role import AclRole  # noqa: E402
-from .app import App  # noqa: E402
+from .app import App  # noqa: E402  # ty: ignore[unresolved-import]
 from .integration import Integration  # noqa: E402

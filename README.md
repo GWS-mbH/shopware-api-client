@@ -1,15 +1,14 @@
 # Shopware API Client
 
-A Django-ORM like, Python 3.12, async Shopware 6 admin and store-front API client.
+A Django-ORM like, Python 3.14+, async Shopware 6 admin and store-front API client.
 
 ## Installation
 
 ```sh
 pip install shopware-api-client
-
-# If you want to use the redis cache
-pip install shopware-api-client[redis]
 ```
+
+> **Note:** Redis support has been refactored in version 2.0. If you need custom caching backends like Redis, you can provide your own cache implementation through the config's `cache` parameter.
 
 ## Usage
 
@@ -44,18 +43,12 @@ ADMIN_PASSWORD = "!MeowMoewMoew~"
 config = AdminConfig(url=SHOP_URL, username=ADMIN_USER, password=ADMIN_PASSWORD, grant_type="password")
 ```
 
-Now you can create the Client. There are two output formats for the client, that can be selected by the `raw` parameter:
-- **raw=True** Outputs the result as a plain dict or list of dicts
-- **raw=False** (Default) Outputs the result as Pydantic-Models
+Now you can create the Client:
 
 ```python
 from shopware_api_client.client import AdminClient
 
-# Model-Mode
 client = AdminClient(config=config)
-
-# raw-Mode
-client = AdminClient(config=config, raw=True)
 ```
 
 Client-Connections should be closed after usage: `await client.close()`. The client can also be used in an `async with`
@@ -78,8 +71,7 @@ customer = await client.customer.first()
 
 All available Endpoint functions can be found in the [AdminEndpoint](#list-of-available-functions) section.
 
-There are two additional ways how the client can be utilized by using it with the Endpoint-Class directly or the
-associated Pydantic Model:
+You can also use the Endpoint-Class directly or the associated Pydantic Model:
 
 ```python
 from shopware_api_client.endpoints.admin.core.customer import Customer, CustomerEndpoint
@@ -94,7 +86,7 @@ customer = await Customer.using(client=client).first()
 
 #### Related Objects
 
-If you use the Pydantic-Model approach (`raw=False`) you can also use the returned object to access its related objects:
+You can use returned Pydantic model objects to access their related objects:
 
 ```python
 from shopware_api_client.endpoints.admin import Customer
@@ -157,38 +149,62 @@ This config can be used with the `StoreClient`, ~~which works exactly like the `
 The `StoreClient` has far less endpoints and does mostly not support full updated of models, but uses
 helper-functions.
 
-### Redis Caching for Rate Limits
+### Caching and Rate Limits
 
-Both the AdminClient and the StoreClient use a built-in rate limiter. Shopware's rate limits differ based on the endpoints, both for the [SaaS-](https://docs.shopware.com/en/en/shopware-6-en/saas/rate-limits) and the [on-premise-solution](https://developer.shopware.com/docs/guides/hosting/infrastructure/rate-limiter.html).
+Both the `AdminClient` and the `StoreClient` use a built-in rate limiter. Shopware's rate limits differ based on the endpoints, both for the [SaaS-](https://docs.shopware.com/en/en/shopware-6-en/saas/rate-limits) and the [on-premise-solution](https://developer.shopware.com/docs/guides/hosting/infrastructure/rate-limiter.html).
 
-To be able to respect the rate limit when sending requests from multiple clients, it is possible to use redis as a cache-backend for route-based rate-limit data. If redis is not used, each Client independently keeps track of the rate limit. Please note that the non-Redis cache is not thread-safe.
+By default, both clients use an in-memory `DictCache` for rate-limit tracking. If you need to share rate-limit data across multiple client instances (e.g., running in different processes), you can provide a custom cache implementation by passing a `cache` parameter to the config.
 
-To use redis, simply hand over a redis-client to the client config:
-```py
-import redis
+The `cache` parameter accepts any object implementing the `CacheProtocol`:
+
+```python
+class CacheProtocol(Protocol):
+    async def get(self, key: str) -> Any | None: ...
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> None: ...
+    async def delete(self, key: str) -> None: ...
+```
+
+#### Example: Using a Custom Redis Cache
+
+```python
 from shopware_api_client.config import AdminConfig, StoreConfig
 from shopware_api_client.client import AdminClient, StoreClient
 
-redis_client = redis.Redis()
+# Implement a Redis-based cache using your preferred Redis client
+class RedisCache:
+    def __init__(self, redis_client):
+        self.client = redis_client
+
+    async def get(self, key: str):
+        value = await self.client.get(key)
+        return json.loads(value) if value else None
+
+    async def set(self, key: str, value: Any, ttl: int | None = None):
+        await self.client.set(key, json.dumps(value), ex=ttl)
+
+    async def delete(self, key: str):
+        await self.client.delete(key)
+
+# Use the custom cache with your config
+redis_cache = RedisCache(your_redis_client)
 
 admin_config = AdminConfig(
-    url='',
+    url='https://your-shop.com',
     client_id='...',
-    client_secre='...',
-    redis_client=redis_client,
+    client_secret='...',
+    cache=redis_cache,  # Pass the custom cache
 )
-admin_client = AdminClient(config=config)  # <- This client uses the redis client now
+admin_client = AdminClient(config=admin_config)
 
 store_config = StoreConfig(
-    url='',
-    access_key='',
-    context_token=''
-    redis_client=redis_client,
+    url='https://your-shop.com',
+    access_key='...',
+    cache=redis_cache,  # Reuse the same cache across clients
 )
-store_client = StoreClient(config=config)  # <- Works for store client as well (Only do this in safe environments)
+store_client = StoreClient(config=store_config)
 ```
 
-__Note:__ Shopware currently enforces rate limits on a per–public‑IP basis. As a result, you should only share Redis‑backed rate‑limit caching among clients that originate from the same public IP address.
+**Note:** Shopware currently enforces rate limits on a per–public‑IP basis. Only share rate-limit caching among clients that originate from the same public IP address.
 
 ## AdminEndpoint
 The `base.AdminEndpoint` class should be used for creating new Admin-Endpoints. It provides some usefull functions to call
@@ -224,7 +240,7 @@ class CustomerGroupEndpoint(AdminEndpoint[CustomerGroup]):
 - `order_by(fields: str | tuple[str]` sets the sort parameter. Needs to be called with .all(), .iter() or .first(). Syntax: "name" for ASC, "-name" for DESC
 - `select_related(**kwargs: dict[str, Any])` sets the _associations parameter to define which related models to load in the request. Needs to be called with .all(), .iter() or .first().
 - `only(**kwargs: list[str])` sets the _includes parameter to define which fields to request. Needs to be called with .all(), .iter() or .first().
-- `iter(batch_size: int = 100)` sets the limit-parameter to batch_size and makes use of the pagination of the api. Should be used when requesting a big set of data (GET /customer-group or POST /search/customer-group if filter or sort is set)
+- `iter(batch_size: int = 100)` sets the limit-parameter to batch_size and makes use of the pagination of the api. Should be used when requesting a big set of data (GET /customer-group or POST /search/customer-group if filter or sort is set).
 - `bulk_upsert(objs: list[ModelClass] | list[dict[str, Any]` creates/updates multiple objects. Does always return dict of plain response. (POST /_action/sync)
 - `bulk_delete(objs: list[ModelClass] | list[dict[str, Any]` deletes multiple objects. Does always return dict or plain response. (POST /_action/sync)
 
@@ -256,6 +272,25 @@ customer = await Customer.using(client=client).filter(custom_field__preferred_pr
 # or with filter-type-appendix
 customer = await Customer.using(client=client).filter(custom_field__preferred_protein__in=["fish", "chicken"])
 ```
+
+### Query Result Caching
+
+You can cache query results for a specified duration using the `cache_for` parameter. This is useful when you're repeatedly fetching the same data within a short time window:
+
+```python
+from shopware_api_client.endpoints.admin import CustomEntity
+
+# Cache results for 300 seconds (5 minutes)
+async for custom_entity in client.custom_entity.iter(cache_for=300):
+    # Process custom_entity
+    pass
+
+# Or with other endpoint methods
+customers = await client.customer.all(cache_for=60)  # Cache for 60 seconds
+customer = await client.customer.first(cache_for=300)  # Cache for 300 seconds
+```
+
+The cached results will be stored using your configured cache backend (either the default in-memory `DictCache` or a custom implementation). The TTL (time-to-live) is specified in seconds. Once the TTL expires, the next query will fetch fresh data from the API.
 
 ## ApiModelBase
 
@@ -336,9 +371,12 @@ from shopware_api_client.endpoints.admin import CustomerAddress  # noqa: E402
 
 ### Testing
 
-You can use `poetry build` and `poetry run pip install -e .` to install the current src.
+You can use `uv sync` to install dependencies, and then run `uv run pytest` to execute the tests.
 
-Then run `poetry run pytest .` to execute the tests.
+```sh
+uv sync
+uv run pytest
+```
 
 ### Model Creation
 

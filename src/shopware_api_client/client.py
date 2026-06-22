@@ -1,7 +1,8 @@
 from typing import Any, cast
 
-import httpx
-from httpx_auth import OAuth2ClientCredentials, OAuth2ResourceOwnerPasswordCredentials
+from httpx2 import AsyncClient, AsyncHTTPTransport, Headers, Timeout
+
+from shopware_api_client.auth import ShopwareAdminAPIAuth, ShopwareAdminPasswordAPIAuth
 
 from .base import ApiModelBase, ClientBase, ModelClass
 from .config import AdminConfig, StoreConfig
@@ -11,41 +12,31 @@ from .exceptions import SWAPIConfigException
 
 
 class AdminClient(ClientBase, AdminEndpoints):
-    def __init__(self, config: AdminConfig, raw: bool | None = None):
-        super().__init__(config=config, raw=raw)
+    def __init__(self, config: AdminConfig):
+        super().__init__(config=config)
         self.config = config
         self.api_url = f"{config.url}/api"
-        self._client: httpx.AsyncClient | None = None
+        self._client: AsyncClient | None = None
 
-    def _get_http_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> AsyncClient:
         if self._client is None:
-            self._client = httpx.AsyncClient(
-                event_hooks={"request": [self.log_request], "response": [self.log_response]}
+            self._client = AsyncClient(
+                event_hooks={"request": [self.log_request], "response": [self.log_response]},
+                transport=AsyncHTTPTransport(retries=1),
             )
 
             # increase default(10s) timeouts
-            self._client.timeout = httpx.Timeout(15, read=45, write=45)
-
-            auth_url = f"{self.api_url}/oauth/token"
+            self._client.timeout = Timeout(15, read=45, write=45)
 
             if self.config.grant_type == "client_credentials":
                 if self.config.client_id is not None and self.config.client_secret is not None:
-                    self._client.auth = OAuth2ClientCredentials(
-                        token_url=auth_url,
-                        client_id=self.config.client_id,
-                        client_secret=self.config.client_secret,
-                        **self.config.extra,
-                    )
+                    self._client.auth = ShopwareAdminAPIAuth(self.config)
                 else:
                     raise SWAPIConfigException("Missing Client Credentials.")
+
             elif self.config.grant_type == "password":
                 if self.config.username is not None and self.config.password is not None:
-                    self._client.auth = OAuth2ResourceOwnerPasswordCredentials(
-                        token_url=auth_url,
-                        username=self.config.username,
-                        password=self.config.password,
-                        **self.config.extra,
-                    )
+                    self._client.auth = ShopwareAdminPasswordAPIAuth(self.config)
                 else:
                     raise SWAPIConfigException("Missing Client Credentials.")
             else:
@@ -96,21 +87,22 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         response = await self.post("/_action/sync", json=data, orig_objs=objs, **request_kwargs)
 
-        return cast(dict, response.json_cached if hasattr(response, "json_cached") else response.json())
+        return cast(dict, getattr(response, "json_cached", response.json()))
 
 
 class StoreClient(ClientBase, StoreEndpoints):
-    def __init__(self, config: StoreConfig, raw: bool | None = None):
-        super().__init__(config, raw=raw)
+    def __init__(self, config: StoreConfig):
+        super().__init__(config)
         self.config = config
         self.api_url = f"{config.url}/store-api"
-        self._client: httpx.AsyncClient | None = None
+        self._client: AsyncClient | None = None
         self.init_endpoints(self)
 
-    def _get_http_client(self) -> httpx.AsyncClient:
+    def _get_http_client(self) -> AsyncClient:
         if self._client is None:
-            self._client = httpx.AsyncClient(
+            self._client = AsyncClient(
                 event_hooks={"request": [self.log_request], "response": [self.log_response]},
+                transport=AsyncHTTPTransport(retries=1),
             )
 
             headers = {
@@ -123,8 +115,7 @@ class StoreClient(ClientBase, StoreEndpoints):
                 headers["sw-context-token"] = self.config.context_token
 
             # increase default(10s) timeouts
-            self._client.timeout = httpx.Timeout(15, read=45, write=45)
-
-            self._client.headers = httpx.Headers(headers)
+            self._client.timeout = Timeout(15, read=45, write=45)
+            self._client.headers = Headers(headers)
 
         return self._client

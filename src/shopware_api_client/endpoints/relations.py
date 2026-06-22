@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, Generic, get_args, TypeGuard
+from typing import Any, Coroutine, Generic, TypeGuard, get_args
 
 from pydantic import GetCoreSchemaHandler, ValidationInfo
 from pydantic.alias_generators import to_camel
