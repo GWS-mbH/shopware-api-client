@@ -1,6 +1,6 @@
 # Shopware API Client
 
-A Django-ORM like, Python 3.14+, async Shopware 6 admin and store-front API client.
+A Django-ORM like, Python 3.12+, async Shopware 6 admin and store-front API client.
 
 ## Installation
 
