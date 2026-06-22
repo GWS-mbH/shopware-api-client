@@ -151,9 +151,7 @@ helper-functions.
 
 ### Caching and Rate Limits
 
-Both the `AdminClient` and the `StoreClient` use a built-in rate limiter. Shopware's rate limits differ based on the endpoints, both for the [SaaS-](https://docs.shopware.com/en/en/shopware-6-en/saas/rate-limits) and the [on-premise-solution](https://developer.shopware.com/docs/guides/hosting/infrastructure/rate-limiter.html).
-
-By default, both clients use an in-memory `DictCache` for rate-limit tracking. If you need to share rate-limit data across multiple client instances (e.g., running in different processes), you can provide a custom cache implementation by passing a `cache` parameter to the config.
+By default, both clients use an in-memory `DictCache` for caching. If you need to share caches across multiple client instances (e.g., running in different processes), you can provide a custom cache implementation by passing a `cache` parameter to the config.
 
 The `cache` parameter accepts any object implementing the `CacheProtocol`:
 
@@ -203,8 +201,6 @@ store_config = StoreConfig(
 )
 store_client = StoreClient(config=store_config)
 ```
-
-**Note:** Shopware currently enforces rate limits on a per–public‑IP basis. Only share rate-limit caching among clients that originate from the same public IP address.
 
 ## AdminEndpoint
 The `base.AdminEndpoint` class should be used for creating new Admin-Endpoints. It provides some usefull functions to call
