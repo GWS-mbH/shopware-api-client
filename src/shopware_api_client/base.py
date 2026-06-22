@@ -46,10 +46,10 @@ from .exceptions import (
     SWAPIInternalServerError,
     SWAPIRetryException,
     SWAPIServiceUnavailable,
-    SWFilterException,
-    SWNoClientProvided,
     SWAPISqlDuplicateEntryError,
     SWAPISqlForeignKeyError,
+    SWFilterException,
+    SWNoClientProvided,
 )
 from .fieldsets import FieldSetBase
 from .logging import logger
@@ -220,7 +220,7 @@ class ClientBase:
 
         retry_after_threshold = int(kwargs.pop("retry_after_threshold", self.retry_after_threshold))
         retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
-        retries = int(kwargs.pop("retries", 0))
+        retries = int(kwargs.pop("retries", 3))
         retry_errors = tuple(
             kwargs.pop("retry_errors", [SWAPIInternalServerError, SWAPIServiceUnavailable, SWAPIGatewayTimeout])
         )
