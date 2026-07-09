@@ -181,11 +181,17 @@ class ClientBase:
         return max(1, ceil(adjusted_time))
 
     def _serialize_response(self, response: Response) -> str:
+        headers = {
+            header: value
+            for header, value in response.headers.items()
+            if header.lower() in ("content-type", "content-length", "date", "server", "transfer-encoding")
+        }
+
         return json.dumps(
             {
                 "status_code": response.status_code,
                 "content": response.content.decode(),
-                "headers": dict(response.headers),
+                "headers": headers,
             }
         )
 
@@ -273,7 +279,7 @@ class ClientBase:
                 if attempt >= retries:
                     raise error
 
-                await asyncio.sleep(retry_wait_base * (2 ** attempt))
+                await asyncio.sleep(retry_wait_base * (2**attempt))
                 continue
 
             if response.status_code == 200 and response.headers.get("Content-Type", "").startswith(APPLICATION_JSON):
@@ -760,7 +766,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     @overload
     async def all(self) -> list[AdminModelClass]: ...
 
-    async def all(self, raw: bool = False, cache_for: int | None = None) -> list[AdminModelClass] | list[dict[str, Any]]:
+    async def all(
+        self, raw: bool = False, cache_for: int | None = None
+    ) -> list[AdminModelClass] | list[dict[str, Any]]:
         data = self._get_data_dict()
 
         if self._is_search_query():
@@ -931,10 +939,14 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return await self.client.bulk_delete(name=self.name, objs=objs, **request_kwargs)
 
     @overload
-    def iter(self, *, batch_size: int = 100, raw: Literal[False] = False, cache_for: int | None = None) -> AsyncGenerator[AdminModelClass, None]: ...
+    def iter(
+        self, *, batch_size: int = 100, raw: Literal[False] = False, cache_for: int | None = None
+    ) -> AsyncGenerator[AdminModelClass, None]: ...
 
     @overload
-    def iter(self, *, batch_size: int = 100, raw: Literal[True] = True, cache_for: int | None = None) -> AsyncGenerator[dict[str, Any], None]: ...
+    def iter(
+        self, *, batch_size: int = 100, raw: Literal[True] = True, cache_for: int | None = None
+    ) -> AsyncGenerator[dict[str, Any], None]: ...
 
     @overload
     def iter(self) -> AsyncGenerator[AdminModelClass, None]: ...
@@ -1049,15 +1061,21 @@ class StoreSearchEndpoint(StoreEndpoint, EndpointSearchMixin, Generic[ModelClass
         return self._parse_response(result_data, cls=self.model_class)
 
     @overload
-    def iter(self, *, batch_size: int = 100, raw: Literal[False] = False, cache_for: int | None = None) -> AsyncGenerator[ModelClass, None]: ...
+    def iter(
+        self, *, batch_size: int = 100, raw: Literal[False] = False, cache_for: int | None = None
+    ) -> AsyncGenerator[ModelClass, None]: ...
 
     @overload
-    def iter(self, *, batch_size: int = 100, raw: Literal[True] = True, cache_for: int | None = None) -> AsyncGenerator[dict[str, Any], None]: ...
+    def iter(
+        self, *, batch_size: int = 100, raw: Literal[True] = True, cache_for: int | None = None
+    ) -> AsyncGenerator[dict[str, Any], None]: ...
 
     @overload
     def iter(self) -> AsyncGenerator[ModelClass, None]: ...
 
-    async def iter(self, batch_size: int = 100, raw: bool = False, cache_for: int | None = None) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
+    async def iter(
+        self, batch_size: int = 100, raw: bool = False, cache_for: int | None = None
+    ) -> AsyncGenerator[ModelClass | dict[str, Any], None]:
         self._limit = batch_size
         data = self._get_data_dict()
         page = 1
