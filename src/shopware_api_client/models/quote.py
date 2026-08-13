@@ -13,11 +13,10 @@ class QuoteBase(ApiModelBase, CustomFieldsMixin):
 
     auto_increment: int | None = Field(default=None, exclude=True)
     quote_number: str | None = None
-    user_id: IdField
+    user_id: IdField | None = None
     currency_id: IdField
     language_id: IdField
     sales_channel_id: IdField
-    default_billing_address_id: IdField
     customer_id: IdField
     created_by_id: IdField | None = None
     updated_by_id: IdField | None = None
@@ -34,5 +33,3 @@ class QuoteBase(ApiModelBase, CustomFieldsMixin):
     subtotal_net: float | None = None
     total_discount: float | None = None
     cart_payload: str | None = None
-    created_at: date
-    updated_at: date | None
