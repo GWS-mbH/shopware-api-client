@@ -7,7 +7,6 @@ from shopware_api_client.config import AdminConfig
 
 
 class ShopwareAdminAPIAuth(Auth):
-
     def __init__(self, config: AdminConfig):
         self.config = config
         self.auth_url = f"{config.url}/api/oauth/token"
@@ -40,13 +39,13 @@ class ShopwareAdminAPIAuth(Auth):
         if not token:
             # If not, get a new one from Shopware.
             token, expires_in = await self._get_access_token_from_shopware()
-            await self.config.cache.set(self._cache_key, token, expires_in - 10)  # cache a bit less than actual expiry
+            await self.config.cache.set(self._cache_key, token, expires_in - 30)  # cache a bit less than actual expiry
 
         return token
 
     async def async_auth_flow(self, request: Request) -> AsyncGenerator[Request, Response]:
 
-        access_token = await  self._get_access_token()
+        access_token = await self._get_access_token()
         request.headers["Authorization"] = f"Bearer {access_token}"
 
         async for req in super().async_auth_flow(request):
@@ -54,7 +53,6 @@ class ShopwareAdminAPIAuth(Auth):
 
 
 class ShopwareAdminPasswordAPIAuth(ShopwareAdminAPIAuth):
-
     @cached_property
     def _cache_key(self):
         return f"shopware_api_client:access_token:password:{self.auth_url}"
@@ -75,5 +73,5 @@ class ShopwareAdminPasswordAPIAuth(ShopwareAdminAPIAuth):
         async with AsyncClient(transport=transport) as client:
             response = await client.post(self.auth_url, data=payload)
             response.raise_for_status()
-            data =  response.json()
+            data = response.json()
             return data.get("access_token"), data.get("expires_in")
