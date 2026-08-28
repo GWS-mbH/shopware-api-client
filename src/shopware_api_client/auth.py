@@ -7,9 +7,10 @@ from shopware_api_client.config import AdminConfig
 
 
 class ShopwareAdminAPIAuth(Auth):
-    def __init__(self, config: AdminConfig):
+    def __init__(self, config: AdminConfig, safety_seconds: int = 30):
         self.config = config
         self.auth_url = f"{config.url}/api/oauth/token"
+        self.safety_seconds = safety_seconds
 
     async def _get_access_token_from_shopware(self) -> tuple[str, int]:
         assert isinstance(self.config, AdminConfig), "Config must be of type AdminConfig"
@@ -39,7 +40,9 @@ class ShopwareAdminAPIAuth(Auth):
         if not token:
             # If not, get a new one from Shopware.
             token, expires_in = await self._get_access_token_from_shopware()
-            await self.config.cache.set(self._cache_key, token, expires_in - 30)  # cache a bit less than actual expiry
+            await self.config.cache.set(
+                self._cache_key, token, expires_in - self.safety_seconds
+            )  # cache a bit less than actual expiry
 
         return token
 
