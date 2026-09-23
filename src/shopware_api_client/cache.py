@@ -25,6 +25,9 @@ class DictCache(CacheProtocol):
     async def get(self, key: str) -> Any | None:
         self._cleanup_by_expiry()
         entry = self._cache.get(key)
+        now = int(time())
+        if entry and entry.expire_at is not None and entry.expire_at < now:
+            return None
 
         return self._json_decode(entry and entry.value)
 

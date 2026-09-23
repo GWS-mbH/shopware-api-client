@@ -27,7 +27,7 @@ class TestShopwareAdminAPIAuth:
             grant_type="client_credentials",
             extra={"audience": "admin-api"},
         )
-        self.auth = ShopwareAdminAPIAuth(config=self.config)
+        self.auth = ShopwareAdminAPIAuth(config=self.config, safety_seconds=42)
 
     async def test_get_access_token_from_shopware_success(self, patch_oauth_post) -> None:
         response = Mock()
@@ -82,7 +82,7 @@ class TestShopwareAdminAPIAuth:
 
         assert token == "FRESH_TOKEN"
         fetch_mock.assert_awaited_once()
-        cache_set_mock.assert_awaited_once_with(self.auth._cache_key, "FRESH_TOKEN", 290)
+        cache_set_mock.assert_awaited_once_with(self.auth._cache_key, "FRESH_TOKEN", 300 - self.auth.safety_seconds)
 
     async def test_async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
         mocker.patch.object(self.auth, "_get_access_token", AsyncMock(return_value="FLOW_TOKEN"))
@@ -103,7 +103,7 @@ class TestShopwareAdminPasswordAPIAuth:
             grant_type="password",
             extra={"scope_hint": "all"},
         )
-        self.auth = ShopwareAdminPasswordAPIAuth(config=self.config)
+        self.auth = ShopwareAdminPasswordAPIAuth(config=self.config, safety_seconds=17)
 
     async def test_get_access_token_from_shopware_success(self, patch_oauth_post) -> None:
         response = Mock()
@@ -160,7 +160,9 @@ class TestShopwareAdminPasswordAPIAuth:
 
         assert token == "FRESH_PASSWORD_TOKEN"
         fetch_mock.assert_awaited_once()
-        cache_set_mock.assert_awaited_once_with(self.auth._cache_key, "FRESH_PASSWORD_TOKEN", 290)
+        cache_set_mock.assert_awaited_once_with(
+            self.auth._cache_key, "FRESH_PASSWORD_TOKEN", 300 - self.auth.safety_seconds
+        )
 
     async def test_async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
         mocker.patch.object(self.auth, "_get_access_token", AsyncMock(return_value="FLOW_PASSWORD_TOKEN"))
