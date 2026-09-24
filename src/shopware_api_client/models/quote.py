@@ -1,6 +1,4 @@
-from datetime import date
-
-from pydantic import Field
+from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
 from shopware_api_client.endpoints.base_fields import IdField
@@ -22,8 +20,8 @@ class QuoteBase(ApiModelBase, CustomFieldsMixin):
     updated_by_id: IdField | None = None
     order_id: IdField | None = None
     order_version_id: IdField | None = None
-    expiration_date: date | None = None
-    sent_at: date | None = None
+    expiration_date: AwareDatetime | None = None
+    sent_at: AwareDatetime | None = None
     price: CartPrice | None = None
     shipping_costs: CalculatedPrice | None = None
     discount: float | None = None
