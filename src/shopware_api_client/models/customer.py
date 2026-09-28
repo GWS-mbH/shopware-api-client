@@ -1,22 +1,24 @@
+from typing import Annotated
+
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class CustomerBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "customer"
 
-    group_id: IdField
-    default_payment_method_id: IdField | None = None
-    sales_channel_id: IdField
-    language_id: IdField
-    last_payment_method_id: IdField | None = None
-    default_billing_address_id: IdField
-    default_shipping_address_id: IdField
+    group_id: Annotated[IdField, RefersTo("customer_group")]
+    default_payment_method_id: Annotated[IdField | None, RefersTo("payment_method")] = None
+    sales_channel_id: Annotated[IdField, RefersTo("sales_channel")]
+    language_id: Annotated[IdField, RefersTo("language")]
+    last_payment_method_id: Annotated[IdField | None, RefersTo("payment_method")] = None
+    default_billing_address_id: Annotated[IdField, RefersTo("customer_address")]
+    default_shipping_address_id: Annotated[IdField, RefersTo("customer_address")]
     auto_increment: int | None = Field(default=None, exclude=True)
     customer_number: str
-    salutation_id: IdField | None = None
+    salutation_id: Annotated[IdField | None, RefersTo("salutation")] = None
     first_name: str
     last_name: str
     company: str | None = None
@@ -40,8 +42,8 @@ class CustomerBase(ApiModelBase, CustomFieldsMixin):
     review_count: int | None = Field(default=None, exclude=True)
     remote_address: str | None = None
     tag_ids: list[IdField] | None = Field(default=None, exclude=True)
-    requested_group_id: IdField | None = None
-    bound_sales_channel_id: IdField | None = None
+    requested_group_id: Annotated[IdField | None, RefersTo("customer_group")] = None
+    bound_sales_channel_id: Annotated[IdField | None, RefersTo("sales_channel")] = None
     account_type: str
-    created_by_id: IdField | None = None
-    updated_by_id: IdField | None = None
+    created_by_id: Annotated[IdField | None, RefersTo("user")] = None
+    updated_by_id: Annotated[IdField | None, RefersTo("user")] = None

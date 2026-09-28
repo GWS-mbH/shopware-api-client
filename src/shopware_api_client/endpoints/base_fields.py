@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Annotated, Any
 
 from pydantic import BeforeValidator, Field, StringConstraints, ValidationInfo
@@ -16,6 +17,16 @@ def normalize_php_assoc_array(value: Any, info: ValidationInfo) -> dict[str, Any
         return {}
     else:
         raise ValueError(f"Expected an associative array, but got {type(value).__name__}")
+
+
+@dataclass(frozen=True, slots=True)
+class RefersTo:
+    """
+    Marks an IdField as a foreign key to `entity`
+    entity must be thev value of the _identifier-field of the related Endpoint.
+    """
+
+    entity: str
 
 
 IdField = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]

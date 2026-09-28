@@ -1,7 +1,9 @@
+from typing import Annotated
+
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class CustomEntityBase(ApiModelBase):
@@ -10,7 +12,7 @@ class CustomEntityBase(ApiModelBase):
     name: str
     fields: list
     flags: list | None = None
-    app_id: IdField | None = None
+    app_id: Annotated[IdField | None, RefersTo("app")] = None
     plugin_id: IdField | None = None
     cms_aware: bool | None = None
     store_api_aware: bool | None = None

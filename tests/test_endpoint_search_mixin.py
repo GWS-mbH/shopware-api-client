@@ -21,7 +21,7 @@ class TestEndpointSearchMixin:
     Tests the methods of the EndpointSearchMixin class.
     """
 
-    def test_filter(self):
+    def test__filter(self):
         """
         Tests the filter method of the EndpointSearchMixin class.
         """
@@ -47,7 +47,7 @@ class TestEndpointSearchMixin:
             ]
         }
 
-    def test_exclude(self):
+    def test__exclude(self):
         """
         Tests the exclude method of the EndpointSearchMixin class.
         """

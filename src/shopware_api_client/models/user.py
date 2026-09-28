@@ -1,13 +1,15 @@
+from typing import Annotated
+
 from pydantic import AwareDatetime
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class UserBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "user"
 
-    locale_id: IdField
+    locale_id: Annotated[IdField, RefersTo("locale")]
     username: str
     first_name: str
     last_name: str
@@ -18,4 +20,4 @@ class UserBase(ApiModelBase, CustomFieldsMixin):
     admin: bool | None = None
     last_updated_password_at: AwareDatetime | None = None
     time_zone: str
-    avatar_id: IdField | None = None
+    avatar_id: Annotated[IdField | None, RefersTo("media")] = None

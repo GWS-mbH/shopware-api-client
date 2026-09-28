@@ -19,7 +19,9 @@ class ForeignRelation(Generic[AdminModelClass]):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
-        assert handler.field_name is not None
+        field_name = handler.field_name
+        assert field_name is not None
+
         data_tp = get_args(source)[0]
         data_schema = handler.generate_schema(data_tp)
 
@@ -30,9 +32,9 @@ class ForeignRelation(Generic[AdminModelClass]):
                 serialization=core_schema.plain_serializer_function_ser_schema(
                     cls._serialize, info_arg=False, return_schema=core_schema.nullable_schema(data_schema)
                 ),
-                field_name=handler.field_name,
+                field_name=field_name,
             ),
-            default=ForeignRelation(field_name=handler.field_name, data=None),
+            default_factory=lambda: ForeignRelation(field_name=field_name, data=None),
         )
 
     @staticmethod
@@ -97,7 +99,9 @@ class ManyRelation(Generic[AdminModelClass]):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
-        assert handler.field_name is not None
+        field_name = handler.field_name
+        assert field_name is not None
+
         data_tp = get_args(source)[0]
         data_schema = handler.generate_schema(data_tp)
 
@@ -110,9 +114,9 @@ class ManyRelation(Generic[AdminModelClass]):
                     info_arg=False,
                     return_schema=core_schema.nullable_schema(core_schema.list_schema(data_schema)),
                 ),
-                field_name=handler.field_name,
+                field_name=field_name,
             ),
-            default=ManyRelation(field_name=handler.field_name, data=[]),
+            default_factory=lambda: ManyRelation(field_name=field_name, data=[]),
         )
 
     @staticmethod

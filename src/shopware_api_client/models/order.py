@@ -1,9 +1,10 @@
 from datetime import date
+from typing import Annotated
 
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.structs.calculated_price import CalculatedPrice
 from shopware_api_client.structs.cart_price import CartPrice
 
@@ -13,11 +14,11 @@ class OrderBase(ApiModelBase, CustomFieldsMixin):
 
     auto_increment: int | None = Field(default=None, exclude=True)
     order_number: str | None = None
-    billing_address_id: IdField
+    billing_address_id: Annotated[IdField, RefersTo("order_address")]
     billing_address_version_id: IdField | None = None
-    currency_id: IdField
-    language_id: IdField
-    sales_channel_id: IdField
+    currency_id: Annotated[IdField, RefersTo("currency")]
+    language_id: Annotated[IdField, RefersTo("language")]
+    sales_channel_id: Annotated[IdField, RefersTo("sales_channel")]
     order_date_time: AwareDatetime
     order_date: date | None = Field(default=None, exclude=True)
     price: CartPrice | None = None
@@ -34,5 +35,5 @@ class OrderBase(ApiModelBase, CustomFieldsMixin):
     customer_comment: str | None = None
     source: str | None = None
     rule_ids: list[str] | None = None
-    created_by_id: IdField | None = None
-    updated_by_id: IdField | None = None
+    created_by_id: Annotated[IdField | None, RefersTo("user")] = None
+    updated_by_id: Annotated[IdField | None, RefersTo("user")] = None

@@ -15,9 +15,11 @@ from shopware_api_client.base import (
     HEADER_X_RATE_LIMIT_REMAINING,
     HEADER_X_RATE_LIMIT_RESET,
     RETRY_CACHE_KEY,
+    AdminEndpoint,
 )
 from shopware_api_client.client import AdminClient, ClientBase, StoreClient
 from shopware_api_client.config import AdminConfig, ConfigBase, StoreConfig
+from shopware_api_client.endpoints.base_fields import RefersTo
 from shopware_api_client.exceptions import (
     SWAPIConfigException,
     SWAPIDataValidationError,
@@ -107,7 +109,7 @@ class TestClientBase:
         self.reset_key = self.cache_key_base + ":reset"
         self.sleep_hitcount = 0
 
-    def test_get_header_ts(self, monkeypatch) -> None:
+    def test__get_header_ts(self, monkeypatch) -> None:
         standard_time = 1_111_111_111.11
         monkeypatch.setattr("shopware_api_client.base.time", lambda: standard_time)
 
@@ -125,7 +127,7 @@ class TestClientBase:
             "Did not return the current time when Date header was missing"
         )
 
-    def test_parse_reset_time(self, rate_limit_headers) -> None:
+    def test__parse_reset_time(self, rate_limit_headers) -> None:
         response = Response(status_code=200, headers=rate_limit_headers(remaining=0, reset=45))
         assert 45 == self.client.parse_reset_time(response.headers), (
             f"Parsing {HEADER_X_RATE_LIMIT_RESET} was not successful"
@@ -136,7 +138,7 @@ class TestClientBase:
             f"Parsing {HEADER_X_RATE_LIMIT_RESET} was not successful"
         )
 
-    def test_parse_retry_after(self) -> None:
+    def test__parse_retry_after(self) -> None:
         response = Response(status_code=429)
         assert 1 == self.client.parse_retry_after(response.headers), "Missing Retry-After header did not return 1"
 
@@ -170,7 +172,7 @@ class TestClientBase:
             "Negative time-delay from Retry-After header did not result in returning 1"
         )
 
-    async def test_429_retry(self, patch_requests, monkeypatch) -> None:
+    async def test__429_retry(self, patch_requests, monkeypatch) -> None:
         wait_time = 9
         patch_requests([(429, "", {"Retry-After": f"{wait_time}"}), (200, "1", "")])
         monkeypatch.setattr("shopware_api_client.base.asyncio.sleep", self.fake_sleep)
@@ -181,7 +183,7 @@ class TestClientBase:
         assert 1 == result.json(), "Request did not succeed"
         assert 1 == self.sleep_hitcount, "Request did not wait even though it should have"
 
-    async def test_429_retry_raises_without_retries(self, patch_request) -> None:
+    async def test__429_retry_raises_without_retries(self, patch_request) -> None:
         patch_request(status=429, content="{}", headers={"Retry-After": "60"})
 
         with pytest.raises(SWAPITooManyRequests) as exc_info:
@@ -200,7 +202,7 @@ class TestAdminClient:
             retry_after_threshold=10,
         )
 
-    async def test_json_decode_error_with_200_response(self, patch_request) -> None:
+    async def test__json_decode_error_with_200_response(self, patch_request) -> None:
         patch_request(
             status=200, content="read error", headers={"x-trace-id": "bla", "content-type": "application/json"}
         )
@@ -215,16 +217,16 @@ class TestAdminClient:
         assert "x-trace-id" in exc.headers
         assert "bla" in exc.detail
 
-    def test_creation(self) -> None:
+    def test__creation(self) -> None:
         client = AdminClient(config=self.admin_config)
         assert isinstance(client, AdminClient)
 
-    def test_get_client(self) -> None:
+    def test__get_client(self) -> None:
         client = AdminClient(config=self.admin_config)
         httpx_client = client.http_client
         assert isinstance(httpx_client, AsyncClient)
 
-    def test_wrong_config(self) -> None:
+    def test__wrong_config(self) -> None:
         self.admin_config.client_id = None
         client = AdminClient(config=self.admin_config)
         httpx_client = None
@@ -234,7 +236,7 @@ class TestAdminClient:
 
         assert httpx_client is None
 
-    async def test_error_on_invalid_data_from_shopware(self, patch_request, caplog: pytest.LogCaptureFixture) -> None:
+    async def test__error_on_invalid_data_from_shopware(self, patch_request, caplog: pytest.LogCaptureFixture) -> None:
         caplog.set_level(logging.ERROR)
         patch_request(status=200, content='[{"id":1},{},{"id":3}]')
 
@@ -248,14 +250,17 @@ class TestAdminClient:
         assert caplog.records[1].id is None
         assert caplog.records[2].id == 3
 
-    async def test_load_custom_entities(self, mocker: MockerFixture) -> None:
+    async def test__load_custom_entities(self, mocker: MockerFixture) -> None:
         client = AdminClient(config=self.admin_config)
         custom_entity = client.custom_entity.model_class(
             name="my_custom_entity",
             fields=[
                 {"name": "required_int", "type": "int", "required": True},
                 {"name": "optional_bool", "type": "bool", "required": False},
-                {"name": "reference", "type": "many-to-one", "required": False},
+                {"name": "reference_field", "type": "many-to-one", "required": False},
+                {"name": "cover", "type": "one-to-one", "reference": "media", "required": True},
+                {"name": "owner", "type": "many-to-one", "reference": "customer", "required": False},
+                {"name": "unknown", "type": "many-to-one", "reference": "not_an_entity", "required": False},
                 {"name": "children", "type": "one-to-many", "required": False},
             ],
         )
@@ -278,34 +283,40 @@ class TestAdminClient:
         assert endpoint.path == "/my-custom-entity"
         assert endpoint.model_class._identifier == ModelPrivateAttr("my_custom_entity")
 
+        assert AdminEndpoint.registry["my_custom_entity"] is type(endpoint), "CE must be added to the registry"
+
         model_fields = endpoint.model_class.model_fields
         assert model_fields["required_int"].is_required()
         assert model_fields["optional_bool"].default is None
-        assert model_fields["reference_id"].default is None
+        assert model_fields["reference_field_id"].default is None
         assert "children" not in model_fields
+
+        assert RefersTo("media") in model_fields["cover_id"].metadata, "reference must become a RefersTo"
+        assert RefersTo("customer") in model_fields["owner_id"].metadata, "reference must become a RefersTo"
+        assert not any(isinstance(meta, RefersTo) for meta in model_fields["reference_field_id"].metadata), "Field shouldn't have a RefersTo-Annotation"
 
 
 class TestStoreClient:
     def setup_method(self) -> None:
         self.store_config = StoreConfig(url="https://localhost", access_key="ACCESS_KEY", retry_after_threshold=10)
 
-    def test_creation(self) -> None:
+    def test__creation(self) -> None:
         client = StoreClient(config=self.store_config)
         assert isinstance(client, StoreClient)
 
-    def test_get_client(self) -> None:
+    def test__get_client(self) -> None:
         client = StoreClient(config=self.store_config)
         httpx_client = client.http_client
         assert isinstance(httpx_client, AsyncClient)
 
-    def test_context_token(self) -> None:
+    def test__context_token(self) -> None:
         config = StoreConfig(url="https://localhost", access_key="ACCESS_KEY", context_token="CONTEXT_TOKEN")
         client = StoreClient(config=config)
         httpx_client = client.http_client
         headers = httpx_client.headers
         assert headers.get("sw-context-token") == "CONTEXT_TOKEN"
 
-    def test_context_token_not_set(self) -> None:
+    def test__context_token_not_set(self) -> None:
         client = StoreClient(config=self.store_config)
         httpx_client = client.http_client
         headers = httpx_client.headers

@@ -1,13 +1,15 @@
+from typing import Annotated
+
 from pydantic import Field
 
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.state_machine_state import StateMachineStateBase
 
 
 class StateMachineState(StateMachineStateBase, AdminModel["StateMachineStateEndpoint"]):
-    state_machine_id: IdField
+    state_machine_id: Annotated[IdField, RefersTo("state_machine")]
     state_machine: ForeignRelation["StateMachine"] = Field(default=...)
     from_state_machine_transitions: ManyRelation["StateMachineTransition"] = Field(default=...)
     to_state_machine_transitions: ManyRelation["StateMachineTransition"] = Field(default=...)

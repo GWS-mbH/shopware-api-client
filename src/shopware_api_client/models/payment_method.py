@@ -1,7 +1,9 @@
+from typing import Annotated
+
 from pydantic import Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 _FILED_DESCRIPTION = "Runtime field, cannot be used as part of the criteria."
 
@@ -17,8 +19,8 @@ class PaymentMethodBase(ApiModelBase, CustomFieldsMixin):
     position: int | None = None
     active: bool | None = None
     after_order_enabled: bool | None = None
-    availability_rule_id: IdField | None = None
-    media_id: IdField | None = None
+    availability_rule_id: Annotated[IdField | None, RefersTo("rule")] = None
+    media_id: Annotated[IdField | None, RefersTo("media")] = None
     formatted_handler_identifier: str | None = Field(None, description=_FILED_DESCRIPTION, exclude=True)
     synchronous: bool | None = Field(None, description=_FILED_DESCRIPTION, exclude=True)
     asynchronous: bool | None = Field(None, description=_FILED_DESCRIPTION, exclude=True)

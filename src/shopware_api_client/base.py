@@ -10,11 +10,13 @@ from typing import (
     Any,
     AsyncGenerator,
     Callable,
+    ClassVar,
     Generic,
     Literal,
     Self,
     Type,
     TypeVar,
+    get_args,
     get_origin,
     overload,
 )
@@ -36,7 +38,7 @@ from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 
 from .cache import CacheProtocol, DictCache
-from .endpoints.base_fields import IdField, PhpAssocArray
+from .endpoints.base_fields import IdField, PhpAssocArray, RefersTo
 from .exceptions import (
     SWAPIDataValidationError,
     SWAPIError,
@@ -218,6 +220,7 @@ class ClientBase:
         cache_for: int | None = kwargs.pop("cache_for", None)
 
         orig_objs: list[ApiModelBase] | list[dict[str, Any]] = kwargs.pop("orig_objs", [])
+        model_class: type[AdminModel] | None = kwargs.pop("model_class", None)
 
         retries = int(kwargs.pop("retries", 3))
         retry_wait_base = int(kwargs.pop("retry_wait_base", 2))
@@ -237,7 +240,7 @@ class ClientBase:
 
         for attempt in range(retries + 1):
             try:
-                response = await client.request(method, url, headers=headers, **kwargs)
+                response = await client.request(method, url, headers=headers, extensions={"model_class": model_class}, **kwargs)
             except RequestError as exc:
                 if attempt >= retries:
                     raise SWAPIException(f"HTTP client exception ({exc.__class__.__name__}). Details: {str(exc)}")
@@ -245,7 +248,7 @@ class ClientBase:
 
             if response.status_code == 429:
                 if attempt >= retries:
-                    raise SWAPIError.from_response(response)
+                    raise SWAPIError.from_response(response, orig_objs)
 
                 # Retry after
                 await asyncio.sleep(self.parse_retry_after(response.headers))
@@ -261,7 +264,7 @@ class ClientBase:
 
                     error = SWAPIError.from_errors(errors, response, orig_objs)
                 except ValueError:
-                    error = SWAPIError.from_response(response)
+                    error = SWAPIError.from_response(response, orig_objs)
 
                 if isinstance(error, SWAPIErrorList) and len(error.errors) == 1:
                     error = error.errors[0]
@@ -291,7 +294,7 @@ class ClientBase:
                     # retries exhausted?
                     if attempt >= retries:
                         response.status_code = 500
-                        exception = SWAPIError.from_response(response)
+                        exception = SWAPIError.from_response(response, orig_objs)
                         # prefix details with x-trace-header to
                         exception.detail = (
                             f"x-trace-id: {str(response.headers.get('x-trace-id', 'not-set'))}" + exception.detail
@@ -490,6 +493,122 @@ class AdminModel(ApiModelBase, EndpointMixin[AdminEndpointClass], Generic[AdminE
             return False
 
         return await endpoint.delete(pk=self.id)
+
+    @classmethod
+    def get_foreign_key_fields(cls) -> dict[str, Type["AdminEndpoint[Any]"]]:
+        from .endpoints import admin  # noqa: F401 | Ensure AdminEndpoint.registry is filled
+        from .endpoints.relations import ForeignRelation, ManyRelation
+
+        # relations use ForwardRefs, so the model may be incomplete and the related model unresolved
+        if not cls.__pydantic_complete__:
+            cls.model_rebuild()
+
+        fields: dict[str, str] = {}
+
+        for name, info in cls.model_fields.items():
+            entity_name = next((meta.entity for meta in info.metadata if isinstance(meta, RefersTo)), None)
+
+            if entity_name is None and get_origin(info.annotation) in [ForeignRelation, ManyRelation]:
+                related_model: type[AdminModel[Any]] = get_args(info.annotation)[0]
+                entity_name = related_model._identifier.get_default()  # type: ignore
+
+            if entity_name is not None:
+                fields[name] = entity_name
+                continue
+
+            # id fields can also live on a fieldset, e.g. `Price.currency_id`
+            annotations: list[tuple[str, Any, frozenset[type]]] = [
+                (name, annotation, frozenset()) for annotation in get_args(info.annotation)
+            ]
+
+            while annotations:
+                prefix, annotation, seen = annotations.pop(0)
+
+                if not isinstance(annotation, type) or not issubclass(annotation, FieldSetBase):
+                    annotations.extend((prefix, nested, seen) for nested in get_args(annotation))
+                    continue
+
+                if annotation in seen:
+                    continue
+
+                for nested_name, nested in annotation.model_fields.items():
+                    entity_name = next((meta.entity for meta in nested.metadata if isinstance(meta, RefersTo)), None)
+
+                    if entity_name is not None:
+                        fields[f"{prefix}.{nested_name}"] = entity_name
+                        continue
+
+                    annotations.extend(
+                        (f"{prefix}.{nested_name}", nested_annotation, seen | {annotation})
+                        for nested_annotation in get_args(nested.annotation)
+                    )
+
+        endpoints: dict[str, Type[AdminEndpoint[Any]]] = {}
+
+        for field_name, entity_name in fields.items():
+            # entities without an endpoint can't be checked, so they are left out
+            if (endpoint_class := AdminEndpoint.registry.get(entity_name)) is not None:
+                endpoints[field_name] = endpoint_class
+
+        return endpoints
+
+    def get_fk_ids_by_endpoint(self) -> dict[Type["AdminEndpoint[Any]"], set[IdField]]:
+        from .endpoints.relations import ForeignRelation, ManyRelation
+
+        result: dict[Type[AdminEndpoint[Any]], set[IdField]] = {}
+        nested_endpoints: dict[str, Type[AdminEndpoint[Any]]] = {}
+        field_sets: list[Any] = []
+        seen: set[int] = set()
+
+        for field_name, endpoint_class in self.get_foreign_key_fields().items():
+            name, _, nested_name = field_name.partition(".")
+
+            if nested_name:
+                # fieldsets can nest themselves, e.g. `Price.list_price`, so the values are followed below
+                nested_endpoints[nested_name.rsplit(".", 1)[-1]] = endpoint_class
+                field_sets.append(getattr(self, name))
+                continue
+
+            if get_origin(self.model_fields[name].annotation) in [ForeignRelation, ManyRelation]:
+                data = getattr(self, f"{name}__raw").data
+
+                if not isinstance(data, list):
+                    data = [data]
+
+                values = {obj.id for obj in data if obj is not None and obj.id is not None}
+
+            else:
+                value = getattr(self, name)
+                values = set() if value is None else {value}
+
+            if values:
+                ids = result.setdefault(endpoint_class, set())
+                ids.update(values)
+
+        while field_sets:
+            field_set = field_sets.pop(0)
+
+            if isinstance(field_set, list):
+                field_sets.extend(field_set)
+                continue
+
+            if not isinstance(field_set, FieldSetBase) or id(field_set) in seen:
+                continue
+
+            seen.add(id(field_set))
+
+            for nested_name in type(field_set).model_fields:
+                value = getattr(field_set, nested_name)
+                endpoint_class = nested_endpoints.get(nested_name)
+
+                if endpoint_class is None:
+                    field_sets.append(value)
+
+                elif value is not None:
+                    ids = result.setdefault(endpoint_class, set())
+                    ids.add(value)
+
+        return result
 
 
 class CustomFieldsMixin(BaseModel):
@@ -707,6 +826,13 @@ class EndpointSearchMixin(Generic[ModelClass]):
 
 class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass]):
     model_class: Type[AdminModelClass]
+    registry: ClassVar[dict[str, Type["AdminEndpoint[Any]"]]] = {}
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+
+        if (model_class := getattr(cls, "model_class", None)) is not None:
+            AdminEndpoint.registry[model_class._identifier.get_default()] = cls
 
     @overload
     def _parse_response(self, data: list[dict[str, Any]]) -> list[AdminModelClass]:
@@ -772,9 +898,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         data = self._get_data_dict()
 
         if self._is_search_query():
-            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data, cache_for=cache_for)
+            result = await self.client.post(f"{self.search_prefix}{self.path}", json=data, cache_for=cache_for, model_class=self.model_class)
         else:
-            result = await self.client.get(self.path, params=data, cache_for=cache_for)
+            result = await self.client.get(self.path, params=data, cache_for=cache_for, model_class=self.model_class)
 
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
@@ -793,7 +919,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def get(self, pk: str) -> AdminModelClass: ...
 
     async def get(self, pk: str, raw: bool = False, cache_for: int | None = None) -> AdminModelClass | dict[str, Any]:
-        result = await self.client.get(f"{self.path}/{pk}", cache_for=cache_for)
+        result = await self.client.get(f"{self.path}/{pk}", cache_for=cache_for, model_class=self.model_class)
         result_data: dict[str, Any] = self._parse_data_single(result.json())
 
         if raw:
@@ -827,7 +953,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         else:
             data = json.dumps(obj)
 
-        result = await self.client.patch(f"{self.path}/{pk}", data=data, orig_objs=[obj])
+        result = await self.client.patch(f"{self.path}/{pk}", data=data, orig_objs=[obj], model_class=self.model_class)
         # 204 - "no data" handling
         if result.status_code == 204:
             return None
@@ -880,7 +1006,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         else:
             data = json.dumps(obj)
 
-        result = await self.client.post(f"{self.path}", data=data, orig_objs=[obj])
+        result = await self.client.post(f"{self.path}", data=data, orig_objs=[obj], model_class=self.model_class)
         # 204 - "no data" handling
         if result.status_code == 204:
             return None
@@ -893,12 +1019,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         return self._parse_response(result_data)
 
     async def delete(self, pk: str) -> bool:
-        response = await self.client.delete(f"{self.path}/{pk}")
+        response = await self.client.delete(f"{self.path}/{pk}", model_class=self.model_class)
 
-        if response.status_code == 204:
-            return True
-
-        return False
+        return response.status_code == 204
 
     @overload
     async def get_related(
@@ -920,7 +1043,7 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         self, parent: AdminModel[Any], relation: str, raw: bool = False
     ) -> list[AdminModelClass] | list[dict[str, Any]]:
         parent_endpoint = parent._get_endpoint()
-        result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}")
+        result = await self.client.get(f"{parent_endpoint.path}/{parent.id}/{relation}", model_class=self.model_class)
         result_data: list[dict[str, Any]] = self._parse_data(result.json())
 
         if raw:
@@ -931,12 +1054,12 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
     async def bulk_upsert(
         self, objs: list[AdminModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
-        return await self.client.bulk_upsert(name=self.name, objs=objs, **request_kwargs)
+        return await self.client.bulk_upsert(name=self.name, objs=objs, model_class=self.model_class, **request_kwargs)
 
     async def bulk_delete(
         self, objs: list[AdminModelClass] | list[dict[str, Any]], **request_kwargs: Any
     ) -> dict[str, Any]:
-        return await self.client.bulk_delete(name=self.name, objs=objs, **request_kwargs)
+        return await self.client.bulk_delete(name=self.name, objs=objs, model_class=self.model_class, **request_kwargs)
 
     @overload
     def iter(
@@ -967,9 +1090,9 @@ class AdminEndpoint(EndpointBase, EndpointSearchMixin, Generic[AdminModelClass])
         while True:
             data["page"] = page
             if is_search_query:
-                result = await self.client.post(url, json=data, cache_for=cache_for)
+                result = await self.client.post(url, json=data, cache_for=cache_for, model_class=self.model_class)
             else:
-                result = await self.client.get(url, params=data, cache_for=cache_for)
+                result = await self.client.get(url, params=data, cache_for=cache_for, model_class=self.model_class)
 
             result_dict: dict[str, Any] = result.json()
             result_data: list[dict[str, Any]] = self._parse_data(result_dict)

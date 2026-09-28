@@ -1,13 +1,15 @@
+from typing import Annotated
+
 from pydantic import Field
 
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.endpoints.relations import ForeignRelation
 from shopware_api_client.models.order_customer import OrderCustomerBase
 
 
 class OrderCustomer(OrderCustomerBase, AdminModel["OrderCustomerEndpoint"]):
-    order_id: IdField
+    order_id: Annotated[IdField, RefersTo("order")]
     order: ForeignRelation["Order"] = Field(default=...)
     customer: ForeignRelation["Customer"] = Field(default=...)
     salutation: ForeignRelation["Salutation"] = Field(default=...)

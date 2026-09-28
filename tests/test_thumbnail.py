@@ -4,7 +4,7 @@ from shopware_api_client.endpoints.admin import MediaThumbnail
 
 
 class TestThumbnail:
-    def test_thumbnail_created_at_can_be_empty(self):
+    def test__thumbnail_created_at_can_be_empty(self):
         thumbnail = MediaThumbnail(
             media_id="deadbeef123412341234123456789012",
             width=100,
@@ -15,7 +15,7 @@ class TestThumbnail:
         assert thumbnail.created_at is None
         assert thumbnail.updated_at is None
 
-    def test_thumbnail_created_at_can_be_filled(self):
+    def test__thumbnail_created_at_can_be_filled(self):
         thumbnail = MediaThumbnail(
             media_id="deadbeef123412341234123456789012",
             width=100,

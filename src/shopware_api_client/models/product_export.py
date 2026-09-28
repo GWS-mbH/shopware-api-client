@@ -1,17 +1,19 @@
+from typing import Annotated
+
 from pydantic import AwareDatetime
 
 from shopware_api_client.base import ApiModelBase
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class ProductExportBase(ApiModelBase):
     _identifier: str = "product_export"
 
-    product_stream_id: IdField
-    storefront_sales_channel_id: IdField
-    sales_channel_id: IdField
-    sales_channel_domain_id: IdField
-    currency_id: IdField
+    product_stream_id: Annotated[IdField, RefersTo("product_stream")]
+    storefront_sales_channel_id: Annotated[IdField, RefersTo("sales_channel")]
+    sales_channel_id: Annotated[IdField, RefersTo("sales_channel")]
+    sales_channel_domain_id: Annotated[IdField, RefersTo("sales_channel_domain")]
+    currency_id: Annotated[IdField, RefersTo("currency")]
     file_name: str
     access_key: str
     encoding: str

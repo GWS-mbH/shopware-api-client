@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from ...base import AdminModel
 
@@ -69,6 +69,7 @@ from .core.order_transaction_capture_refund_position import (
 )
 from .core.payment_method import PaymentMethod, PaymentMethodEndpoint
 from .core.product import Product, ProductEndpoint
+from .core.product_category import ProductCategory, ProductCategoryEndpoint
 from .core.product_configurator_setting import ProductConfiguratorSetting, ProductConfiguratorSettingEndpoint
 from .core.product_cross_selling import ProductCrossSelling, ProductCrossSellingEndpoint
 from .core.product_cross_selling_assigned_products import (
@@ -80,10 +81,13 @@ from .core.product_export import ProductExport, ProductExportEndpoint
 from .core.product_feature_set import ProductFeatureSet, ProductFeatureSetEndpoint
 from .core.product_manufacturer import ProductManufacturer, ProductManufacturerEndpoint
 from .core.product_media import ProductMedia, ProductMediaEndpoint
+from .core.product_option import ProductOption, ProductOptionEndpoint
 from .core.product_price import ProductPrice, ProductPriceEndpoint
+from .core.product_property import ProductProperty, ProductPropertyEndpoint
 from .core.product_review import ProductReview, ProductReviewEndpoint
 from .core.product_search_keyword import ProductSearchKeyword, ProductSearchKeywordEndpoint
 from .core.product_stream import ProductStream, ProductStreamEndpoint
+from .core.product_stream_filter import ProductStreamFilter, ProductStreamFilterEndpoint
 from .core.product_visibility import ProductVisibility, ProductVisibilityEndpoint
 from .core.product_warehouse import ProductWarehouse, ProductWarehouseEndpoint
 from .core.promotion import Promotion, PromotionEndpoint
@@ -171,6 +175,7 @@ __all__ = [
     "OrderTransactionCaptureRefundPosition",
     "PaymentMethod",
     "Product",
+    "ProductCategory",
     "ProductConfiguratorSetting",
     "ProductCrossSelling",
     "ProductCrossSellingAssignedProducts",
@@ -179,10 +184,13 @@ __all__ = [
     "ProductFeatureSet",
     "ProductManufacturer",
     "ProductMedia",
+    "ProductOption",
     "ProductPrice",
+    "ProductProperty",
     "ProductReview",
     "ProductSearchKeyword",
     "ProductStream",
+    "ProductStreamFilter",
     "ProductVisibility",
     "ProductWarehouse",
     "Promotion",
@@ -280,6 +288,7 @@ class AdminEndpoints:
         self.order_transaction_capture_refund_position = OrderTransactionCaptureRefundPositionEndpoint(self)
         self.payment_method = PaymentMethodEndpoint(self)
         self.product = ProductEndpoint(self)
+        self.product_category = ProductCategoryEndpoint(self)
         self.product_configurator_setting = ProductConfiguratorSettingEndpoint(self)
         self.product_cross_selling = ProductCrossSellingEndpoint(self)
         self.product_cross_selling_assigned_products = ProductCrossSellingAssignedProductsEndpoint(self)
@@ -288,10 +297,13 @@ class AdminEndpoints:
         self.product_feature_set = ProductFeatureSetEndpoint(self)
         self.product_manufacturer = ProductManufacturerEndpoint(self)
         self.product_media = ProductMediaEndpoint(self)
+        self.product_option = ProductOptionEndpoint(self)
         self.product_price = ProductPriceEndpoint(self)
+        self.product_property = ProductPropertyEndpoint(self)
         self.product_review = ProductReviewEndpoint(self)
         self.product_search_keyword = ProductSearchKeywordEndpoint(self)
         self.product_stream = ProductStreamEndpoint(self)
+        self.product_stream_filter = ProductStreamFilterEndpoint(self)
         self.product_visibility = ProductVisibilityEndpoint(self)
         self.product_warehouse = ProductWarehouseEndpoint(self)
         self.promotion = PromotionEndpoint(self)
@@ -345,7 +357,7 @@ class AdminEndpoints:
         from pydantic import AwareDatetime, create_model
 
         from ...base import AdminEndpoint
-        from ..base_fields import IdField
+        from ..base_fields import IdField, RefersTo
 
         async for custom_entity in self.custom_entity.iter(cache_for=300):
             assert isinstance(custom_entity, CustomEntity)
@@ -354,6 +366,7 @@ class AdminEndpoints:
             for field in custom_entity.fields:
                 field_type: Any = str
                 field_appendix = ""
+                refers_to: RefersTo | None = None
 
                 match field["type"]:
                     case "int":
@@ -364,14 +377,14 @@ class AdminEndpoints:
                         field_type = bool
                     case "many-to-many":
                         field_type = list[dict[str, Any]]
-                    case "many-to-one":
+                    case "many-to-one" | "one-to-one":
                         field_appendix = "_id"
                         field_type = IdField
+
+                        if reference := field.get("reference"):
+                            refers_to = RefersTo(reference)
                     case "one-to-many":
                         continue
-                    case "one-to-one":
-                        field_appendix = "_id"
-                        field_type = IdField
                     case "json":
                         field_type = dict
                     case "price":
@@ -381,10 +394,13 @@ class AdminEndpoints:
                     case _:
                         field_type = str
 
-                if field["required"]:
-                    fields[field["name"] + field_appendix] = (field_type, ...)
-                else:
-                    fields[field["name"] + field_appendix] = (field_type | None, None)
+                if not field["required"]:
+                    field_type = field_type | None
+
+                if refers_to is not None:
+                    field_type = Annotated[field_type, refers_to]
+
+                fields[field["name"] + field_appendix] = (field_type, ... if field["required"] else None)
 
             fields["_identifier"] = (str, custom_entity.name)
 
@@ -396,6 +412,8 @@ class AdminEndpoints:
             ce_endpoint.name = custom_entity.name
             ce_endpoint.path = f"/{custom_entity.name.replace('_', '-')}"
             ce_endpoint.model_class = ce_model
+
+            AdminEndpoint.registry[custom_entity.name] = ce_endpoint
 
             setattr(self, custom_entity.name, ce_endpoint(self))
 

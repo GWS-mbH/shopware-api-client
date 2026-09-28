@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
-from shopware_api_client.base import AdminModel, AdminEndpoint
+from shopware_api_client.base import AdminEndpoint, AdminModel
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.media import MediaBase
 
@@ -68,15 +68,13 @@ class MediaEndpoint(AdminEndpoint[Media]):
             api_url += f"&fileName={file_name}"
 
         if url is not None:
-            response = await self.client.post(api_url, json={"url": url}, **request_kwargs)
+            response = await self.client.post(api_url, json={"url": url}, model_class=self.model_class, **request_kwargs)
         elif file is not None:
-            response = await self.client.upload(api_url, data=file, **request_kwargs)
+            response = await self.client.upload(api_url, data=file, model_class=self.model_class, **request_kwargs)
         else:
             raise ValueError("Either url or file must be provided.")
 
-        if response.status_code == 204:
-            return True
-        return False
+        return response.status_code == 204
 
 
 from .category import Category  # noqa: E402
