@@ -13,6 +13,14 @@ from .commercial.b2b_components_shopping_list_line_item import (
 )
 from .commercial.b2b_employee import B2bEmployee, B2bEmployeeEndpoint
 from .commercial.dynamic_access import DynamicAccess, DynamicAccessEndpoint
+from .commercial.quote_comment import QuoteComment, QuoteCommentEndpoint
+from .commercial.quote_delivery import QuoteDelivery, QuoteDeliveryEndpoint
+from .commercial.quote_delivery_position import QuoteDeliveryPosition, QuoteDeliveryPositionEndpoint
+from .commercial.quote_document import QuoteDocument, QuoteDocumentEndpoint
+from .commercial.quote_employee import QuoteEmployee, QuoteEmployeeEndpoint
+from .commercial.quote import Quote, QuoteEndpoint
+from .commercial.quote_line_item import QuoteLineItem, QuoteLineItemEndpoint
+from .commercial.quote_transaction import QuoteTransaction, QuoteTransactionEndpoint
 from .core.acl_role import AclRole, AclRoleEndpoint
 from .core.api_info import ApiInfo, ApiInfoEndpoint
 from .core.app import App, AppEndpoint
@@ -190,6 +198,14 @@ __all__ = [
     "PromotionDiscountPrices",
     "PropertyGroup",
     "PropertyGroupOption",
+    "QuoteComment",
+    "QuoteDelivery",
+    "QuoteDeliveryPosition",
+    "QuoteDocument",
+    "QuoteEmployee",
+    "Quote",
+    "QuoteLineItem",
+    "QuoteTransaction",
     "Rule",
     "RuleCondition",
     "SalesChannel",
@@ -228,6 +244,14 @@ class AdminEndpoints:
         self.dynamic_access = DynamicAccessEndpoint(self)
         self.b2b_components_shopping_list = B2bComponentsShoppingListEndpoint(self)
         self.b2b_components_shopping_list_line_item = B2bComponentsShoppingListLineItemEndpoint(self)
+        self.quote_comment = QuoteCommentEndpoint(self)
+        self.quote_delivery = QuoteDeliveryEndpoint(self)
+        self.quote_delivery_position = QuoteDeliveryPositionEndpoint(self)
+        self.quote_document = QuoteDocumentEndpoint(self)
+        self.quote_employee = QuoteEmployeeEndpoint(self)
+        self.quote = QuoteEndpoint(self)
+        self.quote_line_item = QuoteLineItemEndpoint(self)
+        self.quote_transaction = QuoteTransactionEndpoint(self)
 
         # Core
         self.acl_role = AclRoleEndpoint(self)
