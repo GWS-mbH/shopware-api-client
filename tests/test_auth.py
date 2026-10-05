@@ -29,7 +29,7 @@ class TestShopwareAdminAPIAuth:
         )
         self.auth = ShopwareAdminAPIAuth(config=self.config, safety_seconds=42)
 
-    async def test_get_access_token_from_shopware_success(self, patch_oauth_post) -> None:
+    async def test__get_access_token_from_shopware_success(self, patch_oauth_post) -> None:
         response = Mock()
         response.raise_for_status = Mock()
         response.json = Mock(return_value={"access_token": "TOKEN_1", "expires_in": 120})
@@ -49,7 +49,7 @@ class TestShopwareAdminAPIAuth:
             },
         )
 
-    async def test_get_access_token_from_shopware_error(self, patch_oauth_post) -> None:
+    async def test__get_access_token_from_shopware_error(self, patch_oauth_post) -> None:
         class OAuthError(Exception):
             pass
 
@@ -61,7 +61,7 @@ class TestShopwareAdminAPIAuth:
         with pytest.raises(OAuthError, match="oauth failed"):
             await self.auth._get_access_token_from_shopware()
 
-    async def test_get_access_token_uses_cache(self, mocker: MockerFixture) -> None:
+    async def test__get_access_token_uses_cache(self, mocker: MockerFixture) -> None:
         await self.config.cache.set(self.auth._cache_key, "CACHED_TOKEN")
         fetch_mock = mocker.patch.object(self.auth, "_get_access_token_from_shopware", AsyncMock())
 
@@ -70,7 +70,7 @@ class TestShopwareAdminAPIAuth:
         assert token == "CACHED_TOKEN"
         fetch_mock.assert_not_called()
 
-    async def test_get_access_token_fetches_oauth_when_cache_miss(self, mocker: MockerFixture) -> None:
+    async def test__get_access_token_fetches_oauth_when_cache_miss(self, mocker: MockerFixture) -> None:
         cache_set_mock = mocker.patch.object(self.config.cache, "set", AsyncMock())
         fetch_mock = mocker.patch.object(
             self.auth,
@@ -84,7 +84,7 @@ class TestShopwareAdminAPIAuth:
         fetch_mock.assert_awaited_once()
         cache_set_mock.assert_awaited_once_with(self.auth._cache_key, "FRESH_TOKEN", 300 - self.auth.safety_seconds)
 
-    async def test_async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
+    async def test__async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
         mocker.patch.object(self.auth, "_get_access_token", AsyncMock(return_value="FLOW_TOKEN"))
         request = Request("GET", "https://localhost/api/test")
 
@@ -105,7 +105,7 @@ class TestShopwareAdminPasswordAPIAuth:
         )
         self.auth = ShopwareAdminPasswordAPIAuth(config=self.config, safety_seconds=17)
 
-    async def test_get_access_token_from_shopware_success(self, patch_oauth_post) -> None:
+    async def test__get_access_token_from_shopware_success(self, patch_oauth_post) -> None:
         response = Mock()
         response.raise_for_status = Mock()
         response.json = Mock(return_value={"access_token": "TOKEN_2", "expires_in": 90})
@@ -127,7 +127,7 @@ class TestShopwareAdminPasswordAPIAuth:
             },
         )
 
-    async def test_get_access_token_from_shopware_error(self, patch_oauth_post) -> None:
+    async def test__get_access_token_from_shopware_error(self, patch_oauth_post) -> None:
         class OAuthError(Exception):
             pass
 
@@ -139,7 +139,7 @@ class TestShopwareAdminPasswordAPIAuth:
         with pytest.raises(OAuthError, match="oauth failed"):
             await self.auth._get_access_token_from_shopware()
 
-    async def test_get_access_token_uses_cache(self, mocker: MockerFixture) -> None:
+    async def test__get_access_token_uses_cache(self, mocker: MockerFixture) -> None:
         await self.config.cache.set(self.auth._cache_key, "CACHED_PASSWORD_TOKEN")
         fetch_mock = mocker.patch.object(self.auth, "_get_access_token_from_shopware", AsyncMock())
 
@@ -148,7 +148,7 @@ class TestShopwareAdminPasswordAPIAuth:
         assert token == "CACHED_PASSWORD_TOKEN"
         fetch_mock.assert_not_called()
 
-    async def test_get_access_token_fetches_oauth_when_cache_miss(self, mocker: MockerFixture) -> None:
+    async def test__get_access_token_fetches_oauth_when_cache_miss(self, mocker: MockerFixture) -> None:
         cache_set_mock = mocker.patch.object(self.config.cache, "set", AsyncMock())
         fetch_mock = mocker.patch.object(
             self.auth,
@@ -164,7 +164,7 @@ class TestShopwareAdminPasswordAPIAuth:
             self.auth._cache_key, "FRESH_PASSWORD_TOKEN", 300 - self.auth.safety_seconds
         )
 
-    async def test_async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
+    async def test__async_auth_flow_adds_bearer_header(self, mocker: MockerFixture) -> None:
         mocker.patch.object(self.auth, "_get_access_token", AsyncMock(return_value="FLOW_PASSWORD_TOKEN"))
         request = Request("GET", "https://localhost/api/test")
 

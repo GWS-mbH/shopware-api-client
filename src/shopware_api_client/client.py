@@ -4,7 +4,7 @@ from httpx2 import AsyncClient, AsyncHTTPTransport, Headers, Timeout
 
 from shopware_api_client.auth import ShopwareAdminAPIAuth, ShopwareAdminPasswordAPIAuth
 
-from .base import ApiModelBase, ClientBase, ModelClass
+from .base import AdminEndpoint, ApiModelBase, ClientBase, ModelClass
 from .config import AdminConfig, StoreConfig
 from .endpoints.admin import AdminEndpoints
 from .endpoints.store import StoreEndpoints
@@ -60,6 +60,9 @@ class AdminClient(ClientBase, AdminEndpoints):
 
         data = {f"write-{name}": {"entity": name, "action": "upsert", "payload": obj_list}}
 
+        if (endpoint_class := AdminEndpoint.registry.get(name)) is not None:
+            request_kwargs.setdefault("model_class", endpoint_class.model_class)
+
         request_kwargs.setdefault("timeout", 600)
         response = await self.post("/_action/sync", json=data, orig_objs=objs, **request_kwargs)
 
@@ -80,6 +83,9 @@ class AdminClient(ClientBase, AdminEndpoints):
                 obj_list.append(obj)
 
         data = {f"delete-{name}": {"entity": name, "action": "delete", "payload": obj_list}}
+
+        if (endpoint_class := AdminEndpoint.registry.get(name)) is not None:
+            request_kwargs.setdefault("model_class", endpoint_class.model_class)
 
         request_kwargs.setdefault("timeout", 600)
         # remove indexing-behavior queing behavior because it's not supported in bulk delete.

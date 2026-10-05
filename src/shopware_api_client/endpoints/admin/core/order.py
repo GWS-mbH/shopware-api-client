@@ -1,14 +1,16 @@
+from typing import Annotated
+
 from pydantic import Field
 
 from shopware_api_client.base import AdminModel, AdminEndpoint
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.endpoints.relations import ForeignRelation, ManyRelation
 from shopware_api_client.models.order import OrderBase
 from shopware_api_client.structs.cash_rounding_config import CashRoundingConfig
 
 
 class Order(OrderBase, AdminModel["OrderEndpoint"]):
-    state_id: IdField = Field(..., exclude=True)
+    state_id: Annotated[IdField, RefersTo("state_machine_state")] = Field(..., exclude=True)
     item_rounding: CashRoundingConfig
     total_rounding: CashRoundingConfig
     order_customer: "OrderCustomer"

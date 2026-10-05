@@ -9,11 +9,7 @@ class ProductStream(ProductStreamBase, AdminModel["ProductStreamEndpoint"]):
     product_cross_sellings: ManyRelation["ProductCrossSelling"] = Field(default=...)
     product_exports: ManyRelation["ProductExport"] = Field(default=...)
     categories: ManyRelation["Category"] = Field(default=...)
-
-    """
-    Todo:
-    filters[ProductStreamFilter]
-    """
+    filters: ManyRelation["ProductStreamFilter"] = Field(default=...)
 
 
 class ProductStreamEndpoint(AdminEndpoint[ProductStream]):
@@ -25,3 +21,4 @@ class ProductStreamEndpoint(AdminEndpoint[ProductStream]):
 from .category import Category  # noqa: E402
 from .product_cross_selling import ProductCrossSelling  # noqa: E402
 from .product_export import ProductExport  # noqa: E402
+from .product_stream_filter import ProductStreamFilter  # noqa: E402

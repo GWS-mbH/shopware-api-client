@@ -1,15 +1,15 @@
-from typing import Any
+from typing import Annotated, Any
 from pydantic import Field, AwareDatetime
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class MediaBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "media"
 
-    user_id: IdField | None = None
-    media_folder_id: IdField | None = Field(default=None)
+    user_id: Annotated[IdField | None, RefersTo("user")] = None
+    media_folder_id: Annotated[IdField | None, RefersTo("media_folder")] = Field(default=None)
     mime_type: str | None = Field(default=None)
     file_extension: str | None = Field(default=None)
     uploaded_at: AwareDatetime | None = Field(default=None, exclude=True)

@@ -1,11 +1,13 @@
+from typing import Annotated
+
 from shopware_api_client.base import ApiModelBase
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class PromotionDiscountBase(ApiModelBase):
     _identifier: str = "promotion_discount"
 
-    promotion_id: IdField
+    promotion_id: Annotated[IdField, RefersTo("promotion")]
     scope: str
     type: str
     value: float

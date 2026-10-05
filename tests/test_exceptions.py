@@ -13,27 +13,27 @@ from shopware_api_client.exceptions import (
 
 class TestSWAPIError:
     orig_objs = [
-        Unit(short_code="test_1", name="Test_1"),
+        {"short_code": "test_1", "name": "Test_1"},
         Unit(short_code="test_2", name="Test_2"),
         Unit(short_code="test_3", name="Test_3"),
     ]
 
-    def test_from_errors_400s(self) -> None:
+    def test__from_errors_400s(self) -> None:
         errors = [
             {
-                "status": "400",
+                "status": 400,
                 "code": "TESTCODE_1",
                 "detail": "Test error occurred",
                 "source": {"pointer": "/body/0/short_code"},
             },
             {
-                "status": "400",
+                "status": 400,
                 "code": "TESTCODE_2",
                 "detail": "Another test error occurred",
                 "source": {"pointer": "/body/1/nested/attr"},
             },
             {
-                "status": "400",
+                "status": 400,
                 "code": "TESTCODE_3",
                 "detail": "Another test error occurred",
             },
@@ -41,7 +41,7 @@ class TestSWAPIError:
         response = Response(
             status_code=400,
             json={"errors": errors},
-            request=Request("POST", "https://test.com/api/unit"),
+            request=Request("POST", "https://test.com/api/unit", extensions={"model_class": Unit}),
         )
 
         result = SWAPIError.from_errors(errors, response, self.orig_objs)
@@ -52,6 +52,8 @@ class TestSWAPIError:
         for i, error in enumerate(errors):
             for attr in "status", "code", "detail":
                 assert getattr(result.errors[i], attr) == error[attr]
+
+            assert result.errors[i].model_class is Unit
 
         assert result.errors[0].pointer_idx == 0
         assert result.errors[0].pointer_entity == "unit"
@@ -74,7 +76,7 @@ class TestSWAPIError:
             (
                 [
                     {
-                        "status": "500",
+                        "status": 500,
                         "code": "TESTCODE_1",
                         "detail": "Test error occurred",
                     }
@@ -84,7 +86,7 @@ class TestSWAPIError:
             (
                 [
                     {
-                        "status": "500",
+                        "status": 500,
                         "code": "1062",
                         "detail": "An exception occurred while executing a query: SQLSTATE[23000]: Duplicate Error: 1062 ...",
                     }
@@ -94,7 +96,7 @@ class TestSWAPIError:
             (
                 [
                     {
-                        "status": "500",
+                        "status": 500,
                         "code": "1452",
                         "detail": "An exception occurred while executing a query: SQLSTATE[23000]: Integrity constraint violation: 1452 ...",
                     }
@@ -103,11 +105,11 @@ class TestSWAPIError:
             ),
         ],
     )
-    def test_from_errors_500s(self, errors: list[dict[str, str]], error_type: type[SWAPIInternalServerError]) -> None:
+    def test__from_errors_500s(self, errors: list[dict[str, str]], error_type: type[SWAPIInternalServerError]) -> None:
         response = Response(
             status_code=500,
             json={"errors": errors},
-            request=Request("POST", "https://test.com/api/unit"),
+            request=Request("POST", "https://test.com/api/unit", extensions={"model_class": Unit}),
         )
 
         result = SWAPIError.from_errors(errors, response, self.orig_objs)
@@ -119,8 +121,21 @@ class TestSWAPIError:
         assert result.errors[0].status == errors[0]["status"]
         assert result.errors[0].code == errors[0]["code"]
         assert result.errors[0].detail == errors[0]["detail"]
+        assert result.errors[0].model_class is Unit
 
         assert result.errors[0].pointer_idx is None
         assert result.errors[0].pointer_entity is None
         assert result.errors[0].pointer_field is None
         assert result.errors[0].pointer_orig_obj is None
+
+    def test__from_response(self) -> None:
+        request = Request("POST", "https://test.com/api/unit", extensions={"model_class": Unit})
+
+        swapi_error = SWAPIError.from_response(Response(status_code=404, text="x", request=request), self.orig_objs)
+        assert swapi_error.model_class is Unit
+        assert swapi_error.request_objs == self.orig_objs
+
+        request = Request("POST", "https://test.com/api/unit")
+        swapi_error = SWAPIError.from_response(Response(status_code=404, text="x", request=request), self.orig_objs)
+        assert swapi_error.model_class is None
+        assert swapi_error.request_objs == self.orig_objs

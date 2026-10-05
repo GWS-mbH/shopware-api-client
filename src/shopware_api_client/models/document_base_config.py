@@ -1,16 +1,16 @@
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import AliasChoices, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class DocumentBaseConfigBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "document_base_config"
 
-    document_type_id: IdField
-    logo_id: IdField | None = None
+    document_type_id: Annotated[IdField, RefersTo("document_type")]
+    logo_id: Annotated[IdField | None, RefersTo("media")] = None
     name: str
     filename_prefix: str | None = None
     filename_suffix: str | None = None

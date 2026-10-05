@@ -1,12 +1,12 @@
 import json
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Mapping, TypedDict
 
-from httpx2 import Response
+from httpx2 import Request, Response
 from pydantic import ValidationError
 
 if TYPE_CHECKING:
-    from .base import ApiModelBase
+    from .base import AdminModel, ApiModelBase
 
 
 class ErrorPointer(TypedDict):
@@ -14,7 +14,7 @@ class ErrorPointer(TypedDict):
     entity: str | None
     field: str | None
     detail: str
-    orig_obj: Union["ApiModelBase", dict[str, Any], None]
+    orig_obj: "ApiModelBase, dict[str, Any], None"
 
 
 class SWException(Exception):
@@ -50,22 +50,26 @@ class SWAPIMethodNotAvailable(SWAPIConfigException):
 
 class SWAPIError(SWAPIException):
     def __init__(self, **kwargs: Any) -> None:
-        self.id = kwargs.get("id", "")
-        self.links = kwargs.get("links", {})
-        self.status = kwargs.get("status", "")
-        self.code = kwargs.get("code", "")
-        self.title = kwargs.get("title", "")
-        self.detail = kwargs.get("detail", "")
-        self.description = kwargs.get("description", "")
-        self.source = kwargs.get("source", {})
-        self.meta = kwargs.get("meta", {})
-        self.headers = kwargs.get("headers", {})
-        self.request = kwargs.get("request", None)
-        self.response = kwargs.get("response", None)
-        self.pointer_idx = kwargs.get("pointer_idx", None)
-        self.pointer_entity = kwargs.get("pointer_entity", None)
-        self.pointer_field = kwargs.get("pointer_field", None)
-        self.pointer_orig_obj = kwargs.get("pointer_orig_obj", None)
+        self.id: str = kwargs.get("id", "")
+        self.links: dict[str, Any] = kwargs.get("links", {})
+        self.status: int = int(kwargs["status"])
+        self.code: str = kwargs.get("code", "")
+        self.title: str = kwargs.get("title", "")
+        self.detail: str = kwargs.get("detail", "")
+        self.description: str = kwargs.get("description", "")
+        self.source: dict[str, Any] = kwargs.get("source", {})
+        self.meta: dict[str, Any] = kwargs.get("meta", {})
+        self.headers: Mapping[str, str] = kwargs.get("headers", {})
+        self.request: Request | None = kwargs.get("request")
+        self.response: Response | None = kwargs.get("response")
+
+        self.pointer_idx: int | None = kwargs.get("pointer_idx")
+        self.pointer_entity: str | None = kwargs.get("pointer_entity")
+        self.pointer_field: str | None = kwargs.get("pointer_field")
+        self.pointer_orig_obj: "ApiModelBase | dict[str, Any] | None" = kwargs.get("pointer_orig_obj")
+
+        self.request_objs: Sequence["ApiModelBase"] | list[dict[str, Any]] = kwargs.get("request_objs", [])
+        self.model_class: type["AdminModel"] | None = kwargs.get("model_class")
 
     def __str__(self) -> str:
         return f"Status: {self.status} {self.title} - {self.detail} - {self.source}"
@@ -115,9 +119,10 @@ class SWAPIError(SWAPIException):
         from .base import AdminModel
 
         errlist: list["SWAPIError"] = []
+        model_class = response._request.extensions.get("model_class") if response._request is not None else None
 
         for error in errors:
-            error.update({"response": response, "request": response.request})
+            error.update({"response": response, "request": response.request, "model_class": model_class, "request_objs": orig_objs})
             exception_class = cls.get_exception_class(int(error["status"]))
             if exception_class == SWAPIInternalServerError:
                 exception_class = SWAPIInternalServerError.get_subclass(error)
@@ -160,7 +165,7 @@ class SWAPIError(SWAPIException):
         return SWAPIErrorList(errlist)
 
     @classmethod
-    def from_response(cls, response: Response) -> "SWAPIError":
+    def from_response(cls, response: Response, orig_objs: Sequence["ApiModelBase"] | list[dict[str, Any]]) -> "SWAPIError":
         exception_class = cls.get_exception_class(response.status_code)
 
         try:
@@ -176,6 +181,8 @@ class SWAPIError(SWAPIException):
             headers=response.headers,
             request=response._request,
             response=response,
+            request_objs=orig_objs or [],
+            model_class=response._request.extensions.get("model_class") if response._request is not None else None,
         )
 
     def get_pointed_error(self) -> ErrorPointer | None:
@@ -195,6 +202,8 @@ class SWAPIError(SWAPIException):
 class SWAPIErrorList(SWAPIException):
     def __init__(self, errors: list[SWAPIError]) -> None:
         self.errors = errors
+        self.request_objs: Sequence["ApiModelBase"] | list[dict[str, Any]] = errors[0].request_objs if errors else []
+        self.model_class: type["AdminModel"] | None = errors[0].model_class if errors else None
 
     def __str__(self) -> str:
         return f"Errors: {self.errors}"

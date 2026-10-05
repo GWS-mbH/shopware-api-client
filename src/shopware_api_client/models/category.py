@@ -1,17 +1,17 @@
-from typing import Any
+from typing import Annotated, Any
 from pydantic import Field
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class CategoryBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "category"
 
-    parent_id: IdField | None = None
+    parent_id: Annotated[IdField | None, RefersTo("category")] = None
     parent_version_id: IdField | None = None
-    after_category_id: IdField | None = None
+    after_category_id: Annotated[IdField | None, RefersTo("category")] = None
     after_category_version_id: IdField | None = None
-    media_id: IdField | None = None
+    media_id: Annotated[IdField | None, RefersTo("media")] = None
     display_nested_products: bool
     auto_increment: int | None = Field(default=None, exclude=True)
     breadcrumb: list[str] | None = Field(default=None, exclude=True)
@@ -38,7 +38,7 @@ class CategoryBase(ApiModelBase, CustomFieldsMixin):
     meta_title: str | None = None
     meta_description: str | None = None
     keywords: str | None = None
-    cms_page_id: IdField | None = None
+    cms_page_id: Annotated[IdField | None, RefersTo("cms_page")] = None
     cms_page_version_id: IdField | None = None
-    product_stream_id: IdField | None = None
+    product_stream_id: Annotated[IdField | None, RefersTo("product_stream")] = None
     custom_entity_type_id: IdField | None = None

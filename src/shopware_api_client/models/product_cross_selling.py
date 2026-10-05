@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from shopware_api_client.base import ApiModelBase
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class ProductCrossSellingBase(ApiModelBase):
@@ -12,6 +14,6 @@ class ProductCrossSellingBase(ApiModelBase):
     type: str
     active: bool | None = None
     limit: int | None = None
-    product_id: IdField
+    product_id: Annotated[IdField, RefersTo("product")]
     product_version_id: IdField | None = None
-    product_stream_id: IdField | None = None
+    product_stream_id: Annotated[IdField | None, RefersTo("product_stream")] = None

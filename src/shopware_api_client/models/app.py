@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 
 
 class AppBase(ApiModelBase, CustomFieldsMixin):
@@ -29,5 +29,5 @@ class AppBase(ApiModelBase, CustomFieldsMixin):
     label: str
     description: str | None = None
     privacy_policy_extensions: str | None = None
-    integration_id: IdField
-    acl_role_id: IdField
+    integration_id: Annotated[IdField, RefersTo("integration")]
+    acl_role_id: Annotated[IdField, RefersTo("acl_role")]

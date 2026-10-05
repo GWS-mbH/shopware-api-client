@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Annotated, Any
+
 from pydantic import AwareDatetime, Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.structs.price import Price
 from shopware_api_client.structs.variant_listing_config import VariantListingConfig
 
@@ -10,18 +11,18 @@ from shopware_api_client.structs.variant_listing_config import VariantListingCon
 class ProductBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "product"
 
-    parent_id: IdField | None = None
+    parent_id: Annotated[IdField | None, RefersTo("product")] = None
     parent_version_id: IdField | None = None
-    manufacturer_id: IdField | None = None
+    manufacturer_id: Annotated[IdField | None, RefersTo("product_manufacturer")] = None
     product_manufacturer_version_id: IdField | None = None
-    unit_id: IdField | None = None
-    tax_id: IdField | None = None
-    cover_id: IdField | None = None
+    unit_id: Annotated[IdField | None, RefersTo("unit")] = None
+    tax_id: Annotated[IdField | None, RefersTo("tax")] = None
+    cover_id: Annotated[IdField | None, RefersTo("product_media")] = None
     product_media_version_id: IdField | None = None
-    delivery_time_id: IdField | None = None
-    feature_set_id: IdField | None = None
-    canonical_product_id: IdField | None = None
-    cms_page_id: IdField | None = None
+    delivery_time_id: Annotated[IdField | None, RefersTo("delivery_time")] = None
+    feature_set_id: Annotated[IdField | None, RefersTo("product_feature_set")] = None
+    canonical_product_id: Annotated[IdField | None, RefersTo("product")] = None
+    cms_page_id: Annotated[IdField | None, RefersTo("cms_page")] = None
     cms_page_version_id: IdField | None = None
     price: list[Price] | None = None
     product_number: str

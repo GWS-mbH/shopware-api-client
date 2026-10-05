@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Annotated, Any
 
 from shopware_api_client.base import StoreSearchEndpoint, EndpointMixin, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.fieldsets import FieldSetBase
 from shopware_api_client.models.customer_address import CustomerAddressBase
 
@@ -13,9 +13,9 @@ class Address(CustomerAddressBase, EndpointMixin["AddressEndpoint"]):
 
 
 class AddressUpdateSchema(FieldSetBase, CustomFieldsMixin):
-    country_id: IdField
-    country_state_id: IdField | None = None
-    salutation_id: IdField | None = None
+    country_id: Annotated[IdField, RefersTo("country")]
+    country_state_id: Annotated[IdField | None, RefersTo("country_state")] = None
+    salutation_id: Annotated[IdField | None, RefersTo("salutation")] = None
     first_name: str
     last_name: str
     zipcode: str | None = None

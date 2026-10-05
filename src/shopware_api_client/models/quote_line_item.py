@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import Field
 
 from shopware_api_client.base import ApiModelBase, CustomFieldsMixin
-from shopware_api_client.endpoints.base_fields import IdField
+from shopware_api_client.endpoints.base_fields import IdField, RefersTo
 from shopware_api_client.structs.absolute_price_definition import AbsolutePriceDefinition
 from shopware_api_client.structs.calculated_price import CalculatedPrice
 from shopware_api_client.structs.price import Price
@@ -14,14 +14,14 @@ from shopware_api_client.structs.reference_price_definition import ReferencePric
 class QuoteLineItemBase(ApiModelBase, CustomFieldsMixin):
     _identifier: str = "quote_line_item"
 
-    quote_id: IdField
+    quote_id: Annotated[IdField, RefersTo("quote")]
     quote_version_id: IdField | None = None
     identifier: str
-    parent_id: IdField | None = None
+    parent_id: Annotated[IdField | None, RefersTo("quote_line_item")] = None
     parent_version_id: IdField | None = None
-    product_id: IdField | None = None
+    product_id: Annotated[IdField | None, RefersTo("product")] = None
     product_version_id: IdField | None = None
-    promotion_id: IdField | None = Field(default=None, exclude=True)
+    promotion_id: Annotated[IdField | None, RefersTo("promotion")] = Field(default=None, exclude=True)
     states: list[str]
     label: str
     description: str | None = None
@@ -40,4 +40,4 @@ class QuoteLineItemBase(ApiModelBase, CustomFieldsMixin):
     stackable: bool | None = None
     position: int
     referenced_id: str | None = None
-    cover_id: IdField | None = None
+    cover_id: Annotated[IdField | None, RefersTo("media")] = None
