@@ -1,6 +1,6 @@
 import json
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Mapping, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Mapping, TypedDict
 
 from httpx2 import Request, Response
 from pydantic import ValidationError
@@ -14,7 +14,7 @@ class ErrorPointer(TypedDict):
     entity: str | None
     field: str | None
     detail: str
-    orig_obj: Union["ApiModelBase", dict[str, Any], None]
+    orig_obj: "ApiModelBase, dict[str, Any], None"
 
 
 class SWException(Exception):
@@ -66,7 +66,7 @@ class SWAPIError(SWAPIException):
         self.pointer_idx: int | None = kwargs.get("pointer_idx")
         self.pointer_entity: str | None = kwargs.get("pointer_entity")
         self.pointer_field: str | None = kwargs.get("pointer_field")
-        self.pointer_orig_obj: Union["ApiModelBase", dict[str, Any], None] = kwargs.get("pointer_orig_obj")
+        self.pointer_orig_obj: "ApiModelBase | dict[str, Any] | None" = kwargs.get("pointer_orig_obj")
 
         self.request_objs: Sequence["ApiModelBase"] | list[dict[str, Any]] = kwargs.get("request_objs", [])
         self.model_class: type["AdminModel"] | None = kwargs.get("model_class")
